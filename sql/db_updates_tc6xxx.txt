@@ -1,0 +1,5 @@
+last executed update:
+	- wod_auth: 2016_01_13_00_auth.sql
+	- wod_characters: 2016_01_05_00_characters.sql
+	- wod_hotfixes: 2016_01_10_00_hotfixes.sql
+	- wod_world: 2016_01_27_00_world.sql
