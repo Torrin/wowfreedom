@@ -8,7 +8,6 @@
 #include "World.h"
 #include "Player.h"
 #include "Opcodes.h"
-#include "MovementStructures.h"
 
 #ifdef FREEDOM_MOP_548_CODE
 

@@ -27,7 +27,6 @@ EndScriptData */
 #include "ScriptMgr.h"
 #include "ObjectMgr.h"
 #include "MapManager.h"
-#include "TicketMgr.h"
 #include "Chat.h"
 #include "Language.h"
 #include "Player.h"
