@@ -194,3 +194,5 @@ template
 DatabaseLoader& DatabaseLoader::AddDatabase<CharacterDatabaseConnection>(DatabaseWorkerPool<CharacterDatabaseConnection>& pool, std::string const& name);
 template
 DatabaseLoader& DatabaseLoader::AddDatabase<HotfixDatabaseConnection>(DatabaseWorkerPool<HotfixDatabaseConnection>& pool, std::string const& name);
+template
+DatabaseLoader& DatabaseLoader::AddDatabase<FreedomDatabaseConnection>(DatabaseWorkerPool<FreedomDatabaseConnection>& pool, std::string const& name);

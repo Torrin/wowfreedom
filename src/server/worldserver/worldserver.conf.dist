@@ -96,11 +96,13 @@ LogsDir = ""
 #                     "127.0.0.1;3306;trinity;trinity;world"      - (WorldDatabaseInfo)
 #                     "127.0.0.1;3306;trinity;trinity;characters" - (CharacterDatabaseInfo)
 #                     "127.0.0.1;3306;trinity;trinity;hotfixes"   - (HotfixDatabaseInfo)
+#                     "127.0.0.1;3306;trinity;trinity;freedom"   - (FreedomDatabaseInfo)
 
 LoginDatabaseInfo     = "127.0.0.1;3306;trinity;trinity;auth"
 WorldDatabaseInfo     = "127.0.0.1;3306;trinity;trinity;world"
 CharacterDatabaseInfo = "127.0.0.1;3306;trinity;trinity;characters"
 HotfixDatabaseInfo    = "127.0.0.1;3306;trinity;trinity;hotfixes"
+FreedomDatabaseInfo   = "127.0.0.1;3306;trinity;trinity;freedom"
 
 #
 #    LoginDatabase.WorkerThreads
@@ -118,6 +120,7 @@ LoginDatabase.WorkerThreads     = 1
 WorldDatabase.WorkerThreads     = 1
 CharacterDatabase.WorkerThreads = 1
 HotfixDatabase.WorkerThreads    = 1
+FreedomDatabase.WorkerThreads   = 1
 
 #
 #    LoginDatabase.SynchThreads
@@ -133,6 +136,7 @@ LoginDatabase.SynchThreads     = 1
 WorldDatabase.SynchThreads     = 1
 CharacterDatabase.SynchThreads = 2
 HotfixDatabase.SynchThreads    = 1
+FreedomDatabase.SynchThreads   = 1
 
 #
 #    MaxPingTime
@@ -1141,12 +1145,14 @@ FeatureSystem.CharacterUndelete.Cooldown = 2592000
 #           DATABASE_CHARACTER = 2, // Character database
 #           DATABASE_WORLD     = 4, // World database
 #           DATABASE_HOTFIX    = 8, // Hotfixes database
+#           DATABASE_FREEDOM   = 16, // Freedom database
 #
-#        Default:     15 - (All enabled)
+#                     31 - (All enabled + Freedom Database, not implemented)
+#                     15 - (All enabled)
 #                     4  - (Enable world only)
-#                     0  - (All Disabled)
+#        Default:     0  - (All Disabled)
 
-Updates.EnableDatabases = 15
+Updates.EnableDatabases = 0
 
 #
 #    Updates.SourcePath

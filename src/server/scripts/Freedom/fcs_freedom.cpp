@@ -9,6 +9,7 @@
 #include "Player.h"
 #include "Opcodes.h"
 
+
 #ifdef FREEDOM_MOP_548_CODE
 
 class freedom_commandscript : public CommandScript

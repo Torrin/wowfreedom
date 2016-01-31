@@ -84,6 +84,7 @@ WorldDatabaseWorkerPool WorldDatabase;                      ///< Accessor to the
 CharacterDatabaseWorkerPool CharacterDatabase;              ///< Accessor to the character database
 HotfixDatabaseWorkerPool HotfixDatabase;                    ///< Accessor to the hotfix database
 LoginDatabaseWorkerPool LoginDatabase;                      ///< Accessor to the realm/login database
+FreedomDatabaseWorkerPool FreedomDatabase;
 Realm realm;
 
 void SignalHandler(const boost::system::error_code& error, int signalNumber);
@@ -523,7 +524,8 @@ bool StartDB()
         .AddDatabase(HotfixDatabase, "Hotfix")
         .AddDatabase(WorldDatabase, "World")
         .AddDatabase(CharacterDatabase, "Character")
-        .AddDatabase(LoginDatabase, "Login");
+        .AddDatabase(LoginDatabase, "Login")
+		.AddDatabase(FreedomDatabase, "Freedom");
 
     if (!loader.Load())
         return false;
