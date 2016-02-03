@@ -378,6 +378,22 @@ namespace WorldPackets
 
             ObjectGuid Guid;
         };
+
+        class RequestPVPRewards final : public ClientPacket
+        {
+        public:
+            RequestPVPRewards(WorldPacket&& packet) : ClientPacket(CMSG_REQUEST_PVP_REWARDS, std::move(packet)) { }
+        
+            void Read() override { }
+        };
+
+        class RequestRatedBattlefieldInfo final : public ClientPacket
+        {
+        public:
+            RequestRatedBattlefieldInfo(WorldPacket&& packet) : ClientPacket(CMSG_REQUEST_RATED_BATTLEFIELD_INFO, std::move(packet)) { }
+        
+            void Read() override { }
+        };
     }
 }
 

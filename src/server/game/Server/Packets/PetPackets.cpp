@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2008-2016 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,14 +15,26 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "WorldSession.h"
-#include "VoicePackets.h"
+#include "PetPackets.h"
 
-void WorldSession::HandleVoiceSessionEnable(WorldPackets::Voice::VoiceSessionEnable& /*packet*/)
+void WorldPackets::Pet::DismissCritter::Read()
 {
+    _worldPacket >> CritterGUID;
 }
 
-void WorldSession::HandleSetActiveVoiceChannel(WorldPackets::Voice::SetActiveVoiceChannel& /*packet*/)
+void WorldPackets::Pet::PetAbandon::Read()
 {
+    _worldPacket >> Pet;
 }
 
+void WorldPackets::Pet::PetStopAttack::Read()
+{
+    _worldPacket >> PetGUID;
+}
+
+void WorldPackets::Pet::PetSpellAutocast::Read()
+{
+    _worldPacket >> PetGUID;
+    _worldPacket >> SpellID;
+    AutocastEnabled = _worldPacket.ReadBit();
+}

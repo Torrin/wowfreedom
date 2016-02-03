@@ -367,32 +367,26 @@ void WorldSession::HandleCancelAuraOpcode(WorldPackets::Spells::CancelAura& canc
     }
 }
 
-void WorldSession::HandlePetCancelAuraOpcode(WorldPacket& recvPacket)
+void WorldSession::HandlePetCancelAuraOpcode(WorldPackets::Spells::PetCancelAura& packet)
 {
-    ObjectGuid guid;
-    uint32 spellId;
-
-    recvPacket >> guid;
-    recvPacket >> spellId;
-
-    SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(spellId);
+    SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(packet.SpellID);
     if (!spellInfo)
     {
-        TC_LOG_ERROR("network", "WORLD: unknown PET spell id %u", spellId);
+        TC_LOG_ERROR("network", "WORLD: unknown PET spell id %u", packet.SpellID);
         return;
     }
 
-    Creature* pet=ObjectAccessor::GetCreatureOrPetOrVehicle(*_player, guid);
+    Creature* pet = ObjectAccessor::GetCreatureOrPetOrVehicle(*_player, packet.PetGUID);
 
     if (!pet)
     {
-        TC_LOG_ERROR("network", "HandlePetCancelAura: Attempt to cancel an aura for non-existant %s by player '%s'", guid.ToString().c_str(), GetPlayer()->GetName().c_str());
+        TC_LOG_ERROR("network", "HandlePetCancelAura: Attempt to cancel an aura for non-existant %s by player '%s'", packet.PetGUID.ToString().c_str(), GetPlayer()->GetName().c_str());
         return;
     }
 
     if (pet != GetPlayer()->GetGuardianPet() && pet != GetPlayer()->GetCharm())
     {
-        TC_LOG_ERROR("network", "HandlePetCancelAura: %s is not a pet of player '%s'", guid.ToString().c_str(), GetPlayer()->GetName().c_str());
+        TC_LOG_ERROR("network", "HandlePetCancelAura: %s is not a pet of player '%s'", packet.PetGUID.ToString().c_str(), GetPlayer()->GetName().c_str());
         return;
     }
 
@@ -402,7 +396,7 @@ void WorldSession::HandlePetCancelAuraOpcode(WorldPacket& recvPacket)
         return;
     }
 
-    pet->RemoveOwnedAura(spellId, ObjectGuid::Empty, 0, AURA_REMOVE_BY_CANCEL);
+    pet->RemoveOwnedAura(packet.SpellID, ObjectGuid::Empty, 0, AURA_REMOVE_BY_CANCEL);
 }
 
 void WorldSession::HandleCancelGrowthAuraOpcode(WorldPackets::Spells::CancelGrowthAura& /*cancelGrowthAura*/)
@@ -568,39 +562,55 @@ void WorldSession::HandleMirrorImageDataRequest(WorldPackets::Spells::GetMirrorI
     }
 }
 
-void WorldSession::HandleUpdateProjectilePosition(WorldPacket& recvPacket)
+void WorldSession::HandleMissileTrajectoryCollision(WorldPackets::Spells::MissileTrajectoryCollision& packet)
 {
-    ObjectGuid casterGuid;
-    uint32 spellId;
-    uint8 castCount;
-    float x, y, z;    // Position of missile hit
-
-    recvPacket >> casterGuid;
-    recvPacket >> spellId;
-    recvPacket >> castCount;
-    recvPacket >> x;
-    recvPacket >> y;
-    recvPacket >> z;
-
-    Unit* caster = ObjectAccessor::GetUnit(*_player, casterGuid);
+    Unit* caster = ObjectAccessor::GetUnit(*_player, packet.Target);
     if (!caster)
         return;
 
-    Spell* spell = caster->FindCurrentSpellBySpellId(spellId);
+    Spell* spell = caster->FindCurrentSpellBySpellId(packet.SpellID);
     if (!spell || !spell->m_targets.HasDst())
         return;
 
     Position pos = *spell->m_targets.GetDstPos();
-    pos.Relocate(x, y, z);
+    pos.Relocate(packet.CollisionPos);
     spell->m_targets.ModDst(pos);
 
     WorldPacket data(SMSG_NOTIFY_MISSILE_TRAJECTORY_COLLISION, 21);
-    data << casterGuid;
-    data << uint8(castCount);
-    data << float(x);
-    data << float(y);
-    data << float(z);
+    data << packet.Target;
+    data << uint8(packet.CastID);
+    data << float(packet.CollisionPos.x);
+    data << float(packet.CollisionPos.y);
+    data << float(packet.CollisionPos.z);
     caster->SendMessageToSet(&data, true);
+}
+
+void WorldSession::HandleUpdateMissileTrajectory(WorldPackets::Spells::UpdateMissileTrajectory& packet)
+{
+    Unit* caster = ObjectAccessor::GetUnit(*_player, packet.Guid);
+    Spell* spell = caster ? caster->GetCurrentSpell(CURRENT_GENERIC_SPELL) : NULL;
+    if (!spell || spell->m_spellInfo->Id != packet.SpellID || !spell->m_targets.HasDst() || !spell->m_targets.HasSrc())
+        return;
+
+    Position pos = *spell->m_targets.GetSrcPos();
+    pos.Relocate(packet.FirePos);
+    spell->m_targets.ModSrc(pos);
+
+    pos = *spell->m_targets.GetDstPos();
+    pos.Relocate(packet.ImpactPos);
+    spell->m_targets.ModDst(pos);
+
+    spell->m_targets.SetPitch(packet.Pitch);
+    spell->m_targets.SetSpeed(packet.Speed);
+
+    if (packet.Status.is_initialized())
+    {
+        GetPlayer()->ValidateMovementInfo(packet.Status.get_ptr());
+        /*uint32 opcode;
+        recvPacket >> opcode;
+        recvPacket.SetOpcode(CMSG_MOVE_STOP); // always set to CMSG_MOVE_STOP in client SetOpcode
+                                              //HandleMovementOpcodes(recvPacket);*/
+    }
 }
 
 void WorldSession::HandleRequestCategoryCooldowns(WorldPackets::Spells::RequestCategoryCooldowns& /*requestCategoryCooldowns*/)
