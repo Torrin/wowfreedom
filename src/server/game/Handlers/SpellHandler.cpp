@@ -216,11 +216,8 @@ void WorldSession::HandleOpenItemOpcode(WorldPackets::Spells::OpenItem& packet)
 
 void WorldSession::HandleGameObjectUseOpcode(WorldPackets::GameObject::GameObjUse& packet)
 {
-    if (GameObject* obj = GetPlayer()->GetMap()->GetGameObject(packet.Guid))
+    if (GameObject* obj = GetPlayer()->GetGameObjectIfCanInteractWith(packet.Guid))
     {
-        if (!obj->IsWithinDistInMap(GetPlayer(), obj->GetInteractionDistance()))
-            return;
-
         // ignore for remote control state
         if (GetPlayer()->m_mover != GetPlayer())
             if (!(GetPlayer()->IsOnVehicle(GetPlayer()->m_mover) || GetPlayer()->IsMounted()) && !obj->GetGOInfo()->IsUsableMounted())
@@ -236,17 +233,13 @@ void WorldSession::HandleGameobjectReportUse(WorldPackets::GameObject::GameObjRe
     if (_player->m_mover != _player)
         return;
 
-    GameObject* go = GetPlayer()->GetMap()->GetGameObject(packet.Guid);
-    if (!go)
-        return;
+    if (GameObject* go = GetPlayer()->GetGameObjectIfCanInteractWith(packet.Guid))
+    {
+        if (go->AI()->GossipHello(_player))
+            return;
 
-    if (!go->IsWithinDistInMap(_player, INTERACTION_DISTANCE))
-        return;
-
-    if (go->AI()->GossipHello(_player))
-        return;
-
-    _player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_USE_GAMEOBJECT, go->GetEntry());
+        _player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_USE_GAMEOBJECT, go->GetEntry());
+    }
 }
 
 void WorldSession::HandleCastSpellOpcode(WorldPackets::Spells::CastSpell& cast)
@@ -576,20 +569,18 @@ void WorldSession::HandleMissileTrajectoryCollision(WorldPackets::Spells::Missil
     pos.Relocate(packet.CollisionPos);
     spell->m_targets.ModDst(pos);
 
-    WorldPacket data(SMSG_NOTIFY_MISSILE_TRAJECTORY_COLLISION, 21);
-    data << packet.Target;
-    data << uint8(packet.CastID);
-    data << float(packet.CollisionPos.x);
-    data << float(packet.CollisionPos.y);
-    data << float(packet.CollisionPos.z);
-    caster->SendMessageToSet(&data, true);
+    WorldPackets::Spells::NotifyMissileTrajectoryCollision notify;
+    notify.Caster = packet.Target;
+    notify.CastID = packet.CastID;
+    notify.CollisionPos = packet.CollisionPos;
+    caster->SendMessageToSet(notify.Write(), true);
 }
 
 void WorldSession::HandleUpdateMissileTrajectory(WorldPackets::Spells::UpdateMissileTrajectory& packet)
 {
     Unit* caster = ObjectAccessor::GetUnit(*_player, packet.Guid);
     Spell* spell = caster ? caster->GetCurrentSpell(CURRENT_GENERIC_SPELL) : NULL;
-    if (!spell || spell->m_spellInfo->Id != packet.SpellID || !spell->m_targets.HasDst() || !spell->m_targets.HasSrc())
+    if (!spell || spell->m_spellInfo->Id != uint32(packet.SpellID) || !spell->m_targets.HasDst() || !spell->m_targets.HasSrc())
         return;
 
     Position pos = *spell->m_targets.GetSrcPos();
