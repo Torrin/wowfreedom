@@ -1275,7 +1275,7 @@ void Player::Update(uint32 p_time)
     }
 
     //Handle Water/drowning
-    HandleDrowning(p_time);
+    //HandleDrowning(p_time);
 
     // Played time
     if (now > m_Last_tick)
