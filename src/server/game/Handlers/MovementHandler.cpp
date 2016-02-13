@@ -332,8 +332,8 @@ void WorldSession::HandleMovementOpcodes(WorldPackets::Movement::ClientPlayerMov
         plrMover->m_transport->RemovePassenger(plrMover);
 
     // fall damage generation (ignore in flight case that can be triggered also at lags in moment teleportation to another map).
-    if (opcode == CMSG_MOVE_FALL_LAND && plrMover && !plrMover->IsInFlight())
-        plrMover->HandleFall(movementInfo);
+    //if (opcode == CMSG_MOVE_FALL_LAND && plrMover && !plrMover->IsInFlight())
+    //    plrMover->HandleFall(movementInfo);
 
     if (plrMover && ((movementInfo.flags & MOVEMENTFLAG_SWIMMING) != 0) != plrMover->IsInWater())
     {
