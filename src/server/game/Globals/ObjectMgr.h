@@ -1028,6 +1028,8 @@ class ObjectMgr
         PageText const* GetPageText(uint32 pageEntry);
 
         void LoadPlayerInfo();
+		void LoadPlayerCustomSpells();
+		void LoadPlayerCustomSkills();
         void LoadPetLevelInfo();
         void LoadExplorationBaseXP();
         void LoadPetNames();

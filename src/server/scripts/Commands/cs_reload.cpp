@@ -116,6 +116,8 @@ public:
             { "npc_vendor",                    rbac::RBAC_PERM_COMMAND_RELOAD_NPC_VENDOR,                       true,  &HandleReloadNpcVendorCommand,                  "" },
             { "page_text",                     rbac::RBAC_PERM_COMMAND_RELOAD_PAGE_TEXT,                        true,  &HandleReloadPageTextsCommand,                  "" },
             { "pickpocketing_loot_template",   rbac::RBAC_PERM_COMMAND_RELOAD_PICKPOCKETING_LOOT_TEMPLATE,      true,  &HandleReloadLootTemplatesPickpocketingCommand, "" },
+            { "playercreateinfo_skill_custom", rbac::RBAC_PERM_COMMAND_RELOAD_PLAYERCREATEINFO_SKILL_CUSTOM,    true,  &HandleReloadPlayerCreateInfoSkillCustomCommand,"" },
+			{ "playercreateinfo_spell_custom", rbac::RBAC_PERM_COMMAND_RELOAD_PLAYERCREATEINFO_SPELL_CUSTOM,    true,  &HandleReloadPlayerCreateInfoSpellCustomCommand,"" },
             { "points_of_interest",            rbac::RBAC_PERM_COMMAND_RELOAD_POINTS_OF_INTEREST,               true,  &HandleReloadPointsOfInterestCommand,           "" },
             { "prospecting_loot_template",     rbac::RBAC_PERM_COMMAND_RELOAD_PROSPECTING_LOOT_TEMPLATE,        true,  &HandleReloadLootTemplatesProspectingCommand,   "" },
             { "quest_greeting",                rbac::RBAC_PERM_COMMAND_RELOAD_QUEST_GREETING,                   true,  &HandleReloadQuestGreetingCommand,              "" },
@@ -158,6 +160,23 @@ public:
             { "reload",                        rbac::RBAC_PERM_COMMAND_RELOAD,                                  true,  NULL,                                           "", reloadCommandTable },
         };
         return commandTable;
+    }
+
+    // custom reload commands
+    static bool HandleReloadPlayerCreateInfoSkillCustomCommand(ChatHandler* handler, const char* /*args*/)
+    {
+        TC_LOG_INFO("server.loading", "Re-Loading Player Create Custom Skill Data...");
+        sObjectMgr->LoadPlayerCustomSkills();
+        handler->SendGlobalGMSysMessage("DB table `playercreateinfo_skill_custom` reloaded.");
+        return true;
+    }
+
+    static bool HandleReloadPlayerCreateInfoSpellCustomCommand(ChatHandler* handler, const char* /*args*/)
+    {
+        TC_LOG_INFO("server.loading", "Re-Loading Player Create Custom Spell Data...");
+        sObjectMgr->LoadPlayerCustomSkills();
+        handler->SendGlobalGMSysMessage("DB table `playercreateinfo_spell_custom` reloaded.");
+        return true;
     }
 
     //reload commands

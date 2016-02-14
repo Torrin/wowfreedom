@@ -303,6 +303,7 @@ public:
             return false;
 
         target->LearnDefaultSkills();
+        target->LearnCustomSkills();
         target->LearnCustomSpells();
         target->LearnQuestRewardedSpells();
 

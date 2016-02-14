@@ -609,6 +609,7 @@ bool Player::Create(ObjectGuid::LowType guidlow, WorldPackets::Character::Charac
 
     // original spells
     LearnDefaultSkills();
+    LearnCustomSkills();
     LearnCustomSpells();
 
     // Original action bar. Do not use Player::AddActionButton because we do not have skill spells loaded at this time
@@ -16887,6 +16888,7 @@ bool Player::LoadFromDB(ObjectGuid guid, SQLQueryHolder *holder)
     // after spell and quest load
     InitTalentForLevel();
     LearnDefaultSkills();
+    LearnCustomSkills();
     LearnCustomSpells();
 
     // must be before inventory (some items required reputation check)
@@ -22476,6 +22478,7 @@ void Player::ResetSpells(bool myClassOnly)
             RemoveSpell(iter->first, false, false);           // only iter->first can be accessed, object by iter->second can be deleted already
 
     LearnDefaultSkills();
+    LearnCustomSkills();
     LearnCustomSpells();
     LearnQuestRewardedSpells();
 }
@@ -22496,6 +22499,20 @@ void Player::LearnCustomSpells()
             AddSpell(tspell, true, true, true, false);
         else                                                // but send in normal spell in game learn case
             LearnSpell(tspell, true);
+    }
+}
+
+void Player::LearnCustomSkills()
+{
+    if (!sWorld->getBoolConfig(CONFIG_START_ALL_SPELLS))
+        return;
+
+    // learn default race/class spells
+    PlayerInfo const* info = sObjectMgr->GetPlayerInfo(getRace(), getClass());
+    for (PlayerCreateInfoCustomSkills::const_iterator itr = info->customSkills.begin(); itr != info->customSkills.end(); ++itr)
+    {
+        PlayerCreateInfoCustomSkill const &customSkill = *itr;
+        SetSkill(customSkill.skillId, GetSkillValue(customSkill.skillId) ? GetSkillStep(customSkill.skillId) : 1, customSkill.rank, customSkill.rank);
     }
 }
 
@@ -24382,6 +24399,7 @@ void Player::_LoadSkills(PreparedQueryResult result)
             uint16 value    = fields[1].GetUInt16();
             uint16 max      = fields[2].GetUInt16();
 
+            /* Removed strict race/class skill enforcement feature, not needed for sandbox/rp server
             SkillRaceClassInfoEntry const* rcEntry = GetSkillRaceClassInfo(skill, getRace(), getClass());
             if (!rcEntry)
             {
@@ -24421,6 +24439,7 @@ void Player::_LoadSkills(PreparedQueryResult result)
 
                 continue;
             }
+            */
 
             uint16 field = count / 2;
             uint8 offset = count & 1;
@@ -24428,7 +24447,9 @@ void Player::_LoadSkills(PreparedQueryResult result)
             SetUInt16Value(PLAYER_SKILL_LINEID + SKILL_ID_OFFSET + field, offset, skill);
             uint16 step = 0;
 
-            SkillLineEntry const* skillLine = sSkillLineStore.LookupEntry(rcEntry->SkillID);
+            // Removed strict race/class skill enforcement feature, not needed for sandbox/rp server
+            // DEFAULT: SkillLineEntry const* skillLine = sSkillLineStore.LookupEntry(rcEntry->SkillId); 
+            SkillLineEntry const* skillLine = sSkillLineStore.LookupEntry(skill);
             if (skillLine)
             {
                 if (skillLine->CategoryID == SKILL_CATEGORY_SECONDARY)
