@@ -48,6 +48,7 @@ extern CharacterDatabaseWorkerPool CharacterDatabase;
 extern LoginDatabaseWorkerPool LoginDatabase;
 /// Accessor to the hotfix database
 extern HotfixDatabaseWorkerPool HotfixDatabase;
+/// Accessor to the freedom database
 extern FreedomDatabaseWorkerPool FreedomDatabase;
 
 #endif

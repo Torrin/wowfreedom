@@ -321,3 +321,4 @@ template class DatabaseWorkerPool<LoginDatabaseConnection>;
 template class DatabaseWorkerPool<WorldDatabaseConnection>;
 template class DatabaseWorkerPool<CharacterDatabaseConnection>;
 template class DatabaseWorkerPool<HotfixDatabaseConnection>;
+template class DatabaseWorkerPool<FreedomDatabaseConnection>;
