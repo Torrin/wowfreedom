@@ -40,11 +40,14 @@
 #include "Implementation/HotfixDatabase.h"
 #include "Implementation/FreedomDatabase.h"
 
+/// Accessor to the world database
 extern WorldDatabaseWorkerPool WorldDatabase;
+/// Accessor to the character database
 extern CharacterDatabaseWorkerPool CharacterDatabase;
+/// Accessor to the realm/login database
 extern LoginDatabaseWorkerPool LoginDatabase;
+/// Accessor to the hotfix database
 extern HotfixDatabaseWorkerPool HotfixDatabase;
 extern FreedomDatabaseWorkerPool FreedomDatabase;
 
 #endif
-

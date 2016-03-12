@@ -81,10 +81,11 @@ static boost::asio::deadline_timer* _dbPingTimer;
 static uint32 _dbPingInterval;
 static boost::asio::deadline_timer* _banExpiryCheckTimer;
 static uint32 _banExpiryCheckInterval;
-LoginDatabaseWorkerPool LoginDatabase;
 
 int main(int argc, char** argv)
 {
+    signal(SIGABRT, &Trinity::AbortHandler);
+
     std::string configFile = _TRINITY_BNET_CONFIG;
     std::string configService;
     auto vm = GetConsoleArguments(argc, argv, configFile, configService);
