@@ -24,14 +24,14 @@ void AddCommandsScripts();
 
 #ifdef SCRIPTS
 void AddWorldScripts();
-void AddEasternKingdomsScripts();
-void AddKalimdorScripts();
-void AddOutlandScripts();
-void AddNorthrendScripts();
-void AddMaelstromScripts();
-void AddEventsScripts();
+//void AddEasternKingdomsScripts();
+//void AddKalimdorScripts();
+//void AddOutlandScripts();
+//void AddNorthrendScripts();
+//void AddMaelstromScripts();
+//void AddEventsScripts();
 void AddPetScripts();
-void AddOutdoorPvPScripts();
+//void AddOutdoorPvPScripts();
 void AddCustomScripts();
 #endif
 
@@ -42,14 +42,14 @@ void AddScripts()
     AddCommandsScripts();
 #ifdef SCRIPTS
     AddWorldScripts();
-    AddEasternKingdomsScripts();
-    AddKalimdorScripts();
-    AddOutlandScripts();
-    AddNorthrendScripts();
-    AddMaelstromScripts();
-    AddEventsScripts();
+    //AddEasternKingdomsScripts();
+    //AddKalimdorScripts();
+    //AddOutlandScripts();
+    //AddNorthrendScripts();
+    //AddMaelstromScripts();
+    //AddEventsScripts();
     AddPetScripts();
-    AddOutdoorPvPScripts();
+    //AddOutdoorPvPScripts();
     AddCustomScripts();
 #endif
 }
