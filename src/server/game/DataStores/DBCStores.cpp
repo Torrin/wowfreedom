@@ -711,11 +711,11 @@ MapDifficultyEntry const* GetMapDifficultyData(uint32 mapId, Difficulty difficul
 {
     auto itr = sMapDifficultyMap.find(mapId);
     if (itr == sMapDifficultyMap.end())
-        return nullptr;
+        return sMapDifficultyMap[1][0];
 
     auto diffItr = itr->second.find(difficulty);
     if (diffItr == itr->second.end())
-        return nullptr;
+        return sMapDifficultyMap[1][0];
 
     return diffItr->second;
 }
