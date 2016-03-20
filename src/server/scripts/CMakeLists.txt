@@ -23,7 +23,7 @@ endmacro(PrepareScripts)
 
 PrepareScripts(Spells PRIVATE_SOURCES)
 PrepareScripts(Commands PRIVATE_SOURCES)
-PrepareScripts(Freedom scripts_STAT_SRCS)
+PrepareScripts(Freedom PRIVATE_SOURCES)
 
 if(SCRIPTS)
   PrepareScripts(Custom PRIVATE_SOURCES)
