@@ -1211,7 +1211,10 @@ enum TrinityStrings
     LANG_BAN_ACCOUNT_YOUPERMBANNEDMESSAGE_WORLD   = 11007,
 
     LANG_NPCINFO_INHABIT_TYPE                     = 11008,
-    LANG_NPCINFO_FLAGS_EXTRA                      = 11009
+    LANG_NPCINFO_FLAGS_EXTRA                      = 11009,
 
+    // Freedom Trinity Strings
+    FREEDOM_CMD_NOT_YET_IMPLEMENTED               = 100000,
+    FREEDOM_CMD_MONEY_RESET                       = 100001,
 };
 #endif

@@ -9,6 +9,305 @@
 #include "Player.h"
 #include "Opcodes.h"
 
+class freedom_commandscript : public CommandScript
+{
+public:
+    freedom_commandscript() : CommandScript("freedom_commandscript") { }
+
+    std::vector<ChatCommand> GetCommands() const override
+    {
+        static std::vector<ChatCommand> freedomMorphCommandTable = {
+            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH,         false, &HandleFreedomMorphListCommand,      "" },
+            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH_MODIFY,       false, &HandleFreedomMorphAddCommand,       "" },
+            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH_MODIFY,       false, &HandleFreedomMorphDelCommand,       "" },
+            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH,              false, &HandleFreedomMorphCommand,          "" },
+        };
+
+        static std::vector<ChatCommand> freedomTeleportCommandTable = {
+            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE,          false, &HandleFreedomTeleListCommand,       "" },
+            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE_MODIFY,        false, &HandleFreedomTeleAddCommand,        "" },
+            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE_MODIFY,        false, &HandleFreedomTeleDelCommand,        "" },
+            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE,               false, &HandleFreedomTeleCommand,           "" },
+        };
+
+        static std::vector<ChatCommand> freedomPrivateTeleportCommandTable = {
+            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,              false, &HandleFreedomPrivateTeleListCommand,"" },
+            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,              false, &HandleFreedomPrivateTeleAddCommand, "" },
+            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,              false, &HandleFreedomPrivateTeleDelCommand, "" },
+            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,              false, &HandleFreedomPrivateTeleCommand,    "" },
+        };
+
+        static std::vector<ChatCommand> freedomSpellCommandTable = {
+            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,              false, &HandleFreedomSpellListCommand,      "" },
+            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL_MODIFY,       false, &HandleFreedomSpellAddCommand,       "" },
+            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL_MODIFY,       false, &HandleFreedomSpellDelCommand,       "" },
+            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,              false, &HandleFreedomSpellCommand,          "" },
+        };
+
+        static std::vector<ChatCommand> freedomCommandTable =
+        {
+            { "cast",           rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,              false, &HandleFreedomSpellCommand,          "" },
+            { "summon",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,             false, &HandleFreedomSummonCommand,         "" },
+            { "demorph",        rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,            false, &HandleFreedomDemorphCommand,        "" },
+            { "fly",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,                false, &HandleFreedomFlyCommand,            "" },
+            { "revive",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,             false, &HandleFreedomReviveCommand,         "" },
+            { "unaura",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,             false, &HandleFreedomUnAuraCommand,         "" },
+            { "speed",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,             false, &HandleFreedomSpeedCommand,          "" },
+            { "walk",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,               false, &HandleFreedomWalkCommand,           "" },
+            { "run",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,                false, &HandleFreedomRunCommand,            "" },
+            { "swim",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,               false, &HandleFreedomSwimCommand,           "" },
+            { "scale",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,              false, &HandleFreedomScaleCommand,          "" },
+            { "drunk",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,              false, &HandleFreedomDrunkCommand,          "" },
+            { "waterwalk",      rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,          false, &HandleFreedomWaterwalkCommand,      "" },
+            { "fix",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,                false, &HandleFreedomFixCommand,            "" },
+            { "mailbox",        rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,            false, &HandleFreedomMailboxCommand,        "" },
+            { "morph",          rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH,              false, NULL,                                "", freedomMorphCommandTable },
+            { "money",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,              false, &HandleFreedomMoneyCommand,          "" },
+            { "bank",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,               false, &HandleFreedomBankCommand,           "" },
+            { "customize",      rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,          false, &HandleFreedomCustomizeCommand,      "" },
+            //{ "racechange",     rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,        false, &HandleFreedomRaceChangeCommand,     "" }, race/faction change opcode is not handled yet
+            //{ "factionchange",  rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,     false, &HandleFreedomFactionChangeCommand,  "" }, race/faction change opcode is not handled yet
+            { "teleport",       rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE,               false, NULL,                                "", freedomTeleportCommandTable },
+            { "pteleport",      rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,              false, NULL,                                "", freedomPrivateTeleportCommandTable },
+            { "spell",          rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,              false, NULL,                                "", freedomSpellCommandTable },
+        };
+
+        static std::vector<ChatCommand> commandTable =
+        {
+            { "freedom",            rbac::RBAC_FPERM_COMMAND_FREEDOM,                    false, NULL,                                "", freedomCommandTable },
+        };
+        return commandTable;
+    }
+
+#pragma region COMMAND TABLE : .freedom -> morph -> *
+    static bool HandleFreedomMorphListCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomMorphAddCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomMorphDelCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomMorphCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+#pragma endregion
+
+#pragma region COMMAND TABLE : .freedom -> teleport -> *
+    static bool HandleFreedomTeleListCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomTeleAddCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomTeleDelCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomTeleCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+#pragma endregion
+
+#pragma region COMMAND TABLE : .freedom -> pteleport -> *
+    static bool HandleFreedomPrivateTeleListCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomPrivateTeleAddCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomPrivateTeleDelCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomPrivateTeleCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+#pragma endregion
+
+#pragma region COMMAND TABLE : .freedom -> spell -> *
+    static bool HandleFreedomSpellListCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomSpellAddCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomSpellDelCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomSpellCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+#pragma endregion
+
+#pragma region COMMAND TABLE : .freedom -> *
+    static bool HandleFreedomSummonCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomDemorphCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomFlyCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomReviveCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomUnAuraCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomSpeedCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomWalkCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomRunCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomSwimCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomScaleCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomDrunkCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomWaterwalkCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomFixCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomMailboxCommand(ChatHandler* handler, char const* args)
+    {
+        Player* source = handler->GetSession()->GetPlayer();
+        handler->GetSession()->SendShowMailBox(source->GetGUID());
+        return true;
+    }
+
+    static bool HandleFreedomMoneyCommand(ChatHandler* handler, char const* args)
+    {
+        Player* source = handler->GetSession()->GetPlayer();
+        source->SetMoney(uint64(100000000000Ui64));
+        handler->PSendSysMessage(FREEDOM_CMD_MONEY_RESET);
+        return true;
+    }
+
+    static bool HandleFreedomBankCommand(ChatHandler* handler, char const* args)
+    {
+        Player* source = handler->GetSession()->GetPlayer();
+        handler->GetSession()->SendShowBank(source->GetGUID());
+        return true;
+    }
+
+    static bool HandleFreedomCustomizeCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomRaceChangeCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+
+    static bool HandleFreedomFactionChangeCommand(ChatHandler* handler, char const* args)
+    {
+        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+#pragma endregion
+};
+
+void AddSC_freedom_commandscript()
+{
+    new freedom_commandscript();
+}
 
 #ifdef FREEDOM_MOP_548_CODE
 

@@ -42,7 +42,16 @@ INSERT INTO rbac_permissions (`id`, `name`) VALUES
 (@PLAYER,    'Role: [GM0] Player'),
 -- custom non-freedom perms
 (1000, 'Commmand: reload playercreateinfo_spell_custom'),
-(1001, 'Commmand: reload playercreateinfo_skill_custom')
+(1001, 'Commmand: reload playercreateinfo_skill_custom'),
+(1002, 'Commmand: freedom'),
+(1003, 'Commmand: freedom morph'),
+(1004, 'Commmand: freedom morph add/del'),
+(1005, 'Commmand: freedom tele'),
+(1006, 'Commmand: freedom tele add/del'),
+(1007, 'Commmand: freedom ptele'),
+(1008, 'Commmand: freedom spell'),
+(1009, 'Commmand: freedom spell add/del'),
+(1010, 'Freedom player utility commands')
 ;
 
 -- [RECREATION: LINKED PERMS]
@@ -92,6 +101,12 @@ INSERT INTO rbac_linked_permissions (`id`, `linkedId`) VALUES
 (@PLAYER, 507), -- help
 
 -- [CUSTOM COMMANDS]
+(@PLAYER, 1002), -- freedom
+(@PLAYER, 1003), -- freedom morph
+(@PLAYER, 1005), -- freedom tele
+(@PLAYER, 1007), -- freedom ptele
+(@PLAYER, 1008), -- freedom spell
+(@PLAYER, 1010), -- freedom utility commands
 
 -- [198 - Role: [GM1] Moderator, ST]
 (@MODERATOR, @PLAYER), -- Inherit player permissions
@@ -339,6 +354,9 @@ INSERT INTO rbac_linked_permissions (`id`, `linkedId`) VALUES
 -- [CUSTOM COMMANDS]
 (@GM, 1000), -- reload playercreateinfo_spell_custom
 (@GM, 1001), -- reload playercreateinfo_skill_custom
+(@GM, 1004), -- freedom morph add/del
+(@GM, 1006), -- freedom tele add/del
+(@GM, 1009), -- freedom spell add/del
 
 -- [190 - Role: [GM3] Administrator]
 (@ADMIN, @GM), -- Inherit GM permissions

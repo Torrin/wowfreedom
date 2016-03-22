@@ -20,6 +20,7 @@
 
 void AddSpellsScripts();
 void AddCommandsScripts();
+void AddFreedomScripts();
 
 #ifdef SCRIPTS
 void AddWorldScripts();
@@ -38,6 +39,7 @@ void AddScripts()
 {
     AddSpellsScripts();
     AddCommandsScripts();
+    AddFreedomScripts();
 #ifdef SCRIPTS
     AddWorldScripts();
     //AddEasternKingdomsScripts();
