@@ -8,4 +8,5 @@
 #include "Opcodes.h"
 #include "SharedDefines.h"
 #include "ObjectMgr.h"
+#include "FreedomMgr.h"
 #include "Packets/AllPackets.h"

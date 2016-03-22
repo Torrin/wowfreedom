@@ -19,6 +19,7 @@
 #ifndef _OBJECTMGR_H
 #define _OBJECTMGR_H
 
+#include "FreedomMgr.h"
 #include "Log.h"
 #include "Object.h"
 #include "Bag.h"
@@ -698,10 +699,12 @@ typedef std::unordered_map<uint32, std::vector<uint32>> TerrainUIPhaseInfo; // w
 typedef std::unordered_map<uint32, std::vector<PhaseInfoStruct>> PhaseInfo; // phase
 
 class PlayerDumpReader;
+class FreedomMgr;
 
 class ObjectMgr
 {
     friend class PlayerDumpReader;
+    friend class FreedomMgr;
 
     private:
         ObjectMgr();
