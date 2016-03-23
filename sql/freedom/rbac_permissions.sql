@@ -632,7 +632,8 @@ INSERT INTO rbac_linked_permissions (`id`, `linkedId`) VALUES
 (@ADMIN, 733), -- server set motd
 (@ADMIN, 734), -- server shutdown
 (@ADMIN, 735), -- server shutdown cancel
-(@ADMIN, 736)  -- server motd
+(@ADMIN, 736), -- server motd
+(@ADMIN, 836)  -- debug boundary
 ;
 
 -- [RECREATION: LINKED PERMS TO DEFAULT SEC LEVELS]
