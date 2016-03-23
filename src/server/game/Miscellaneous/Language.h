@@ -1215,8 +1215,11 @@ enum TrinityStrings
 	LANG_INSTANCE_LOGIN_GAMEMASTER_EXCEPTION      = 11010,
     LANG_INSTANCE_BIND_MISMATCH                   = 11014,
 
-    // Freedom Trinity Strings
-    FREEDOM_CMD_NOT_YET_IMPLEMENTED               = 100000,
-    FREEDOM_CMD_MONEY_RESET                       = 100001,
+    // Custom FreedomCore Trinity Strings
+    FREEDOM_CMDE_NOT_YET_IMPLEMENTED               = 100000,
+    FREEDOM_CMDI_MONEY_RESET                       = 100001,
+    FREEDOM_CMDE_NOT_ENOUGH_PARAMS                 = 100002,
+    FREEDOM_CMDH_GOTO_RELATIVE                     = 100003,
+    FREEDOM_E_INVALID_MAP_COORD                    = 100004,
 };
 #endif

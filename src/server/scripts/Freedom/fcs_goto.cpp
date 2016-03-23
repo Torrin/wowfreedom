@@ -14,30 +14,90 @@ public:
 
     std::vector<ChatCommand> GetCommands() const override
     {
-        static std::vector<ChatCommand> goCommandTable =
+        static std::vector<ChatCommand> gotoCommandTable =
         {
-            { "creature",           rbac::RBAC_PERM_COMMAND_GO_CREATURE,            false, &HandleGoCreatureCommand,                    "" },
-            { "graveyard",          rbac::RBAC_PERM_COMMAND_GO_GRAVEYARD,           false, &HandleGoGraveyardCommand,                   "" },
-            { "grid",               rbac::RBAC_PERM_COMMAND_GO_GRID,                false, &HandleGoGridCommand,                        "" },
-            { "object",             rbac::RBAC_PERM_COMMAND_GO_OBJECT,              false, &HandleGoObjectCommand,                      "" },
-            { "quest",              rbac::RBAC_PERM_COMMAND_GO_QUEST,               false, &HandleGoQuestCommand,                       "" },
-            { "taxinode",           rbac::RBAC_PERM_COMMAND_GO_TAXINODE,            false, &HandleGoTaxinodeCommand,                    "" },
-            { "trigger",            rbac::RBAC_PERM_COMMAND_GO_TRIGGER,             false, &HandleGoTriggerCommand,                     "" },
-            { "zonexy",             rbac::RBAC_PERM_COMMAND_GO_ZONEXY,              false, &HandleGoZoneXYCommand,                      "" },
-            { "xyz",                rbac::RBAC_PERM_COMMAND_GO_XYZ,                 false, &HandleGoXYZCommand,                         "" },
-            { "bugticket",          rbac::RBAC_PERM_COMMAND_GO_BUG_TICKET,          false, &HandleGoTicketCommand<BugTicket>,           "" },
-            { "complaintticket",    rbac::RBAC_PERM_COMMAND_GO_COMPLAINT_TICKET,    false, &HandleGoTicketCommand<ComplaintTicket>,     "" },
-            { "suggestionticket",   rbac::RBAC_PERM_COMMAND_GO_SUGGESTION_TICKET,   false, &HandleGoTicketCommand<SuggestionTicket>,    "" },
-            { "",                   rbac::RBAC_PERM_COMMAND_GO,                     false, &HandleGoXYZCommand,                         "" },
+            { "creature",           rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoCreatureCommand,                    "" },
+            { "graveyard",          rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoGraveyardCommand,                   "" },
+            { "grid",               rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoGridCommand,                        "" },
+            { "object",             rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoObjectCommand,                      "" },
+            { "quest",              rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoQuestCommand,                       "" },
+            { "taxinode",           rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoTaxinodeCommand,                    "" },
+            { "trigger",            rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoTriggerCommand,                     "" },
+            { "zonexy",             rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoZoneXYCommand,                      "" },
+            { "xyz",                rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoXYZCommand,                         "" },
+            { "bugticket",          rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoTicketCommand<BugTicket>,           "" },
+            { "complaintticket",    rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoTicketCommand<ComplaintTicket>,     "" },
+            { "suggestionticket",   rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoTicketCommand<SuggestionTicket>,    "" },
+            { "local",              rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoRelativeCommand,                    "" },
+            { "relative",           rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoRelativeCommand,                    "" },
+            { "",                   rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoRelativeCommand,                    "" },
         };
 
         static std::vector<ChatCommand> commandTable =
         {
-            { "goto", rbac::RBAC_PERM_COMMAND_GO, false, NULL, "", goCommandTable },
+            { "goto", rbac::RBAC_FPERM_COMMAND_GOTO, false, NULL, "", gotoCommandTable },
         };
         return commandTable;
     }
 
+#pragma region FREEDOM_COMMANDS
+    static bool HandleGotoRelativeCommand(ChatHandler* handler, char const* args)
+    {
+        // Get parameters and location info about source player
+        Player* source = handler->GetSession()->GetPlayer();
+        char* token_x = strtok((char*)args, " ");
+        char* token_y = strtok(NULL, " ");
+        char* token_z = strtok(NULL, " ");
+        char* token_deg = strtok(NULL, " ");
+        float source_x = source->GetPositionX();
+        float source_y = source->GetPositionY();
+        float source_z = source->GetPositionZ();
+        float source_o = source->GetOrientation();
+        uint32 source_map_id = source->GetMapId();
+
+        if (!token_x) {
+            handler->PSendSysMessage(FREEDOM_CMDE_NOT_ENOUGH_PARAMS);
+            handler->PSendSysMessage(FREEDOM_CMDH_GOTO_RELATIVE);
+            return true;
+        }
+
+        // Extract parameters as values
+        float add_x = (float)atof(token_x);
+        float add_y = token_y ? (float)atof(token_y) : 0.0f;
+        float add_z = token_z ? (float)atof(token_z) : 0.0f;
+        float add_deg = token_deg ? (float)atof(token_deg) : 0.0f;
+
+        // Calculate and get new local/relative coordinates
+        float new_x = (add_x*cos(source_o)) - (add_y*sin(source_o)) + source_x; // rotation matrix for x
+        float new_y = (add_x*sin(source_o)) + (add_y*cos(source_o)) + source_y; // rotation matrix for y
+        float new_z = add_z + source_z;
+        float new_o = (add_deg * (M_PI / 180.0f)) + source_o;
+
+        // Validate coordinates before teleport
+        if (!MapManager::IsValidMapCoord(source_map_id, new_x, new_y, new_z))
+        {
+            handler->PSendSysMessage(FREEDOM_E_INVALID_MAP_COORD, new_x, new_y, source_map_id);
+            return true;
+        }
+
+        // stop flight if need
+        if (source->IsInFlight())
+        {
+            source->GetMotionMaster()->MovementExpired();
+            source->CleanupAfterTaxiFlight();
+        }
+        // save only in non-flight case
+        else
+        {
+            source->SaveRecallPosition();
+        }
+
+        source->TeleportTo(source_map_id, new_x, new_y, new_z, new_o);
+        return true;
+    }
+#pragma endregion
+
+#pragma region DEFAULT_COMMANDS
     /** \brief Teleport the GM to the specified creature
     *
     * .gocreature <GUID>      --> TP using creature.guid
@@ -49,7 +109,7 @@ public:
     *                                      you will be teleported to the first one that is found.
     */
     //teleport to creature
-    static bool HandleGoCreatureCommand(ChatHandler* handler, char const* args)
+    static bool HandleGotoCreatureCommand(ChatHandler* handler, char const* args)
     {
         if (!*args)
             return false;
@@ -135,7 +195,7 @@ public:
         return true;
     }
 
-    static bool HandleGoGraveyardCommand(ChatHandler* handler, char const* args)
+    static bool HandleGotoGraveyardCommand(ChatHandler* handler, char const* args)
     {
         Player* player = handler->GetSession()->GetPlayer();
 
@@ -181,7 +241,7 @@ public:
     }
 
     //teleport to grid
-    static bool HandleGoGridCommand(ChatHandler* handler, char const* args)
+    static bool HandleGotoGridCommand(ChatHandler* handler, char const* args)
     {
         if (!*args)
             return false;
@@ -226,7 +286,7 @@ public:
     }
 
     //teleport to gameobject
-    static bool HandleGoObjectCommand(ChatHandler* handler, char const* args)
+    static bool HandleGotoObjectCommand(ChatHandler* handler, char const* args)
     {
         if (!*args)
             return false;
@@ -282,7 +342,7 @@ public:
         return true;
     }
 
-    static bool HandleGoQuestCommand(ChatHandler* handler, char const* args)
+    static bool HandleGotoQuestCommand(ChatHandler* handler, char const* args)
     {
         if (!*args)
             return false;
@@ -347,7 +407,7 @@ public:
         return true;
     }
 
-    static bool HandleGoTaxinodeCommand(ChatHandler* handler, char const* args)
+    static bool HandleGotoTaxinodeCommand(ChatHandler* handler, char const* args)
     {
         Player* player = handler->GetSession()->GetPlayer();
 
@@ -392,7 +452,7 @@ public:
         return true;
     }
 
-    static bool HandleGoTriggerCommand(ChatHandler* handler, char const* args)
+    static bool HandleGotoTriggerCommand(ChatHandler* handler, char const* args)
     {
         Player* player = handler->GetSession()->GetPlayer();
 
@@ -438,7 +498,7 @@ public:
     }
 
     //teleport at coordinates
-    static bool HandleGoZoneXYCommand(ChatHandler* handler, char const* args)
+    static bool HandleGotoZoneXYCommand(ChatHandler* handler, char const* args)
     {
         if (!*args)
             return false;
@@ -511,7 +571,7 @@ public:
     }
 
     //teleport at coordinates, including Z and orientation
-    static bool HandleGoXYZCommand(ChatHandler* handler, char const* args)
+    static bool HandleGotoXYZCommand(ChatHandler* handler, char const* args)
     {
         if (!*args)
             return false;
@@ -570,7 +630,7 @@ public:
     }
 
     template<typename T>
-    static bool HandleGoTicketCommand(ChatHandler* handler, char const* args)
+    static bool HandleGotoTicketCommand(ChatHandler* handler, char const* args)
     {
         if (!*args)
             return false;
@@ -602,6 +662,7 @@ public:
         ticket->TeleportTo(player);
         return true;
     }
+#pragma endregion
 };
 
 void AddSC_fgoto_commandscript()
@@ -621,13 +682,13 @@ public:
     {
         static ChatCommand goCommandTable[] =
         {
-            { "creature",   rbac::RBAC_PERM_COMMAND_GO_CREATURE,            false, &HandleGoCreatureCommand,                        "", NULL },
-            { "grid",       rbac::RBAC_PERM_COMMAND_GO_GRID,                false, &HandleGoGridCommand,                            "", NULL },
-            { "object",     rbac::RBAC_PERM_COMMAND_GO_OBJECT,              false, &HandleGoObjectCommand,                          "", NULL },
-            { "gobject",    rbac::RBAC_PERM_COMMAND_GO_OBJECT,              false, &HandleGoObjectCommand,                          "", NULL },
-            { "zonexy",     rbac::RBAC_PERM_COMMAND_GO_ZONEXY,              false, &HandleGoZoneXYCommand,                          "", NULL },
-            { "xyz",        rbac::RBAC_PERM_COMMAND_GO_XYZ,                 false, &HandleGoXYZCommand,                             "", NULL },
-            { "ticket",     rbac::RBAC_PERM_COMMAND_GO_TICKET,              false, &HandleGoTicketCommand,                          "", NULL },
+            { "creature",   rbac::RBAC_PERM_COMMAND_GO_CREATURE,            false, &HandleGotoCreatureCommand,                        "", NULL },
+            { "grid",       rbac::RBAC_PERM_COMMAND_GO_GRID,                false, &HandleGotoGridCommand,                            "", NULL },
+            { "object",     rbac::RBAC_PERM_COMMAND_GO_OBJECT,              false, &HandleGotoObjectCommand,                          "", NULL },
+            { "gobject",    rbac::RBAC_PERM_COMMAND_GO_OBJECT,              false, &HandleGotoObjectCommand,                          "", NULL },
+            { "zonexy",     rbac::RBAC_PERM_COMMAND_GO_ZONEXY,              false, &HandleGotoZoneXYCommand,                          "", NULL },
+            { "xyz",        rbac::RBAC_PERM_COMMAND_GO_XYZ,                 false, &HandleGotoXYZCommand,                             "", NULL },
+            { "ticket",     rbac::RBAC_PERM_COMMAND_GO_TICKET,              false, &HandleGotoTicketCommand,                          "", NULL },
             { "local",      rbac::RBAC_PERM_COMMAND_GO_LOCAL,               false, &HandleGoLocalCommand,                           "", NULL },
             { "relative",   rbac::RBAC_PERM_COMMAND_GO_LOCAL,               false, &HandleGoLocalCommand,                           "", NULL },
             { "",           rbac::RBAC_PERM_COMMAND_GO_LOCAL,               false, &HandleGoLocalCommand,                           "", NULL },
@@ -696,7 +757,7 @@ public:
         return true;
     }
 
-    static bool HandleGoCreatureCommand(ChatHandler* handler, char const* args)
+    static bool HandleGotoCreatureCommand(ChatHandler* handler, char const* args)
     {
         Player* source = handler->GetSession()->GetPlayer();
         
@@ -758,7 +819,7 @@ public:
     }
 
     //teleport to grid
-    static bool HandleGoGridCommand(ChatHandler* handler, char const* args)
+    static bool HandleGotoGridCommand(ChatHandler* handler, char const* args)
     {
         if (!*args)
             return false;
@@ -805,7 +866,7 @@ public:
     }
 
     //teleport to gameobject
-    static bool HandleGoObjectCommand(ChatHandler* handler, char const* args)
+    static bool HandleGotoObjectCommand(ChatHandler* handler, char const* args)
     {
 
         Player* source = handler->GetSession()->GetPlayer();
@@ -860,7 +921,7 @@ public:
     }
 
     //teleport at coordinates
-    static bool HandleGoZoneXYCommand(ChatHandler* handler, char const* args)
+    static bool HandleGotoZoneXYCommand(ChatHandler* handler, char const* args)
     {
         if (!*args)
             return false;
@@ -934,7 +995,7 @@ public:
     }
 
     //teleport at coordinates, including Z and orientation
-    static bool HandleGoXYZCommand(ChatHandler* handler, char const* args)
+    static bool HandleGotoXYZCommand(ChatHandler* handler, char const* args)
     {
         if (!*args)
             return false;
@@ -994,7 +1055,7 @@ public:
         return true;
     }
 
-    static bool HandleGoTicketCommand(ChatHandler* handler, char const* args)
+    static bool HandleGotoTicketCommand(ChatHandler* handler, char const* args)
     {
         if (!*args)
             return false;

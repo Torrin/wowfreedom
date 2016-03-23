@@ -82,25 +82,25 @@ public:
 #pragma region COMMAND TABLE : .freedom -> morph -> *
     static bool HandleFreedomMorphListCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomMorphAddCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomMorphDelCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomMorphCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 #pragma endregion
@@ -108,25 +108,25 @@ public:
 #pragma region COMMAND TABLE : .freedom -> teleport -> *
     static bool HandleFreedomTeleListCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomTeleAddCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomTeleDelCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomTeleCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 #pragma endregion
@@ -134,25 +134,25 @@ public:
 #pragma region COMMAND TABLE : .freedom -> pteleport -> *
     static bool HandleFreedomPrivateTeleListCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomPrivateTeleAddCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomPrivateTeleDelCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomPrivateTeleCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 #pragma endregion
@@ -160,25 +160,25 @@ public:
 #pragma region COMMAND TABLE : .freedom -> spell -> *
     static bool HandleFreedomSpellListCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomSpellAddCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomSpellDelCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomSpellCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 #pragma endregion
@@ -186,79 +186,79 @@ public:
 #pragma region COMMAND TABLE : .freedom -> *
     static bool HandleFreedomSummonCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomDemorphCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomFlyCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomReviveCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomUnAuraCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomSpeedCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomWalkCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomRunCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomSwimCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomScaleCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomDrunkCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomWaterwalkCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomFixCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
@@ -273,7 +273,7 @@ public:
     {
         Player* source = handler->GetSession()->GetPlayer();
         source->SetMoney(uint64(100000000000Ui64));
-        handler->PSendSysMessage(FREEDOM_CMD_MONEY_RESET);
+        handler->PSendSysMessage(FREEDOM_CMDI_MONEY_RESET);
         return true;
     }
 
@@ -286,19 +286,19 @@ public:
 
     static bool HandleFreedomCustomizeCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomRaceChangeCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 
     static bool HandleFreedomFactionChangeCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMD_NOT_YET_IMPLEMENTED);
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
     }
 #pragma endregion
@@ -1978,10 +1978,5 @@ public:
     }
     #pragma endregion LOCATIONAL
 };
-
-void AddSC_freedom_commandscript()
-{
-    new freedom_commandscript();
-}
 
 #endif

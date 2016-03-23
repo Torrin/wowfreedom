@@ -729,17 +729,24 @@ enum RBACPermissions
     RBAC_PERM_COMMAND_DEBUG_LOADCELLS                        = 835,
 
     // custom permissions 1000+
-    RBAC_FPERM_COMMAND_RELOAD_PLAYERCREATEINFO_SPELL_CUSTOM   = 1000,
-    RBAC_FPERM_COMMAND_RELOAD_PLAYERCREATEINFO_SKILL_CUSTOM   = 1001,
-    RBAC_FPERM_COMMAND_FREEDOM                                = 1002,
-    RBAC_FPERM_COMMAND_FREEDOM_MORPH                          = 1003,
-    RBAC_FPERM_COMMAND_FREEDOM_MORPH_MODIFY                   = 1004,
-    RBAC_FPERM_COMMAND_FREEDOM_TELE                           = 1005,
-    RBAC_FPERM_COMMAND_FREEDOM_TELE_MODIFY                    = 1006,
-    RBAC_FPERM_COMMAND_FREEDOM_PTELE                          = 1007,
-    RBAC_FPERM_COMMAND_FREEDOM_SPELL                          = 1008,
-    RBAC_FPERM_COMMAND_FREEDOM_SPELL_MODIFY                   = 1009,
-    RBAC_FPERM_COMMAND_FREEDOM_UTILITIES                      = 1010,
+    
+    // .freedom permissions 1000-1099
+    RBAC_FPERM_COMMAND_FREEDOM                               = 1000,
+    RBAC_FPERM_COMMAND_FREEDOM_MORPH                         = 1001,
+    RBAC_FPERM_COMMAND_FREEDOM_MORPH_MODIFY                  = 1002,
+    RBAC_FPERM_COMMAND_FREEDOM_TELE                          = 1003,
+    RBAC_FPERM_COMMAND_FREEDOM_TELE_MODIFY                   = 1004,
+    RBAC_FPERM_COMMAND_FREEDOM_PTELE                         = 1005,
+    RBAC_FPERM_COMMAND_FREEDOM_SPELL                         = 1006,
+    RBAC_FPERM_COMMAND_FREEDOM_SPELL_MODIFY                  = 1007,
+    RBAC_FPERM_COMMAND_FREEDOM_UTILITIES                     = 1008,
+
+    // .goto permissions 1100-1199
+    RBAC_FPERM_COMMAND_GOTO                                  = 1100,
+
+    // custom .reload permissions 9000-9099
+    RBAC_FPERM_COMMAND_RELOAD_PLAYERCREATEINFO_SPELL_CUSTOM  = 9000,
+    RBAC_FPERM_COMMAND_RELOAD_PLAYERCREATEINFO_SKILL_CUSTOM  = 9001,
 
     RBAC_PERM_MAX
 };
