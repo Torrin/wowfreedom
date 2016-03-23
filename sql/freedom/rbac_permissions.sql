@@ -272,7 +272,7 @@ INSERT INTO rbac_linked_permissions (`id`, `linkedId`) VALUES
 (@GM, 371), -- gm
 (@GM, 372), -- gm chat
 (@GM, 373), -- gm fly
-(@GM, 374), -- gm ingame
+-- (@GM, 374), -- gm ingame
 (@GM, 375), -- gm list
 (@GM, 376), -- gm visible
 (@GM, 401), -- guild
