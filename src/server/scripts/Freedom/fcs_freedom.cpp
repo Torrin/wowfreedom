@@ -8,6 +8,8 @@
 #include "World.h"
 #include "Player.h"
 #include "Opcodes.h"
+#include "MovementPackets.h"
+#include "MoveSpline.h"
 
 class freedom_commandscript : public CommandScript
 {
@@ -17,59 +19,59 @@ public:
     std::vector<ChatCommand> GetCommands() const override
     {
         static std::vector<ChatCommand> freedomMorphCommandTable = {
-            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH,         false, &HandleFreedomMorphListCommand,      "" },
-            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH_MODIFY,       false, &HandleFreedomMorphAddCommand,       "" },
-            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH_MODIFY,       false, &HandleFreedomMorphDelCommand,       "" },
-            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH,              false, &HandleFreedomMorphCommand,          "" },
+            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH,             false, &HandleFreedomMorphListCommand,      "" },
+            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH_MODIFY,      false, &HandleFreedomMorphAddCommand,       "" },
+            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH_MODIFY,      false, &HandleFreedomMorphDelCommand,       "" },
+            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH,             false, &HandleFreedomMorphCommand,          "" },
         };
 
         static std::vector<ChatCommand> freedomTeleportCommandTable = {
-            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE,          false, &HandleFreedomTeleListCommand,       "" },
-            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE_MODIFY,        false, &HandleFreedomTeleAddCommand,        "" },
-            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE_MODIFY,        false, &HandleFreedomTeleDelCommand,        "" },
-            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE,               false, &HandleFreedomTeleCommand,           "" },
+            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE,              false, &HandleFreedomTeleListCommand,       "" },
+            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE_MODIFY,       false, &HandleFreedomTeleAddCommand,        "" },
+            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE_MODIFY,       false, &HandleFreedomTeleDelCommand,        "" },
+            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE,              false, &HandleFreedomTeleCommand,           "" },
         };
 
         static std::vector<ChatCommand> freedomPrivateTeleportCommandTable = {
-            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,              false, &HandleFreedomPrivateTeleListCommand,"" },
-            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,              false, &HandleFreedomPrivateTeleAddCommand, "" },
-            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,              false, &HandleFreedomPrivateTeleDelCommand, "" },
-            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,              false, &HandleFreedomPrivateTeleCommand,    "" },
+            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,             false, &HandleFreedomPrivateTeleListCommand,"" },
+            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,             false, &HandleFreedomPrivateTeleAddCommand, "" },
+            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,             false, &HandleFreedomPrivateTeleDelCommand, "" },
+            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,             false, &HandleFreedomPrivateTeleCommand,    "" },
         };
 
         static std::vector<ChatCommand> freedomSpellCommandTable = {
-            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,              false, &HandleFreedomSpellListCommand,      "" },
-            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL_MODIFY,       false, &HandleFreedomSpellAddCommand,       "" },
-            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL_MODIFY,       false, &HandleFreedomSpellDelCommand,       "" },
-            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,              false, &HandleFreedomSpellCommand,          "" },
+            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,             false, &HandleFreedomSpellListCommand,      "" },
+            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL_MODIFY,      false, &HandleFreedomSpellAddCommand,       "" },
+            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL_MODIFY,      false, &HandleFreedomSpellDelCommand,       "" },
+            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,             false, &HandleFreedomSpellCommand,          "" },
         };
 
         static std::vector<ChatCommand> freedomCommandTable =
         {
-            { "cast",           rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,              false, &HandleFreedomSpellCommand,          "" },
-            { "summon",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,             false, &HandleFreedomSummonCommand,         "" },
-            { "demorph",        rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,            false, &HandleFreedomDemorphCommand,        "" },
-            { "fly",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,                false, &HandleFreedomFlyCommand,            "" },
-            { "revive",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,             false, &HandleFreedomReviveCommand,         "" },
-            { "unaura",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,             false, &HandleFreedomUnAuraCommand,         "" },
-            { "speed",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,             false, &HandleFreedomSpeedCommand,          "" },
-            { "walk",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,               false, &HandleFreedomWalkCommand,           "" },
-            { "run",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,                false, &HandleFreedomRunCommand,            "" },
-            { "swim",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,               false, &HandleFreedomSwimCommand,           "" },
-            { "scale",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,              false, &HandleFreedomScaleCommand,          "" },
-            { "drunk",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,              false, &HandleFreedomDrunkCommand,          "" },
-            { "waterwalk",      rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,          false, &HandleFreedomWaterwalkCommand,      "" },
-            { "fix",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,                false, &HandleFreedomFixCommand,            "" },
-            { "mailbox",        rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,            false, &HandleFreedomMailboxCommand,        "" },
-            { "morph",          rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH,              false, NULL,                                "", freedomMorphCommandTable },
-            { "money",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,              false, &HandleFreedomMoneyCommand,          "" },
-            { "bank",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,               false, &HandleFreedomBankCommand,           "" },
-            { "customize",      rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,          false, &HandleFreedomCustomizeCommand,      "" },
-            //{ "racechange",     rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,        false, &HandleFreedomRaceChangeCommand,     "" }, race/faction change opcode is not handled yet
-            //{ "factionchange",  rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,     false, &HandleFreedomFactionChangeCommand,  "" }, race/faction change opcode is not handled yet
-            { "teleport",       rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE,               false, NULL,                                "", freedomTeleportCommandTable },
-            { "pteleport",      rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,              false, NULL,                                "", freedomPrivateTeleportCommandTable },
-            { "spell",          rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,              false, NULL,                                "", freedomSpellCommandTable },
+            { "cast",           rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,             false, &HandleFreedomSpellCommand,          "" },
+            { "summon",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomSummonCommand,         "" },
+            { "demorph",        rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomDemorphCommand,        "" },
+            { "fly",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomFlyCommand,            "" },
+            { "revive",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomReviveCommand,         "" },
+            { "unaura",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomUnAuraCommand,         "" },
+            { "speed",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomSpeedCommand,          "" },
+            { "walk",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomWalkCommand,           "" },
+            { "run",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomRunCommand,            "" },
+            { "swim",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomSwimCommand,           "" },
+            { "scale",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomScaleCommand,          "" },
+            { "drunk",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomDrunkCommand,          "" },
+            { "waterwalk",      rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomWaterwalkCommand,      "" },
+            { "fix",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomFixCommand,            "" },
+            { "mailbox",        rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomMailboxCommand,        "" },
+            { "morph",          rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH,             false, NULL,                                "", freedomMorphCommandTable },
+            { "money",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomMoneyCommand,          "" },
+            { "bank",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomBankCommand,           "" },
+            { "customize",      rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomCustomizeCommand,      "" },
+            { "racechange",     rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomRaceChangeCommand,     "" },
+            { "factionchange",  rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomFactionChangeCommand,  "" },
+            { "teleport",       rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE,              false, NULL,                                "", freedomTeleportCommandTable },
+            { "pteleport",      rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,             false, NULL,                                "", freedomPrivateTeleportCommandTable },
+            { "spell",          rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,             false, NULL,                                "", freedomSpellCommandTable },
         };
 
         static std::vector<ChatCommand> commandTable =
@@ -246,19 +248,66 @@ public:
 
     static bool HandleFreedomDrunkCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_DRUNK);
+            return true;
+        }
+
+        Player* source = handler->GetSession()->GetPlayer();
+        uint8 drunklevel = (uint8)atoul(args);
+
+        if (drunklevel > 100)
+            drunklevel = 100;
+
+        source->SetDrunkValue(drunklevel);
+        handler->PSendSysMessage(FREEDOM_CMDI_DRUNK, drunklevel);
         return true;
     }
 
     static bool HandleFreedomWaterwalkCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            // did not specify ON or OFF value
+            handler->PSendSysMessage(FREEDOM_CMDH_WATERWALK);
+            return true;
+        }
+
+        Player* source = handler->GetSession()->GetPlayer();
+
+        // on & off
+        std::string subcommand = args;
+        std::transform(subcommand.begin(), subcommand.end(), subcommand.begin(), ::tolower);
+        if (subcommand == "on")
+        {
+            handler->PSendSysMessage(FREEDOM_CMDI_WATERWALK, "on");
+            source->SetWaterWalking(true);
+            return true;
+        }
+        else if (subcommand == "off")
+        {
+            // SetWaterWalking does not turn off properly, WORKAROUND: sending packets directly
+            Unit* source_unit = handler->GetSession()->GetPlayer()->ToUnit();
+            source_unit->RemoveUnitMovementFlag(MOVEMENTFLAG_WATERWALKING);
+            WorldPackets::Movement::MoveSetFlag packet(SMSG_MOVE_SET_LAND_WALK);
+            packet.MoverGUID = source_unit->GetGUID();         
+            source_unit->SendMessageToSet(packet.Write(), true);
+            handler->PSendSysMessage(FREEDOM_CMDI_WATERWALK, "off");
+            return true;
+        }
+
+        // did not specify ON or OFF value
+        handler->PSendSysMessage(FREEDOM_CMDH_WATERWALK);
+
         return true;
     }
 
     static bool HandleFreedomFixCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        Player* source = handler->GetSession()->GetPlayer();
+        source->DurabilityRepairAll(false, 0, false);
+        handler->PSendSysMessage(FREEDOM_CMDI_FIX_ITEMS);
         return true;
     }
 
@@ -286,19 +335,44 @@ public:
 
     static bool HandleFreedomCustomizeCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        Player* source = handler->GetSession()->GetPlayer();
+
+        PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ADD_AT_LOGIN_FLAG);
+        stmt->setUInt16(0, uint16(AT_LOGIN_CUSTOMIZE));
+        stmt->setUInt32(1, source->GetGUID().GetCounter());
+        CharacterDatabase.Execute(stmt);
+
+        source->SetAtLoginFlag(AT_LOGIN_CUSTOMIZE);
+        handler->PSendSysMessage(FREEDOM_CMDI_FLAG_FOR_CUSTOMIZATION);
+
         return true;
     }
 
     static bool HandleFreedomRaceChangeCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        Player* source = handler->GetSession()->GetPlayer();
+
+        PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ADD_AT_LOGIN_FLAG);
+        stmt->setUInt16(0, uint16(AT_LOGIN_CHANGE_RACE));
+        stmt->setUInt32(1, source->GetGUID().GetCounter());
+        CharacterDatabase.Execute(stmt);
+
+        source->SetAtLoginFlag(AT_LOGIN_CHANGE_RACE);
+        handler->PSendSysMessage(FREEDOM_CMDI_FLAG_FOR_RACECHANGE);
         return true;
     }
 
     static bool HandleFreedomFactionChangeCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        Player* source = handler->GetSession()->GetPlayer();
+
+        PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ADD_AT_LOGIN_FLAG);
+        stmt->setUInt16(0, uint16(AT_LOGIN_CHANGE_FACTION));
+        stmt->setUInt32(1, source->GetGUID().GetCounter());
+        CharacterDatabase.Execute(stmt);
+
+        source->SetAtLoginFlag(AT_LOGIN_CHANGE_FACTION);
+        handler->PSendSysMessage(FREEDOM_CMDI_FLAG_FOR_FACTIONCHANGE);
         return true;
     }
 #pragma endregion

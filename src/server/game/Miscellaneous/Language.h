@@ -1225,5 +1225,13 @@ enum TrinityStrings
     FREEDOM_CMDE_NOT_ENOUGH_PARAMS                  = 100002,
     FREEDOM_CMDH_GOTO_RELATIVE                      = 100003,
     FREEDOM_E_INVALID_MAP_COORD                     = 100004,
+    FREEDOM_CMDI_FLAG_FOR_CUSTOMIZATION             = 100005,
+    FREEDOM_CMDI_FLAG_FOR_RACECHANGE                = 100006,
+    FREEDOM_CMDI_FLAG_FOR_FACTIONCHANGE             = 100007,
+    FREEDOM_CMDI_FIX_ITEMS                          = 100008,
+    FREEDOM_CMDH_WATERWALK                          = 100009,
+    FREEDOM_CMDI_WATERWALK                          = 100010,
+    FREEDOM_CMDH_DRUNK                              = 100011,
+    FREEDOM_CMDI_DRUNK                              = 100012,
 };
 #endif
