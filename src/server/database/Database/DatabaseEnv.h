@@ -41,14 +41,14 @@
 #include "Implementation/FreedomDatabase.h"
 
 /// Accessor to the world database
-extern WorldDatabaseWorkerPool WorldDatabase;
+TC_DATABASE_API extern WorldDatabaseWorkerPool WorldDatabase;
 /// Accessor to the character database
-extern CharacterDatabaseWorkerPool CharacterDatabase;
+TC_DATABASE_API extern CharacterDatabaseWorkerPool CharacterDatabase;
 /// Accessor to the realm/login database
-extern LoginDatabaseWorkerPool LoginDatabase;
+TC_DATABASE_API extern LoginDatabaseWorkerPool LoginDatabase;
 /// Accessor to the hotfix database
-extern HotfixDatabaseWorkerPool HotfixDatabase;
+TC_DATABASE_API extern HotfixDatabaseWorkerPool HotfixDatabase;
 /// Accessor to the freedom database
-extern FreedomDatabaseWorkerPool FreedomDatabase;
+TC_DATABASE_API extern FreedomDatabaseWorkerPool FreedomDatabase;
 
 #endif
