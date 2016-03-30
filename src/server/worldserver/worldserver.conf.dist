@@ -7,6 +7,7 @@
 # SECTION INDEX
 #
 #    EXAMPLE CONFIG
+#    FREEDOM CONFIG
 #    CONNECTIONS AND DIRECTORIES
 #    PERFORMANCE SETTINGS
 #    SERVER LOGGING
@@ -51,6 +52,31 @@
 # Note to developers:
 # - Copy this example to keep the formatting.
 # - Line breaks should be at column 100.
+###################################################################################################
+
+###################################################################################################
+# CONNECTIONS AND DIRECTORIES
+#
+#    Freedom.Modify.MaxSpeed
+#    Freedom.Modify.MinSpeed
+#        Description: Controls max/min values for .freedom speed modification command.
+#        Default:     MaxSpeed = 10.0
+#                     MinSpeed = 0.01
+
+Freedom.Modify.MaxSpeed = 10.0
+Freedom.Modify.MinSpeed = 0.01
+
+#
+#    Freedom.Modify.MaxScale
+#    Freedom.Modify.MinScale
+#        Description: Controls max/min values for .freedom scale modification command.
+#        Default:     MaxScale = 10.0
+#                     MinScale = 0.1
+
+Freedom.Modify.MaxScale = 10.0
+Freedom.Modify.MinScale = 0.1
+
+#
 ###################################################################################################
 
 ###################################################################################################

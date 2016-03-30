@@ -11,6 +11,49 @@
 #include "MovementPackets.h"
 #include "MoveSpline.h"
 
+void ModifyMovementSpeed(ChatHandler* handler, UnitMoveType type, float value)
+{
+    float max = sConfigMgr->GetFloatDefault("Freedom.Modify.MaxSpeed", 10.0f);
+    float min = sConfigMgr->GetFloatDefault("Freedom.Modify.MinSpeed", 0.01f);
+    std::string speedName;
+
+    if (value < min || value > max)
+    {
+        handler->PSendSysMessage(FREEDOM_CMDE_VALUE_OUT_OF_RANGE, max, min);
+        return;
+    }
+
+    switch (type)
+    {
+    case UnitMoveType::MOVE_FLIGHT:
+    case UnitMoveType::MOVE_FLIGHT_BACK:
+        speedName = "fly";
+        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_FLIGHT, value);
+        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_FLIGHT_BACK, value);
+        break;
+    case UnitMoveType::MOVE_RUN:
+        speedName = "run";
+        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_RUN, value);
+        break;
+    case UnitMoveType::MOVE_SWIM:
+    case UnitMoveType::MOVE_SWIM_BACK:
+        speedName = "swim";
+        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_SWIM, value);
+        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_SWIM_BACK, value);
+        break;
+    case UnitMoveType::MOVE_WALK:
+    case UnitMoveType::MOVE_RUN_BACK:
+        speedName = "walk";
+        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_WALK, value);
+        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_RUN_BACK, value);
+        break;
+    default:
+        return;
+    }
+
+    handler->PSendSysMessage(FREEDOM_CMDI_MOD_SPEED, speedName.c_str(), value);
+}
+
 class freedom_commandscript : public CommandScript
 {
 public:
@@ -188,61 +231,199 @@ public:
 #pragma region COMMAND TABLE : .freedom -> *
     static bool HandleFreedomSummonCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_SUMMON);
+            return true;
+        }
+
+        Player* source = handler->GetSession()->GetPlayer();
+        ObjectGuid targetGuid = sObjectMgr->GetPlayerGUIDByName(args);
+        Player* target = sObjectMgr->GetPlayerByLowGUID(targetGuid.GetCounter());
+
+        if (!target || target->IsLoading() || target->IsBeingTeleported())
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_SUMMON_NOT_FOUND, args);
+            return true;
+        }
+
+        if (target->GetSocial()->HasIgnore(source->GetGUID()))
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_SUMMON_IGNORE, target->GetName().c_str());
+            return true;
+        }
+
+        if (target->IsGameMaster())
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_SUMMON_GM_ON, target->GetName().c_str());
+            return true;
+        }
+       
+        // Evil Twin (ignore player summon, but hide this for summoner)
+        if (target->HasAura(23445))
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_SUMMON_EVIL_TWIN, target->GetName().c_str());
+            return true;
+        }
+
+        target->SetSummonPoint(source->GetMapId(), source->GetPositionX(), source->GetPositionY(), source->GetPositionZ());
+        
+        WorldPacket data(SMSG_SUMMON_REQUEST, 8 + 4 + 4);
+        data << source->GetGUID();
+        data << uint32(source->GetZoneId());
+        data << uint32(MAX_PLAYER_SUMMON_DELAY*IN_MILLISECONDS);
+        target->GetSession()->SendPacket(&data);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_SUMMON, target->GetName().c_str());
         return true;
     }
 
     static bool HandleFreedomDemorphCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        Player* source = handler->GetSession()->GetPlayer();
+        source->DeMorph();
+        handler->PSendSysMessage(FREEDOM_CMDI_DEMORPH);
         return true;
     }
 
     static bool HandleFreedomFlyCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_FLY);
+            handler->PSendSysMessage(FREEDOM_CMDH_MOD_SPEED);
+            return true;
+        }
+
+        std::string arg = args;
+        std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
+
+        if (arg == "on")
+        {
+            handler->PSendSysMessage(FREEDOM_CMDI_FLY, "on");
+        }
+        else if (arg == "off")
+        {
+            handler->PSendSysMessage(FREEDOM_CMDI_FLY, "off");
+        }
+        else
+        {
+            ModifyMovementSpeed(handler, MOVE_FLIGHT, (float)atof(arg.c_str()));
+        }
+
         return true;
     }
 
     static bool HandleFreedomReviveCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        Player* source = handler->GetSession()->GetPlayer();
+
+        if (source->IsAlive()) {
+            handler->PSendSysMessage(FREEDOM_CMDE_REVIVE);
+            return true;
+        }
+        
+        source->ResurrectPlayer(1.0);
+        source->SaveToDB();
+        handler->PSendSysMessage(FREEDOM_CMDI_REVIVE);
         return true;
     }
 
     static bool HandleFreedomUnAuraCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        Player* source = handler->GetSession()->GetPlayer();   
+        source->RemoveAllAuras();
+        handler->PSendSysMessage(FREEDOM_CMDI_UNAURA);
         return true;
     }
 
     static bool HandleFreedomSpeedCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_MOD_SPEED);
+            return true;
+        }
+
+        float speed = (float)atof((char*)args);
+        float max = sConfigMgr->GetFloatDefault("Freedom.Modify.MaxSpeed", 10.0f);
+        float min = sConfigMgr->GetFloatDefault("Freedom.Modify.MinSpeed", 0.01f);
+        std::string speedName = "all";
+
+        if (speed < min || speed > max)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_VALUE_OUT_OF_RANGE, max, min);
+            return true;
+        }
+
+        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_FLIGHT, speed);
+        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_FLIGHT_BACK, speed);
+        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_RUN, speed);
+        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_SWIM, speed);
+        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_SWIM_BACK, speed);
+        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_WALK, speed);
+        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_RUN_BACK, speed);
+        handler->PSendSysMessage(FREEDOM_CMDI_MOD_SPEED, speedName.c_str(), speed);
         return true;
     }
 
     static bool HandleFreedomWalkCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_MOD_SPEED);
+            return true;
+        }
+
+        ModifyMovementSpeed(handler, MOVE_WALK, (float)atof((char*)args));
         return true;
     }
 
     static bool HandleFreedomRunCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_MOD_SPEED);
+            return true;
+        }
+
+        ModifyMovementSpeed(handler, MOVE_RUN, (float)atof((char*)args));
         return true;
     }
 
     static bool HandleFreedomSwimCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_MOD_SPEED);
+            return true;
+        }
+
+        ModifyMovementSpeed(handler, MOVE_SWIM, (float)atof((char*)args));
         return true;
     }
 
     static bool HandleFreedomScaleCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_SCALE);
+            return true;
+        }
+
+        Player* source = handler->GetSession()->GetPlayer();
+        float scale = (float)atof((char*)args);
+        float max = sConfigMgr->GetFloatDefault("Freedom.Modify.MaxScale", 10.0f);
+        float min = sConfigMgr->GetFloatDefault("Freedom.Modify.MinScale", 0.01f);
+
+        if (scale < min || scale > max)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_VALUE_OUT_OF_RANGE, max, min);
+            return true;
+        }
+
+        source->SetObjectScale(scale);
+        handler->PSendSysMessage(FREEDOM_CMDI_SCALE, scale);
         return true;
     }
 
