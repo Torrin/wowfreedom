@@ -1512,6 +1512,9 @@ void World::SetInitialWorldSettings()
     MMAP::MMapManager* mmmgr = MMAP::MMapFactory::createOrGetMMapManager();
     mmmgr->InitializeThreadUnsafe(mapData);
 
+    TC_LOG_INFO("server.loading", "Loading FreedomMgr tables...");
+    sFreedomMgr->LoadAllTables();
+
     TC_LOG_INFO("server.loading", "Loading SpellInfo store...");
     sSpellMgr->LoadSpellInfoStore();
 

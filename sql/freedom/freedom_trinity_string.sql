@@ -12,6 +12,7 @@ SET @C_CLOSE := '|r'; -- stops/closes color tag
 SET @T_CMD_INFO := CONCAT(@C_TITLE, '>> ', @C_CLOSE);
 SET @T_CMD_SYNTAX := CONCAT(@C_TITLE, 'SYNTAX: ', @C_CLOSE);
 SET @T_CMD_ERROR := CONCAT(@C_ERR, 'ERROR: ', @C_CLOSE);
+SET @T_GLOBAL_GM := CONCAT(@C_LINK, '[GM-NOTIFY]', @C_CLOSE);
 
 INSERT INTO wod_world.trinity_string (entry, content_default) VALUES
 /* FREEDOM_CMDE_NOT_YET_IMPLEMENTED 					*/ (100000, CONCAT(@T_CMD_ERROR, @C_TEXT, 'This command isn\'t implemented yet.', @C_CLOSE)),
@@ -44,6 +45,8 @@ INSERT INTO wod_world.trinity_string (entry, content_default) VALUES
 /* FREEDOM_CMDE_SUMMON_IGNORE								*/ (100027, CONCAT(@T_CMD_ERROR, @C_TEXT, 'Player ', @C_LINK, '%s ', @C_TEXT, 'is ignoring you.', @C_CLOSE)),
 /* FREEDOM_CMDE_SUMMON_GM_ON								*/ (100028, CONCAT(@T_CMD_ERROR, @C_TEXT, 'Player ', @C_LINK, '%s ', @C_TEXT, 'has GM tag ON.', @C_CLOSE)),
 /* FREEDOM_CMDE_SUMMON_EVIL_TWIN							*/ (100029, CONCAT(@T_CMD_ERROR, @C_TEXT, 'Player ', @C_LINK, '%s ', @C_TEXT, 'has Evil Twin aura. Summoning is not possible.', @C_CLOSE)),
+/* FREEDOM_CMDI_RELOAD										*/ (100030, CONCAT(@T_GLOBAL_GM, @C_TEXT, ' Freedom DB table ', @C_LINK, '%s ', @C_TEXT, 'has been reloaded.', @C_CLOSE)),
+/* FREEDOM_CMDI_RELOAD_ALL									*/ (100031, CONCAT(@T_GLOBAL_GM, @C_TEXT, ' All freedom DB tables have been reloaded.', @C_CLOSE)),
 
 (200000, 'Dummy');
 -- Select new changes

@@ -22,5 +22,21 @@ void FreedomDatabaseConnection::DoPrepareStatements()
     if (!m_reconnecting)
         m_stmts.resize(MAX_FREEDOMDATABASE_STATEMENTS);
 
-    PrepareStatement(FREEDOM_SEL_PUBLIC_TELEPORT, "SELECT id, name, position_x, position_y, position_z, orientation, map, gm_uid FROM public_teleport", CONNECTION_SYNCH);
+    // SELECTS
+    PrepareStatement(FREEDOM_SEL_PUBLIC_TELE, "SELECT id, position_x, position_y, position_z, orientation, map, name, id_bnet_gm FROM public_tele ORDER BY name", CONNECTION_SYNCH);
+    PrepareStatement(FREEDOM_SEL_PRIVATE_TELE, "SELECT id, position_x, position_y, position_z, orientation, map, name, id_bnet_account FROM private_tele ORDER BY id_bnet_account, name", CONNECTION_SYNCH);
+    PrepareStatement(FREEDOM_SEL_PUBLIC_SPELL, "SELECT spell_id, allow_targeting, name, id_bnet_gm FROM public_spell", CONNECTION_SYNCH);
+    PrepareStatement(FREEDOM_SEL_MORPHS, "SELECT guid, name, id_display, id_bnet_gm FROM morphs ORDER BY guid, name", CONNECTION_SYNCH);
+
+    // INSERTS
+    PrepareStatement(FREEDOM_INS_PUBLIC_TELE, "INSERT INTO public_tele (id, position_x, position_y, position_z, orientation, map, name, id_bnet_gm) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(FREEDOM_INS_PRIVATE_TELE, "INSERT INTO private_tele (id, position_x, position_y, position_z, orientation, map, name, id_bnet_account) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(FREEDOM_INS_PUBLIC_SPELL, "INSERT INTO public_spell (spell_id, allow_targeting, name, id_bnet_gm) VALUES (?, ?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(FREEDOM_INS_MORPHS, "INSERT INTO morphs (guid, name, id_display, id_bnet_gm) VALUES (?, ?, ?, ?)", CONNECTION_ASYNC);
+
+    // DELETIONS
+    PrepareStatement(FREEDOM_DEL_PUBLIC_TELE_NAME, "DELETE FROM public_tele WHERE name = ?", CONNECTION_ASYNC);
+    PrepareStatement(FREEDOM_DEL_PRIVATE_TELE_NAME, "DELETE FROM private_tele WHERE name = ? AND id_bnet_account = ?", CONNECTION_ASYNC);
+    PrepareStatement(FREEDOM_DEL_PUBLIC_SPELL_ID, "DELETE FROM public_spell WHERE spell_id = ?", CONNECTION_ASYNC);
+    PrepareStatement(FREEDOM_DEL_MORPHS_NAME, "DELETE FROM morphs WHERE name = ? AND guid = ?", CONNECTION_ASYNC);
 }

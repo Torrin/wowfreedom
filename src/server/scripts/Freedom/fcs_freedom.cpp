@@ -61,60 +61,74 @@ public:
 
     std::vector<ChatCommand> GetCommands() const override
     {
-        static std::vector<ChatCommand> freedomMorphCommandTable = {
-            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH,             false, &HandleFreedomMorphListCommand,      "" },
-            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH_MODIFY,      false, &HandleFreedomMorphAddCommand,       "" },
-            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH_MODIFY,      false, &HandleFreedomMorphDelCommand,       "" },
-            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH,             false, &HandleFreedomMorphCommand,          "" },
+        static std::vector<ChatCommand> freedomMorphCommandTable = 
+        {
+            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH,             false, &HandleFreedomMorphListCommand,          "" },
+            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH_MODIFY,      false, &HandleFreedomMorphAddCommand,           "" },
+            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH_MODIFY,      false, &HandleFreedomMorphDelCommand,           "" },
+            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH,             false, &HandleFreedomMorphCommand,              "" },
         };
 
-        static std::vector<ChatCommand> freedomTeleportCommandTable = {
-            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE,              false, &HandleFreedomTeleListCommand,       "" },
-            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE_MODIFY,       false, &HandleFreedomTeleAddCommand,        "" },
-            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE_MODIFY,       false, &HandleFreedomTeleDelCommand,        "" },
-            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE,              false, &HandleFreedomTeleCommand,           "" },
+        static std::vector<ChatCommand> freedomTeleportCommandTable = 
+        {
+            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE,              false, &HandleFreedomTeleListCommand,           "" },
+            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE_MODIFY,       false, &HandleFreedomTeleAddCommand,            "" },
+            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE_MODIFY,       false, &HandleFreedomTeleDelCommand,            "" },
+            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE,              false, &HandleFreedomTeleCommand,               "" },
         };
 
-        static std::vector<ChatCommand> freedomPrivateTeleportCommandTable = {
-            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,             false, &HandleFreedomPrivateTeleListCommand,"" },
-            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,             false, &HandleFreedomPrivateTeleAddCommand, "" },
-            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,             false, &HandleFreedomPrivateTeleDelCommand, "" },
-            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,             false, &HandleFreedomPrivateTeleCommand,    "" },
+        static std::vector<ChatCommand> freedomPrivateTeleportCommandTable = 
+        {
+            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,             false, &HandleFreedomPrivateTeleListCommand,    "" },
+            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,             false, &HandleFreedomPrivateTeleAddCommand,     "" },
+            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,             false, &HandleFreedomPrivateTeleDelCommand,     "" },
+            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,             false, &HandleFreedomPrivateTeleCommand,        "" },
         };
 
-        static std::vector<ChatCommand> freedomSpellCommandTable = {
-            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,             false, &HandleFreedomSpellListCommand,      "" },
-            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL_MODIFY,      false, &HandleFreedomSpellAddCommand,       "" },
-            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL_MODIFY,      false, &HandleFreedomSpellDelCommand,       "" },
-            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,             false, &HandleFreedomSpellCommand,          "" },
+        static std::vector<ChatCommand> freedomSpellCommandTable = 
+        {
+            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,             false, &HandleFreedomSpellListCommand,          "" },
+            { "add",            rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL_MODIFY,      false, &HandleFreedomSpellAddCommand,           "" },
+            { "delete",         rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL_MODIFY,      false, &HandleFreedomSpellDelCommand,           "" },
+            { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,             false, &HandleFreedomSpellCommand,              "" },
+        };
+
+        static std::vector<ChatCommand> freedomReloadCommandTable = 
+        {
+            { "public_tele",    rbac::RBAC_FPERM_COMMAND_FREEDOM_ADMINISTRATION,    false, &HandleFreedomReloadPublicTeleCommand,   "" },
+            { "private_tele",   rbac::RBAC_FPERM_COMMAND_FREEDOM_ADMINISTRATION,    false, &HandleFreedomReloadPrivateTeleCommand,  "" },
+            { "public_spell",   rbac::RBAC_FPERM_COMMAND_FREEDOM_ADMINISTRATION,    false, &HandleFreedomReloadPublicSpellCommand,  "" },
+            { "morphs",         rbac::RBAC_FPERM_COMMAND_FREEDOM_ADMINISTRATION,    false, &HandleFreedomReloadMorphsCommand,       "" },
+            { "all",            rbac::RBAC_FPERM_COMMAND_FREEDOM_ADMINISTRATION,    false, &HandleFreedomReloadAllCommand,          "" },
         };
 
         static std::vector<ChatCommand> freedomCommandTable =
         {
-            { "cast",           rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,             false, &HandleFreedomSpellCommand,          "" },
-            { "summon",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomSummonCommand,         "" },
-            { "demorph",        rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomDemorphCommand,        "" },
-            { "fly",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomFlyCommand,            "" },
-            { "revive",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomReviveCommand,         "" },
-            { "unaura",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomUnAuraCommand,         "" },
-            { "speed",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomSpeedCommand,          "" },
-            { "walk",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomWalkCommand,           "" },
-            { "run",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomRunCommand,            "" },
-            { "swim",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomSwimCommand,           "" },
-            { "scale",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomScaleCommand,          "" },
-            { "drunk",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomDrunkCommand,          "" },
-            { "waterwalk",      rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomWaterwalkCommand,      "" },
-            { "fix",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomFixCommand,            "" },
-            { "mailbox",        rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomMailboxCommand,        "" },
-            { "morph",          rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH,             false, NULL,                                "", freedomMorphCommandTable },
-            { "money",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomMoneyCommand,          "" },
-            { "bank",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomBankCommand,           "" },
-            { "customize",      rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomCustomizeCommand,      "" },
-            { "racechange",     rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomRaceChangeCommand,     "" },
-            { "factionchange",  rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomFactionChangeCommand,  "" },
-            { "teleport",       rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE,              false, NULL,                                "", freedomTeleportCommandTable },
-            { "pteleport",      rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,             false, NULL,                                "", freedomPrivateTeleportCommandTable },
-            { "spell",          rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,             false, NULL,                                "", freedomSpellCommandTable },
+            { "cast",           rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,             false, &HandleFreedomSpellCommand,              "" },
+            { "summon",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomSummonCommand,             "" },
+            { "demorph",        rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomDemorphCommand,            "" },
+            { "fly",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomFlyCommand,                "" },
+            { "revive",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomReviveCommand,             "" },
+            { "unaura",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomUnAuraCommand,             "" },
+            { "speed",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomSpeedCommand,              "" },
+            { "walk",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomWalkCommand,               "" },
+            { "run",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomRunCommand,                "" },
+            { "swim",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomSwimCommand,               "" },
+            { "scale",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomScaleCommand,              "" },
+            { "drunk",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomDrunkCommand,              "" },
+            { "waterwalk",      rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomWaterwalkCommand,          "" },
+            { "fix",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomFixCommand,                "" },
+            { "mailbox",        rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomMailboxCommand,            "" },
+            { "morph",          rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH,             false, NULL,                                    "", freedomMorphCommandTable },
+            { "money",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomMoneyCommand,              "" },
+            { "bank",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomBankCommand,               "" },
+            { "customize",      rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomCustomizeCommand,          "" },
+            { "racechange",     rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomRaceChangeCommand,         "" },
+            { "factionchange",  rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomFactionChangeCommand,      "" },
+            { "teleport",       rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE,              false, NULL,                                    "", freedomTeleportCommandTable },
+            { "pteleport",      rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,             false, NULL,                                    "", freedomPrivateTeleportCommandTable },
+            { "spell",          rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,             false, NULL,                                    "", freedomSpellCommandTable },
+            { "reload",         rbac::RBAC_FPERM_COMMAND_FREEDOM_ADMINISTRATION,    false, NULL,                                    "", freedomReloadCommandTable },
         };
 
         static std::vector<ChatCommand> commandTable =
@@ -224,6 +238,43 @@ public:
     static bool HandleFreedomSpellCommand(ChatHandler* handler, char const* args)
     {
         handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        return true;
+    }
+#pragma endregion
+
+#pragma region COMMAND TABLE : .freedom -> reload -> *
+    static bool HandleFreedomReloadAllCommand(ChatHandler* handler, char const* args)
+    {
+        sFreedomMgr->LoadAllTables();
+        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_ALL).c_str());
+        return true;
+    }
+
+    static bool HandleFreedomReloadPublicTeleCommand(ChatHandler* handler, char const* args)
+    {
+        sFreedomMgr->LoadPublicTeleports();        
+        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD, "public_tele").c_str());
+        return true;
+    }
+
+    static bool HandleFreedomReloadPrivateTeleCommand(ChatHandler* handler, char const* args)
+    {
+        sFreedomMgr->LoadPrivateTeleports();
+        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD, "private_tele").c_str());
+        return true;
+    }
+
+    static bool HandleFreedomReloadPublicSpellCommand(ChatHandler* handler, char const* args)
+    {
+        sFreedomMgr->LoadPublicSpells();
+        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD, "public_spell").c_str());
+        return true;
+    }
+
+    static bool HandleFreedomReloadMorphsCommand(ChatHandler* handler, char const* args)
+    {
+        sFreedomMgr->LoadMorphs();
+        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD, "morphs").c_str());
         return true;
     }
 #pragma endregion

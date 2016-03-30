@@ -28,8 +28,23 @@ enum FreedomDatabaseStatements
         When updating more than one field, consider looking at the calling function
         name for a suiting suffix.
     */
+    // SELECTS
+	FREEDOM_SEL_PUBLIC_TELE,
+    FREEDOM_SEL_PRIVATE_TELE,
+    FREEDOM_SEL_PUBLIC_SPELL,
+    FREEDOM_SEL_MORPHS,
 
-	FREEDOM_SEL_PUBLIC_TELEPORT,
+    // INSERTS
+    FREEDOM_INS_PUBLIC_TELE,
+    FREEDOM_INS_PRIVATE_TELE,
+    FREEDOM_INS_PUBLIC_SPELL,
+    FREEDOM_INS_MORPHS,
+
+    // DELETIONS
+    FREEDOM_DEL_PUBLIC_TELE_NAME,
+    FREEDOM_DEL_PRIVATE_TELE_NAME,
+    FREEDOM_DEL_PUBLIC_SPELL_ID,
+    FREEDOM_DEL_MORPHS_NAME,
 
     MAX_FREEDOMDATABASE_STATEMENTS
 };

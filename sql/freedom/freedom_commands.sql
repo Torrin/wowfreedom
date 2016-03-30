@@ -7,7 +7,7 @@ SET @GMLEVEL_GM := 2;
 SET @GMLEVEL_ADMIN := 3;
 
 -- DEFAULT COMMANDS
-INSERT INTO `commands` (`command`, `syntax`, `description`, `gmlevel`) VALUES
+INSERT INTO freedom.commands (`command`, `syntax`, `description`, `gmlevel`) VALUES
 ('account', 'Syntax: .account', 'Display the access level of your account and the email adress if you possess the necessary permissions.', @GMLEVEL_ADMIN),
 ('account addon', 'Syntax: .account addon $addon', 'Set expansion addon level allowed. Addon values: 0 - normal, 1 - tbc, 2 - wotlk, 3 - cata.', @GMLEVEL_ADMIN),
 ('account create', 'Syntax: .account create $account $password', 'Create account and set password to it.', @GMLEVEL_ADMIN),
@@ -467,6 +467,12 @@ REPLACE INTO freedom.commands (command, syntax, description, gmlevel) VALUES
 ('freedom customize', 'Syntax: .freedom customize', 'Flag your character for re-customization.', @GMLEVEL_PLAYER),
 ('freedom racechange', 'Syntax: .freedom racechange', 'Flag your character for race change.', @GMLEVEL_PLAYER),
 ('freedom factionchange', 'Syntax: .freedom factionchange', 'Flag your character for faction change.', @GMLEVEL_PLAYER),
+('freedom reload', 'Syntax: .freedom reload $subcommand', 'Type .freedom reload to see the list of possible subcommands.', @GMLEVEL_GM),
+('freedom reload all', 'Syntax: .freedom reload all', 'Refreshes all values from Freedom DB in-game.', @GMLEVEL_GM),
+('freedom reload public_tele', 'Syntax: .freedom reload public_tele', 'Refreshes in-game public teleports with values from public_tele table in the DB.', @GMLEVEL_GM),
+('freedom reload private_tele', 'Syntax: .freedom reload private_tele', 'Refreshes in-game private teleports with values from private_tele table in the DB.', @GMLEVEL_GM),
+('freedom reload public_spell', 'Syntax: .freedom reload public_spell', 'Refreshes in-game public spell list with values from public_spell table in the DB.', @GMLEVEL_GM),
+('freedom reload morphs', 'Syntax: .freedom reload morphs', 'Refreshes in-game morph list with values from morphs table in the DB.', @GMLEVEL_GM),
 ('goto', 'Syntax: .goto $local_x [$local_y [$local_z [$local_deg]]]', 'Teleport to coordinates relative of your character.\n$local_x is forward(+)/backward(+)\n$local_y is left(+)/right(-)\n$local_z is up(+)/down(-)\n$local_deg is turn left(+)/turn right(-)', @GMLEVEL_MODERATOR),
 ('goto local', 'Syntax: .goto local $local_x [$local_y [$local_z [$local_deg]]]', 'Teleport to coordinates relative of your character.\n$local_x is forward(+)/backward(+)\n$local_y is left(+)/right(-)\n$local_z is up(+)/down(-)\n$local_deg is turn left(+)/turn right(-)', @GMLEVEL_MODERATOR),
 ('goto relative', 'Syntax: .goto relative $local_x [$local_y [$local_z [$local_deg]]]', 'Teleport to coordinates relative of your character.\n$local_x is forward(+)/backward(+)\n$local_y is left(+)/right(-)\n$local_z is up(+)/down(-)\n$local_deg is turn left(+)/turn right(-)', @GMLEVEL_MODERATOR)

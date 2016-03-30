@@ -1250,5 +1250,7 @@ enum TrinityStrings
     FREEDOM_CMDE_SUMMON_IGNORE                      = 100027,
     FREEDOM_CMDE_SUMMON_GM_ON                       = 100028,
     FREEDOM_CMDE_SUMMON_EVIL_TWIN                   = 100029,
+    FREEDOM_CMDI_RELOAD                             = 100030,
+    FREEDOM_CMDI_RELOAD_ALL                         = 100031,
 };
 #endif

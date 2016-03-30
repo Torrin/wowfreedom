@@ -741,6 +741,7 @@ enum RBACPermissions
     RBAC_FPERM_COMMAND_FREEDOM_SPELL                         = 1006,
     RBAC_FPERM_COMMAND_FREEDOM_SPELL_MODIFY                  = 1007,
     RBAC_FPERM_COMMAND_FREEDOM_UTILITIES                     = 1008,
+    RBAC_FPERM_COMMAND_FREEDOM_ADMINISTRATION                = 1009,
 
     // .goto permissions 1100-1199
     RBAC_FPERM_COMMAND_GOTO                                  = 1100,

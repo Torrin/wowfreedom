@@ -597,20 +597,6 @@ REPLACE INTO `map_info` (`id`, `name`) VALUES
 	(1497, 'Garrison Shipyard - Battleship - Horde');
 /*!40000 ALTER TABLE `map_info` ENABLE KEYS */;
 
--- Dumping structure for table freedom.public_teleport
-DROP TABLE IF EXISTS `public_teleport`;
-CREATE TABLE IF NOT EXISTS `public_teleport` (
-  `id` mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL DEFAULT '',
-  `position_x` float NOT NULL DEFAULT '0',
-  `position_y` float NOT NULL DEFAULT '0',
-  `position_z` float NOT NULL DEFAULT '0',
-  `orientation` float NOT NULL DEFAULT '0',
-  `map` smallint(5) unsigned NOT NULL DEFAULT '0',
-  `gm_uid` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'GM Account Identifier',
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='.f teleport table';
-
 -- Dumping structure for table freedom.race_info
 DROP TABLE IF EXISTS `race_info`;
 CREATE TABLE IF NOT EXISTS `race_info` (

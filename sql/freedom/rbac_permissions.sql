@@ -50,6 +50,7 @@ INSERT INTO rbac_permissions (`id`, `name`) VALUES
 (1006, 'Command: freedom spell'),
 (1007, 'Command: freedom spell add/del'),
 (1008, 'Freedom player utility commands'),
+(1009, 'Freedom administration commands'),
 (1100, 'Command: .goto ...'),
 (9000, 'Command: reload playercreateinfo_spell_custom'),
 (9001, 'Command: reload playercreateinfo_skill_custom')
@@ -359,6 +360,7 @@ INSERT INTO rbac_linked_permissions (`id`, `linkedId`) VALUES
 (@GM, 1002), -- freedom morph add/del
 (@GM, 1004), -- freedom tele add/del
 (@GM, 1007), -- freedom spell add/del
+(@GM, 1009), -- freedom administration commands
 
 -- [190 - Role: [GM3] Administrator]
 (@ADMIN, @GM), -- Inherit GM permissions
