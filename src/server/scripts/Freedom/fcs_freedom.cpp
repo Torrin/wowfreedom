@@ -10,6 +10,14 @@
 #include "Opcodes.h"
 #include "MovementPackets.h"
 #include "MoveSpline.h"
+#include <boost/algorithm/string/predicate.hpp>
+
+enum FreedomCmdAuraSpells
+{
+    SPELL_PERMANENT_FEIGN_DEATH = 114371,
+    SPELL_PERMANENT_SLEEP_VISUAL = 107674,
+    SPELL_PERMANENT_HOVER = 138092
+};
 
 void ModifyMovementSpeed(ChatHandler* handler, UnitMoveType type, float value)
 {
@@ -104,13 +112,13 @@ public:
 
         static std::vector<ChatCommand> freedomCommandTable =
         {
+            { "hover",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomHoverCommand,              "" },
             { "cast",           rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,             false, &HandleFreedomSpellCommand,              "" },
             { "summon",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomSummonCommand,             "" },
             { "demorph",        rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomDemorphCommand,            "" },
             { "fly",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomFlyCommand,                "" },
             { "revive",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomReviveCommand,             "" },
             { "unaura",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomUnAuraCommand,             "" },
-            { "speed",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomSpeedCommand,              "" },
             { "walk",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomWalkCommand,               "" },
             { "run",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomRunCommand,                "" },
             { "swim",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomSwimCommand,               "" },
@@ -118,8 +126,8 @@ public:
             { "drunk",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomDrunkCommand,              "" },
             { "waterwalk",      rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomWaterwalkCommand,          "" },
             { "fix",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomFixCommand,                "" },
-            { "mailbox",        rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomMailboxCommand,            "" },
             { "morph",          rbac::RBAC_FPERM_COMMAND_FREEDOM_MORPH,             false, NULL,                                    "", freedomMorphCommandTable },
+            { "mailbox",        rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomMailboxCommand,            "" },
             { "money",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomMoneyCommand,              "" },
             { "bank",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomBankCommand,               "" },
             { "customize",      rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomCustomizeCommand,          "" },
@@ -128,6 +136,7 @@ public:
             { "teleport",       rbac::RBAC_FPERM_COMMAND_FREEDOM_TELE,              false, NULL,                                    "", freedomTeleportCommandTable },
             { "pteleport",      rbac::RBAC_FPERM_COMMAND_FREEDOM_PTELE,             false, NULL,                                    "", freedomPrivateTeleportCommandTable },
             { "spell",          rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,             false, NULL,                                    "", freedomSpellCommandTable },
+            { "speed",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomSpeedCommand,              "" },
             { "reload",         rbac::RBAC_FPERM_COMMAND_FREEDOM_ADMINISTRATION,    false, NULL,                                    "", freedomReloadCommandTable },
         };
 
@@ -141,51 +150,324 @@ public:
 #pragma region COMMAND TABLE : .freedom -> morph -> *
     static bool HandleFreedomMorphListCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        const MorphDataContainer morphList = sFreedomMgr->GetMorphContainer(handler->GetSession()->GetPlayer()->GetGUID().GetCounter());
+        uint64 count = 0;
+
+        if (!*args)
+        {
+            for (auto morphData : morphList)
+            {
+                handler->PSendSysMessage(FREEDOM_CMDI_MORPH_LIST_ITEM, morphData.displayId, morphData.name);
+                count++;
+            }
+        }
+        else
+        {
+            Tokenizer tokens = Tokenizer(args, ' ');
+            std::string name = tokens[0];
+
+            for (auto morphData : morphList)
+            {
+                if (boost::istarts_with(morphData.name, name))
+                {
+                    handler->PSendSysMessage(FREEDOM_CMDI_MORPH_LIST_ITEM, morphData.displayId, morphData.name);
+                    count++;
+                }
+            }
+        }
+
+        if (count == 0)
+            handler->PSendSysMessage(FREEDOM_CMDI_X_NONE_FOUND, "morphs");
+        else
+            handler->PSendSysMessage(FREEDOM_CMDI_SEARCH_QUERY_RESULT, count);
+
         return true;
     }
 
     static bool HandleFreedomMorphAddCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_MORPH_ADD);
+            return true;
+        }
+
+        Tokenizer tokens = Tokenizer(args, ' ');
+
+        if (tokens.size() < 2)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_NOT_ENOUGH_PARAMS);
+            handler->PSendSysMessage(FREEDOM_CMDH_MORPH_ADD);
+            return true;
+        }
+
+        std::string morphName = tokens[0];
+        uint32 displayId = atoul(tokens[1]);
+        Player* source = handler->GetSession()->GetPlayer();
+        std::string targetNameArg = tokens.size() > 2 ? tokens[2] : "";
+        std::string targetName;
+        ObjectGuid targetGuid;
+
+        if (!displayId)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_INVALID_ARGUMENT_X, "$displayId");
+            return true;
+        }
+
+        if (!handler->extractPlayerTarget(&targetNameArg[0], nullptr, &targetGuid, &targetName))
+            return true;
+
+        // Check if morph already exists
+        const MorphData* morphDataByName = sFreedomMgr->GetMorphByName(targetGuid.GetCounter(), morphName);
+        const MorphData* morphDataByDisplayId = sFreedomMgr->GetMorphByDisplayId(targetGuid.GetCounter(), displayId);
+
+        if (morphDataByName)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_X_WITH_NAME_ALREADY_EXISTS, "Morph", morphName);
+            return true;
+        }
+
+        if (morphDataByDisplayId)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_X_WITH_ID_ALREADY_EXISTS, "Morph", displayId);
+            return true;
+        }
+
+        // Create teleport
+        MorphData newMorphData;
+        newMorphData.name = morphName;
+        newMorphData.displayId = displayId;
+        newMorphData.gmBnetAccId = source->GetSession()->GetBattlenetAccountId();
+
+        sFreedomMgr->AddMorph(targetGuid.GetCounter(), newMorphData);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_MORPH_ADD, morphName, displayId, targetName);
         return true;
     }
 
     static bool HandleFreedomMorphDelCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_MORPH_DEL);
+            return true;
+        }
+
+        Tokenizer tokens = Tokenizer(args, ' ');
+        std::string morphName = tokens[0];
+        uint32 displayId = atoul(tokens[0]);
+        Player* source = handler->GetSession()->GetPlayer();
+        std::string targetNameArg = tokens.size() > 1 ? tokens[1] : "";
+        std::string targetName;
+        ObjectGuid targetGuid;
+
+        if (!handler->extractPlayerTarget(&targetNameArg[0], nullptr, &targetGuid, &targetName))
+            return true;
+
+        // Check if morph actually exists
+        const MorphData* morphData = sFreedomMgr->GetMorphByName(targetGuid.GetCounter(), morphName);
+
+        if (displayId && !morphData) // get by displayId only if name search doesn't turn up anything
+        {
+            morphData = sFreedomMgr->GetMorphByDisplayId(targetGuid.GetCounter(), displayId);
+
+            if (!morphData)
+            {
+                handler->PSendSysMessage(FREEDOM_CMDE_X_WITH_ID_NOT_FOUND, "Morph", displayId);
+                return true;
+            }
+        }
+        else if (!morphData)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_X_WITH_NAME_NOT_FOUND, "Morph", morphName);
+            return true;
+        }
+
+        morphName = morphData->name;
+        displayId = morphData->displayId;
+
+        sFreedomMgr->DeleteMorphByName(targetGuid.GetCounter(), morphData->name);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_MORPH_DEL, morphName, displayId, targetName);
         return true;
     }
 
     static bool HandleFreedomMorphCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_MORPH);
+            return true;
+        }
+
+        Tokenizer tokens = Tokenizer(args, ' ');
+        std::string morphName = tokens[0];
+        uint32 displayId = atoul(tokens[0]);
+        Player* source = handler->GetSession()->GetPlayer();
+
+        // Check if morph actually exists
+        const MorphData* morphData = sFreedomMgr->GetMorphByName(source->GetGUID().GetCounter(), morphName);
+
+        if (displayId && !morphData) // get by displayId only if name search doesn't turn up anything
+        {
+            morphData = sFreedomMgr->GetMorphByDisplayId(source->GetGUID().GetCounter(), displayId);
+
+            if (!morphData)
+            {
+                handler->PSendSysMessage(FREEDOM_CMDE_X_WITH_ID_NOT_FOUND, "Morph", displayId);
+                return true;
+            }
+        }
+        else if (!morphData)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_X_WITH_NAME_NOT_FOUND, "Morph", morphName);
+            return true;
+        }
+
+        source->SetDisplayId(morphData->displayId);
+        handler->PSendSysMessage(FREEDOM_CMDI_MORPH, morphData->name, morphData->displayId);
         return true;
     }
 #pragma endregion
 
 #pragma region COMMAND TABLE : .freedom -> teleport -> *
     static bool HandleFreedomTeleListCommand(ChatHandler* handler, char const* args)
-    {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+    {    
+        const PublicTeleContainer teleList = sFreedomMgr->GetPublicTeleportContainer();
+        uint64 count = 0;
+
+        if (!*args)
+        {
+            for (auto teleData : teleList)
+            {
+                handler->PSendSysMessage(FREEDOM_CMDI_PUBLIC_TELE_LIST_ITEM, teleData.name, sFreedomMgr->GetMapName(teleData.map));
+                count++;
+            }
+        }
+        else
+        {
+            Tokenizer tokens = Tokenizer(args, ' ');
+            std::string name = tokens[0];
+
+            for (auto teleData : teleList)
+            {
+                if (boost::istarts_with(teleData.name, name))
+                {
+                    handler->PSendSysMessage(FREEDOM_CMDI_PUBLIC_TELE_LIST_ITEM, teleData.name, sFreedomMgr->GetMapName(teleData.map));
+                    count++;
+                }                    
+            }
+        }
+
+        if (count == 0)
+            handler->PSendSysMessage(FREEDOM_CMDI_X_NONE_FOUND, "public teleports");
+        else
+            handler->PSendSysMessage(FREEDOM_CMDI_SEARCH_QUERY_RESULT, count);
+
         return true;
     }
 
     static bool HandleFreedomTeleAddCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_PUBLIC_TELE_ADD);
+            return true;
+        }
+
+        Tokenizer tokens = Tokenizer(args, ' ');
+        std::string name = tokens[0];
+        Player* source = handler->GetSession()->GetPlayer();
+
+        // Check if teleport already exists
+        const PublicTeleData* teleData = sFreedomMgr->GetPublicTeleport(name);
+
+        if (teleData)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_X_WITH_NAME_ALREADY_EXISTS, "Public teleport", name);
+            return true;
+        }
+
+        // Create teleport
+        PublicTeleData newTeleData;
+        source->GetPosition(newTeleData.x, newTeleData.y, newTeleData.z, newTeleData.o);
+        newTeleData.map = source->GetMapId();
+        newTeleData.name = name;
+        newTeleData.gmBnetAccId = source->GetSession()->GetBattlenetAccountId();
+
+        sFreedomMgr->AddPublicTeleport(newTeleData);
+        
+        handler->PSendSysMessage(FREEDOM_CMDI_X_ADDED_WITH_NAME, "Public teleport", name);
         return true;
     }
 
     static bool HandleFreedomTeleDelCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_PUBLIC_TELE_DEL);
+            return true;
+        }
+
+        Tokenizer tokens = Tokenizer(args, ' ');
+        std::string name = tokens[0];
+        Player* source = handler->GetSession()->GetPlayer();
+
+        // Check if teleport actually exists
+        const PublicTeleData* teleData = sFreedomMgr->GetPublicTeleport(name);
+
+        if (!teleData)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_X_WITH_NAME_NOT_FOUND, "Public teleport", name);
+            return true;
+        }
+
+        sFreedomMgr->DeletePublicTeleport(name);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_X_WITH_NAME_REMOVED, "Public teleport", name);
         return true;
     }
 
     static bool HandleFreedomTeleCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_PUBLIC_TELE);
+            return true;
+        }
+
+        Tokenizer tokens = Tokenizer(args, ' ');
+        std::string name = tokens[0];
+        Player* source = handler->GetSession()->GetPlayer();
+
+        // Stop combat before teleporting
+        if (source->IsInCombat())
+        {
+            source->CombatStop();
+        }
+
+        // Get first match of public teleport
+        const PublicTeleData* teleData = sFreedomMgr->GetFirstClosestPublicTeleport(name);
+
+        if (!teleData)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDI_X_NONE_FOUND_WITH_NAME, "public teleports", name);
+            return true;
+        }
+
+        // Stop flight if needed
+        if (source->IsInFlight())
+        {
+            source->GetMotionMaster()->MovementExpired();
+            source->CleanupAfterTaxiFlight();
+        }
+        // Save only in non-flight case
+        else
+        {
+            source->SaveRecallPosition();
+        }            
+        
+        source->TeleportTo(teleData->map, teleData->x, teleData->y, teleData->z, teleData->o);
         return true;
     }
 #pragma endregion
@@ -193,25 +475,140 @@ public:
 #pragma region COMMAND TABLE : .freedom -> pteleport -> *
     static bool HandleFreedomPrivateTeleListCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        const PrivateTeleVector teleList = sFreedomMgr->GetPrivateTeleportContainer(handler->GetSession()->GetBattlenetAccountId());
+        uint64 count = 0;
+
+        if (!*args)
+        {
+            for (auto teleData : teleList)
+            {
+                handler->PSendSysMessage(FREEDOM_CMDI_PRIVATE_TELE_LIST_ITEM, teleData.name, sFreedomMgr->GetMapName(teleData.map));
+                count++;
+            }
+        }
+        else
+        {
+            Tokenizer tokens = Tokenizer(args, ' ');
+            std::string name = tokens[0];
+
+            for (auto teleData : teleList)
+            {
+                if (boost::istarts_with(teleData.name, name))
+                {
+                    handler->PSendSysMessage(FREEDOM_CMDI_PRIVATE_TELE_LIST_ITEM, teleData.name, sFreedomMgr->GetMapName(teleData.map));
+                    count++;
+                }
+            }
+        }
+
+        if (count == 0)
+            handler->PSendSysMessage(FREEDOM_CMDI_X_NONE_FOUND, "private teleports");
+        else
+            handler->PSendSysMessage(FREEDOM_CMDI_SEARCH_QUERY_RESULT, count);
+
         return true;
     }
 
     static bool HandleFreedomPrivateTeleAddCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_PRIVATE_TELE_ADD);
+            return true;
+        }
+
+        Tokenizer tokens = Tokenizer(args, ' ');
+        std::string name = tokens[0];
+        Player* source = handler->GetSession()->GetPlayer();
+
+        // Check if teleport already exists
+        const PrivateTeleData* teleData = sFreedomMgr->GetPrivateTeleport(source->GetSession()->GetBattlenetAccountId(), name);
+
+        if (teleData)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_X_WITH_NAME_ALREADY_EXISTS, "Private teleport", name);
+            return true;
+        }
+
+        // Create teleport
+        PrivateTeleData newTeleData;
+        source->GetPosition(newTeleData.x, newTeleData.y, newTeleData.z, newTeleData.o);
+        newTeleData.map = source->GetMapId();
+        newTeleData.name = name;
+
+        sFreedomMgr->AddPrivateTeleport(source->GetSession()->GetBattlenetAccountId(), newTeleData);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_X_ADDED_WITH_NAME, "Private teleport", name);
         return true;
     }
 
     static bool HandleFreedomPrivateTeleDelCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_PRIVATE_TELE_DEL);
+            return true;
+        }
+
+        Tokenizer tokens = Tokenizer(args, ' ');
+        std::string name = tokens[0];
+        Player* source = handler->GetSession()->GetPlayer();
+
+        // Check if teleport actually exists
+        const PrivateTeleData* teleData = sFreedomMgr->GetPrivateTeleport(source->GetSession()->GetBattlenetAccountId(), name);
+
+        if (!teleData)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_X_WITH_NAME_NOT_FOUND, "Private teleport", name);
+            return true;
+        }
+
+        sFreedomMgr->DeletePrivateTeleport(source->GetSession()->GetBattlenetAccountId(), name);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_X_WITH_NAME_REMOVED, "Private teleport", name);
         return true;
     }
 
     static bool HandleFreedomPrivateTeleCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_PRIVATE_TELE);
+            return true;
+        }
+
+        Tokenizer tokens = Tokenizer(args, ' ');
+        std::string name = tokens[0];
+        Player* source = handler->GetSession()->GetPlayer();
+
+        // Stop combat before teleporting
+        if (source->IsInCombat())
+        {
+            source->CombatStop();
+        }
+
+        // Get first match of public teleport
+        const PrivateTeleData* teleData = sFreedomMgr->GetFirstClosestPrivateTeleport(source->GetSession()->GetBattlenetAccountId(), name);
+
+        if (!teleData)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDI_X_NONE_FOUND_WITH_NAME, "private teleports", name);
+            return true;
+        }
+
+        // Stop flight if needed
+        if (source->IsInFlight())
+        {
+            source->GetMotionMaster()->MovementExpired();
+            source->CleanupAfterTaxiFlight();
+        }
+        // Save only in non-flight case
+        else
+        {
+            source->SaveRecallPosition();
+        }
+
+        source->TeleportTo(teleData->map, teleData->x, teleData->y, teleData->z, teleData->o);
         return true;
     }
 #pragma endregion
@@ -219,25 +616,154 @@ public:
 #pragma region COMMAND TABLE : .freedom -> spell -> *
     static bool HandleFreedomSpellListCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        const PublicSpellContainer spellList = sFreedomMgr->GetPublicSpellContainer();
+        uint64 count = 0;
+
+        if (!*args)
+        {
+            for (auto spellData : spellList)
+            {
+                handler->PSendSysMessage(FREEDOM_CMDI_PUBLIC_SPELL_LIST_ITEM, spellData.first, sFreedomMgr->ToChatLink("Hspell", spellData.first, spellData.second.name));
+                count++;
+            }
+        }
+        else
+        {
+            Tokenizer tokens = Tokenizer(args, ' ');
+            std::string name = tokens[0];
+
+            for (auto spellData : spellList)
+            {
+                if (boost::istarts_with(spellData.second.name, name))
+                {
+                    handler->PSendSysMessage(FREEDOM_CMDI_PUBLIC_SPELL_LIST_ITEM, spellData.first, sFreedomMgr->ToChatLink("Hspell", spellData.first, spellData.second.name));
+                    count++;
+                }
+            }
+        }
+
+        if (count == 0)
+            handler->PSendSysMessage(FREEDOM_CMDI_X_NONE_FOUND, "public spells");
+        else
+            handler->PSendSysMessage(FREEDOM_CMDI_SEARCH_QUERY_RESULT, count);
+
         return true;
     }
 
     static bool HandleFreedomSpellAddCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_PUBLIC_SPELL_ADD);
+            return true;
+        }
+
+        uint32 spellId = handler->extractSpellIdFromLink((char*)args);
+        Player* source = handler->GetSession()->GetPlayer();
+        uint32 bnetAccId = source->GetSession()->GetBattlenetAccountId();
+        uint8 targetOthers = 0;
+        char* targetOthersArg = strtok(NULL, args);
+
+        if (targetOthersArg && boost::iequals("true", targetOthersArg))
+            targetOthers = 1;
+
+        // Check if public spell already exists
+        const PublicSpellData* spellData = sFreedomMgr->GetPublicSpell(spellId);
+
+        if (spellData)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_X_WITH_ID_ALREADY_EXISTS, "Public spell", spellId);
+            return true;
+        }
+
+        const SpellEntry* spellEntry = sSpellStore.LookupEntry(spellId);
+
+        if (!spellEntry)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_X_WITH_ID_NOT_FOUND, "Spell entry", spellId);
+            return true;
+        }
+
+        // Create teleport
+        PublicSpellData newSpellData;
+        newSpellData.name = spellEntry->Name_lang;
+        newSpellData.targetOthers = targetOthers;
+        newSpellData.gmBnetAccId = source->GetSession()->GetBattlenetAccountId();
+
+        sFreedomMgr->AddPublicSpell(spellId, newSpellData);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_PUBLIC_SPELL_ADD, sFreedomMgr->ToChatLink("Hspell", spellId, spellEntry->Name_lang), spellId);
         return true;
     }
 
     static bool HandleFreedomSpellDelCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_PUBLIC_SPELL_DEL);
+            return true;
+        }
+
+        uint32 spellId = handler->extractSpellIdFromLink((char*)args);
+        std::string spellName;
+
+        // Check if public spell already exists
+        const PublicSpellData* spellData = sFreedomMgr->GetPublicSpell(spellId);
+
+        if (!spellData)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_X_WITH_ID_NOT_FOUND, "Public spell", spellId);
+            return true;
+        }
+
+        spellName = spellData->name;
+
+        sFreedomMgr->DeletePublicSpell(spellId);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_PUBLIC_SPELL_DEL, sFreedomMgr->ToChatLink("Hspell", spellId, spellName), spellId);
         return true;
     }
 
     static bool HandleFreedomSpellCommand(ChatHandler* handler, char const* args)
     {
-        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_PUBLIC_SPELL);
+            return true;
+        }
+
+        uint32 spellId = handler->extractSpellIdFromLink((char*)args);
+        Player* source = handler->GetSession()->GetPlayer();
+        Player* target = handler->getSelectedPlayerOrSelf();
+        std::string spellName;
+
+        // Check if public spell already exists
+        const PublicSpellData* spellData = sFreedomMgr->GetPublicSpell(spellId);
+
+        if (!spellData)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_X_WITH_ID_NOT_FOUND, "Public spell", spellId);
+            return true;
+        }
+
+        const SpellEntry* spellEntry = sSpellStore.LookupEntry(spellId);
+
+        if (!spellEntry)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_X_WITH_ID_NOT_FOUND, "Spell entry", spellId);
+            return true;
+        }
+
+        if (spellData->targetOthers)
+        {
+            source->CastSpell(target, spellId);
+        }
+        else
+        {
+            source->CastSpell(source, spellId);
+        }
+
+        spellName = spellData->name;
         return true;
     }
 #pragma endregion
@@ -280,6 +806,40 @@ public:
 #pragma endregion
 
 #pragma region COMMAND TABLE : .freedom -> *
+    static bool HandleFreedomHoverCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            // did not specify ON or OFF value
+            handler->PSendSysMessage(FREEDOM_CMDH_HOVER);
+            return true;
+        }
+
+        Player* source = handler->GetSession()->GetPlayer();
+
+        // on & off
+        std::string arg = strtok((char*)args, " ");
+        if (boost::iequals(arg, "on"))
+        {
+            handler->PSendSysMessage(FREEDOM_CMDI_HOVER, "on");
+            source->AddAura(SPELL_PERMANENT_HOVER, source);
+            source->SetHover(true);
+            return true;
+        }
+        else if (boost::iequals(arg, "off"))
+        {
+            sFreedomMgr->RemoveHoverFromPlayer(source);
+            source->RemoveAura(SPELL_PERMANENT_HOVER);
+            handler->PSendSysMessage(FREEDOM_CMDI_HOVER, "off");
+            return true;
+        }
+
+        // did not specify ON or OFF value
+        handler->PSendSysMessage(FREEDOM_CMDH_HOVER);
+
+        return true;
+    }
+
     static bool HandleFreedomSummonCommand(ChatHandler* handler, char const* args)
     {
         if (!*args)
@@ -346,15 +906,17 @@ public:
             return true;
         }
 
-        std::string arg = args;
-        std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
+        Player* source = handler->GetSession()->GetPlayer();
+        std::string arg = strtok((char*)args, " ");
 
-        if (arg == "on")
+        if (boost::iequals(arg, "on"))
         {
+            source->SetCanFly(true);
             handler->PSendSysMessage(FREEDOM_CMDI_FLY, "on");
         }
-        else if (arg == "off")
+        else if (boost::iequals(arg, "off"))
         {
+            sFreedomMgr->RemoveFlyFromPlayer(source);
             handler->PSendSysMessage(FREEDOM_CMDI_FLY, "off");
         }
         else
@@ -383,7 +945,8 @@ public:
     static bool HandleFreedomUnAuraCommand(ChatHandler* handler, char const* args)
     {
         Player* source = handler->GetSession()->GetPlayer();   
-        source->RemoveAllAuras();
+        sFreedomMgr->RemoveHoverFromPlayer(source); // unaura removes hover animation, so proceed to remove entire hover mechanic
+        source->RemoveAllAuras();        
         handler->PSendSysMessage(FREEDOM_CMDI_UNAURA);
         return true;
     }
@@ -509,22 +1072,16 @@ public:
         Player* source = handler->GetSession()->GetPlayer();
 
         // on & off
-        std::string subcommand = args;
-        std::transform(subcommand.begin(), subcommand.end(), subcommand.begin(), ::tolower);
-        if (subcommand == "on")
+        std::string arg = strtok((char*)args, " ");
+        if (boost::iequals(arg, "on"))
         {
             handler->PSendSysMessage(FREEDOM_CMDI_WATERWALK, "on");
             source->SetWaterWalking(true);
             return true;
         }
-        else if (subcommand == "off")
+        else if (boost::iequals(arg, "off"))
         {
-            // SetWaterWalking does not turn off properly, WORKAROUND: sending packets directly
-            Unit* source_unit = handler->GetSession()->GetPlayer()->ToUnit();
-            source_unit->RemoveUnitMovementFlag(MOVEMENTFLAG_WATERWALKING);
-            WorldPackets::Movement::MoveSetFlag packet(SMSG_MOVE_SET_LAND_WALK);
-            packet.MoverGUID = source_unit->GetGUID();         
-            source_unit->SendMessageToSet(packet.Write(), true);
+            sFreedomMgr->RemoveWaterwalkFromPlayer(source);
             handler->PSendSysMessage(FREEDOM_CMDI_WATERWALK, "off");
             return true;
         }

@@ -17,22 +17,22 @@ CREATE TABLE IF NOT EXISTS `morphs` (
   `guid` bigint(20) unsigned NOT NULL COMMENT 'CHARACTER identifier',
   `name` varchar(255) NOT NULL COMMENT 'Custom given name for morph',
   `id_display` int(10) unsigned NOT NULL DEFAULT '0',
-  `id_bnet_gm` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'GM Account Identifier'
+  `id_bnet_gm` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'GM Account Identifier',
+  PRIMARY KEY (`guid`,`id_display`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='.f morph table';
 
 -- Data exporting was unselected.
 -- Dumping structure for table freedom.private_tele
 DROP TABLE IF EXISTS `private_tele`;
 CREATE TABLE IF NOT EXISTS `private_tele` (
-  `id` mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL DEFAULT '',
   `position_x` float NOT NULL DEFAULT '0',
   `position_y` float NOT NULL DEFAULT '0',
   `position_z` float NOT NULL DEFAULT '0',
   `orientation` float NOT NULL DEFAULT '0',
   `map` int(10) unsigned NOT NULL DEFAULT '0',
-  `name` varchar(255) NOT NULL DEFAULT '',
   `id_bnet_account` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'OWNER Account Identifier',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`name`,`id_bnet_account`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='.f pteleport table';
 
 -- Data exporting was unselected.
@@ -44,21 +44,20 @@ CREATE TABLE IF NOT EXISTS `public_spell` (
   `name` varchar(255) NOT NULL DEFAULT '',
   `id_bnet_gm` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'GM Account Identifier',
   PRIMARY KEY (`spell_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=45949 DEFAULT CHARSET=utf8;
 
 -- Data exporting was unselected.
 -- Dumping structure for table freedom.public_tele
 DROP TABLE IF EXISTS `public_tele`;
 CREATE TABLE IF NOT EXISTS `public_tele` (
-  `id` mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL DEFAULT '',
   `position_x` float NOT NULL DEFAULT '0',
   `position_y` float NOT NULL DEFAULT '0',
   `position_z` float NOT NULL DEFAULT '0',
   `orientation` float NOT NULL DEFAULT '0',
   `map` int(10) unsigned NOT NULL DEFAULT '0',
-  `name` varchar(255) NOT NULL DEFAULT '',
   `id_bnet_gm` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'GM Account Identifier',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='.f teleport table';
 
 -- Data exporting was unselected.
