@@ -1291,5 +1291,6 @@ enum TrinityStrings
     FREEDOM_CMDI_PUBLIC_SPELL_DEL                   = 100067,
     FREEDOM_CMDH_HOVER                              = 100068,
     FREEDOM_CMDI_HOVER                              = 100069,
+    FREEDOM_CMDE_SUMMON_PENDING                     = 100070,
 };
 #endif

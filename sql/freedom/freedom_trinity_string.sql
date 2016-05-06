@@ -85,6 +85,7 @@ INSERT INTO wod_world.trinity_string (entry, content_default) VALUES
 /* FREEDOM_CMDI_PUBLIC_SPELL_DEL							*/ (100067, CONCAT(@T_CMD_INFO, @C_TEXT, 'Public spell (Name link: %s, Spell ID: ', @C_LINK, '%u', @C_TEXT, ') successfully removed from public spell list.', @C_CLOSE)),
 /* FREEDOM_CMDH_HOVER 										*/ (100068, CONCAT(@T_CMD_SYNTAX, '.freedom hover on/off')),
 /* FREEDOM_CMDI_HOVER										*/ (100069, CONCAT(@T_CMD_INFO, @C_TEXT, 'Hover toggle: ', @C_LINK, '%s', @C_CLOSE)),
+/* FREEDOM_CMDE_SUMMON_PENDING							*/ (100070, CONCAT(@T_CMD_ERROR, @C_TEXT, 'Player ', @C_LINK, '%s ', @C_TEXT, 'already has a pending summon request from someone.', @C_CLOSE)),
 
 (200000, 'Dummy');
 -- Select new changes

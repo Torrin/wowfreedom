@@ -19,49 +19,6 @@ enum FreedomCmdAuraSpells
     SPELL_PERMANENT_HOVER = 138092
 };
 
-void ModifyMovementSpeed(ChatHandler* handler, UnitMoveType type, float value)
-{
-    float max = sConfigMgr->GetFloatDefault("Freedom.Modify.MaxSpeed", 10.0f);
-    float min = sConfigMgr->GetFloatDefault("Freedom.Modify.MinSpeed", 0.01f);
-    std::string speedName;
-
-    if (value < min || value > max)
-    {
-        handler->PSendSysMessage(FREEDOM_CMDE_VALUE_OUT_OF_RANGE, max, min);
-        return;
-    }
-
-    switch (type)
-    {
-    case UnitMoveType::MOVE_FLIGHT:
-    case UnitMoveType::MOVE_FLIGHT_BACK:
-        speedName = "fly";
-        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_FLIGHT, value);
-        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_FLIGHT_BACK, value);
-        break;
-    case UnitMoveType::MOVE_RUN:
-        speedName = "run";
-        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_RUN, value);
-        break;
-    case UnitMoveType::MOVE_SWIM:
-    case UnitMoveType::MOVE_SWIM_BACK:
-        speedName = "swim";
-        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_SWIM, value);
-        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_SWIM_BACK, value);
-        break;
-    case UnitMoveType::MOVE_WALK:
-    case UnitMoveType::MOVE_RUN_BACK:
-        speedName = "walk";
-        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_WALK, value);
-        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_RUN_BACK, value);
-        break;
-    default:
-        return;
-    }
-
-    handler->PSendSysMessage(FREEDOM_CMDI_MOD_SPEED, speedName.c_str(), value);
-}
-
 class freedom_commandscript : public CommandScript
 {
 public:
@@ -145,6 +102,49 @@ public:
             { "freedom",            rbac::RBAC_FPERM_COMMAND_FREEDOM,                    false, NULL,                                "", freedomCommandTable },
         };
         return commandTable;
+    }
+
+    static void ModifyMovementSpeed(ChatHandler* handler, UnitMoveType type, float value)
+    {
+        float max = sConfigMgr->GetFloatDefault("Freedom.Modify.MaxSpeed", 10.0f);
+        float min = sConfigMgr->GetFloatDefault("Freedom.Modify.MinSpeed", 0.01f);
+        std::string speedName;
+
+        if (value < min || value > max)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_VALUE_OUT_OF_RANGE, max, min);
+            return;
+        }
+
+        switch (type)
+        {
+        case UnitMoveType::MOVE_FLIGHT:
+        case UnitMoveType::MOVE_FLIGHT_BACK:
+            speedName = "fly";
+            handler->GetSession()->GetPlayer()->SetSpeed(MOVE_FLIGHT, value);
+            handler->GetSession()->GetPlayer()->SetSpeed(MOVE_FLIGHT_BACK, value);
+            break;
+        case UnitMoveType::MOVE_RUN:
+            speedName = "run";
+            handler->GetSession()->GetPlayer()->SetSpeed(MOVE_RUN, value);
+            break;
+        case UnitMoveType::MOVE_SWIM:
+        case UnitMoveType::MOVE_SWIM_BACK:
+            speedName = "swim";
+            handler->GetSession()->GetPlayer()->SetSpeed(MOVE_SWIM, value);
+            handler->GetSession()->GetPlayer()->SetSpeed(MOVE_SWIM_BACK, value);
+            break;
+        case UnitMoveType::MOVE_WALK:
+        case UnitMoveType::MOVE_RUN_BACK:
+            speedName = "walk";
+            handler->GetSession()->GetPlayer()->SetSpeed(MOVE_WALK, value);
+            handler->GetSession()->GetPlayer()->SetSpeed(MOVE_RUN_BACK, value);
+            break;
+        default:
+            return;
+        }
+
+        handler->PSendSysMessage(FREEDOM_CMDI_MOD_SPEED, speedName.c_str(), value);
     }
 
 #pragma region COMMAND TABLE : .freedom -> morph -> *
@@ -870,6 +870,12 @@ public:
             return true;
         }
        
+        if (target->HasSummonPending())
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_SUMMON_PENDING, target->GetName().c_str());
+            return true;
+        }
+
         // Evil Twin (ignore player summon, but hide this for summoner)
         if (target->HasAura(23445))
         {
@@ -877,13 +883,7 @@ public:
             return true;
         }
 
-        target->SetSummonPoint(source->GetMapId(), source->GetPositionX(), source->GetPositionY(), source->GetPositionZ());
-        
-        WorldPacket data(SMSG_SUMMON_REQUEST, 8 + 4 + 4);
-        data << source->GetGUID();
-        data << uint32(source->GetZoneId());
-        data << uint32(MAX_PLAYER_SUMMON_DELAY*IN_MILLISECONDS);
-        target->GetSession()->SendPacket(&data);
+        target->SendSummonRequestFrom(source);
 
         handler->PSendSysMessage(FREEDOM_CMDI_SUMMON, target->GetName().c_str());
         return true;
