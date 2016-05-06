@@ -133,7 +133,7 @@ void CreatureAI::MoveInLineOfSight(Unit* who)
     if (me->GetCreatureType() == CREATURE_TYPE_NON_COMBAT_PET) // non-combat pets should just stand there and look good;)
         return;
 
-    if (me->CanStartAttack(who, false))
+    if (me->HasReactState(REACT_AGGRESSIVE) && me->CanStartAttack(who, false))
         AttackStart(who);
     //else if (who->GetVictim() && me->IsFriendlyTo(who)
     //    && me->IsWithinDistInMap(who, sWorld->getIntConfig(CONFIG_CREATURE_FAMILY_ASSISTANCE_RADIUS))
@@ -204,7 +204,8 @@ void CreatureAI::SetGazeOn(Unit* target)
 {
     if (me->IsValidAttackTarget(target))
     {
-        AttackStart(target);
+        if (!me->IsFocusing(nullptr, true))
+            AttackStart(target);
         me->SetReactState(REACT_PASSIVE);
     }
 }
@@ -223,7 +224,8 @@ bool CreatureAI::UpdateVictimWithGaze()
     }
 
     if (Unit* victim = me->SelectVictim())
-        AttackStart(victim);
+        if (!me->IsFocusing(nullptr, true))
+            AttackStart(victim);
 
     return me->GetVictim() != nullptr;
 }
@@ -236,7 +238,8 @@ bool CreatureAI::UpdateVictim()
     if (!me->HasReactState(REACT_PASSIVE))
     {
         if (Unit* victim = me->SelectVictim())
-            AttackStart(victim);
+            if (!me->IsFocusing(nullptr, true))
+                AttackStart(victim);
 
         return me->GetVictim() != nullptr;
     }
@@ -254,9 +257,7 @@ bool CreatureAI::_EnterEvadeMode(EvadeReason /*why*/)
     if (!me->IsAlive())
         return false;
 
-    // don't remove vehicle auras, passengers aren't supposed to drop off the vehicle
-    // don't remove clone caster on evade (to be verified)
-    me->RemoveAllAurasExceptType(SPELL_AURA_CONTROL_VEHICLE, SPELL_AURA_CLONE_CASTER);
+    me->RemoveAurasOnEvade();
 
     // sometimes bosses stuck in combat?
     me->DeleteThreatList();
@@ -280,7 +281,7 @@ bool CreatureAI::_EnterEvadeMode(EvadeReason /*why*/)
 int32 CreatureAI::VisualizeBoundary(uint32 duration, Unit* owner, bool fill) const
 {
     typedef std::pair<int32, int32> coordinate;
-    
+
     if (!owner)
         return -1;
 
@@ -290,7 +291,7 @@ int32 CreatureAI::VisualizeBoundary(uint32 duration, Unit* owner, bool fill) con
     std::queue<coordinate> Q;
     std::unordered_set<coordinate> alreadyChecked;
     std::unordered_set<coordinate> outOfBounds;
-    
+
     Position startPosition = owner->GetPosition();
     if (!CheckBoundary(&startPosition)) // fall back to creature position
     {
@@ -347,7 +348,7 @@ int32 CreatureAI::VisualizeBoundary(uint32 duration, Unit* owner, bool fill) con
     return boundsWarning ? LANG_CREATURE_MOVEMENT_MAYBE_UNBOUNDED : 0;
 }
 
-bool CreatureAI::CheckBoundary(Position* who) const
+bool CreatureAI::CheckBoundary(Position const* who) const
 {
     if (!who)
         who = me;

@@ -24,8 +24,8 @@ GroupSources(${CMAKE_CURRENT_SOURCE_DIR})
 add_definitions(-DTRINITY_API_EXPORT_SHARED)
 
 add_library(shared
-  ${PRIVATE_SOURCES}
   ${PRIVATE_PCH_SOURCE}
+  ${PRIVATE_SOURCES}
 )
 
 CollectIncludeDirectories(
@@ -43,7 +43,10 @@ target_include_directories(shared
 target_link_libraries(shared
   PUBLIC
     database
-    rapidjson)
+    rapidjson
+    proto
+    zlib
+    gsoap)
 
 set_target_properties(shared
     PROPERTIES

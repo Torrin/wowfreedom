@@ -62,7 +62,7 @@ enum RollMask
 #define MAX_NR_QUEST_ITEMS 32
 // unrelated to the number of quest items shown, just for reserve
 
-enum LootMethod
+enum LootMethod : uint8
 {
     FREE_FOR_ALL      = 0,
     ROUND_ROBIN       = 1,
@@ -83,7 +83,7 @@ enum PermissionTypes
     NONE_PERMISSION             = 6
 };
 
-enum LootType
+enum LootType : uint8
 {
     LOOT_NONE                   = 0,
 
@@ -121,11 +121,11 @@ enum LootError
 // type of Loot Item in Loot View
 enum LootSlotType
 {
-    LOOT_SLOT_TYPE_ALLOW_LOOT   = 4,                        // player can loot the item.
-    LOOT_SLOT_TYPE_ROLL_ONGOING = 7,                        // roll is ongoing. player cannot loot.
-    LOOT_SLOT_TYPE_MASTER       = 6,                        // item can only be distributed by group loot master.
-    LOOT_SLOT_TYPE_LOCKED       = 3,                        // item is shown in red. player cannot loot.
-    LOOT_SLOT_TYPE_OWNER        = 5                         // ignore binding confirmation and etc, for single player looting
+    LOOT_SLOT_TYPE_ALLOW_LOOT   = 0,                        // player can loot the item.
+    LOOT_SLOT_TYPE_ROLL_ONGOING = 1,                        // roll is ongoing. player cannot loot.
+    LOOT_SLOT_TYPE_MASTER       = 3,                        // item can only be distributed by group loot master.
+    LOOT_SLOT_TYPE_LOCKED       = 2,                        // item is shown in red. player cannot loot.
+    LOOT_SLOT_TYPE_OWNER        = 4                         // ignore binding confirmation and etc, for single player looting
 };
 
 class Player;

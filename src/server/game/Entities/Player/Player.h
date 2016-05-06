@@ -54,6 +54,7 @@ class PlayerMenu;
 class PlayerSocial;
 class SpellCastTargets;
 class UpdateMask;
+class PlayerAI;
 
 typedef std::deque<Mail*> PlayerMails;
 
@@ -114,8 +115,6 @@ struct PlayerSpell
     bool dependent         : 1;                             // learned as result another spell learn, skill grow, quest reward, etc
     bool disabled          : 1;                             // first rank has been learned in result talent learn but currently talent unlearned, save max learned ranks
 };
-
-TC_GAME_API extern uint32 const MasterySpells[MAX_CLASSES];
 
 enum TalentSpecialization // talent tabs
 {
@@ -470,7 +469,7 @@ enum RuneCooldowns
     RUNE_MISS_COOLDOWN  = 1500     // cooldown applied on runes when the spell misses
 };
 
-enum RuneType
+enum RuneType : uint8
 {
     RUNE_BLOOD      = 0,
     RUNE_UNHOLY     = 1,
@@ -614,8 +613,9 @@ enum PlayerFieldBytesOffsets
 
 enum PlayerFieldBytes2Offsets
 {
-    PLAYER_FIELD_BYTES_2_OFFSET_AURA_VISION         = 1,
-    PLAYER_FIELD_BYTES_2_OFFSET_OVERRIDE_SPELLS_ID  = 2  // uint16!
+    PLAYER_FIELD_BYTES_2_OFFSET_IGNORE_POWER_REGEN_PREDICTION_MASK  = 0,
+    PLAYER_FIELD_BYTES_2_OFFSET_AURA_VISION                         = 1,
+    PLAYER_FIELD_BYTES_2_OFFSET_OVERRIDE_SPELLS_ID                  = 2     // uint16!
 };
 
 static_assert((PLAYER_FIELD_BYTES_2_OFFSET_OVERRIDE_SPELLS_ID & 1) == 0, "PLAYER_FIELD_BYTES_2_OFFSET_OVERRIDE_SPELLS_ID must be aligned to 2 byte boundary");
@@ -698,9 +698,10 @@ enum QuestSlotOffsets
     QUEST_ID_OFFSET     = 0,
     QUEST_STATE_OFFSET  = 1,
     QUEST_COUNTS_OFFSET = 2,
-    QUEST_TIME_OFFSET   = 4
+    QUEST_TIME_OFFSET   = 14
 };
 
+#define MAX_QUEST_COUNTS 24
 #define MAX_QUEST_OFFSET 15
 
 enum QuestSlotStateMask
@@ -753,7 +754,7 @@ enum PlayerSlots
 
 #define INVENTORY_SLOT_BAG_0    255
 
-enum EquipmentSlots                                         // 19 slots
+enum EquipmentSlots : uint8                                 // 19 slots
 {
     EQUIPMENT_SLOT_START        = 0,
     EQUIPMENT_SLOT_HEAD         = 0,
@@ -781,13 +782,13 @@ enum EquipmentSlots                                         // 19 slots
 #define VISIBLE_ITEM_ENTRY_OFFSET 0
 #define VISIBLE_ITEM_ENCHANTMENT_OFFSET 1
 
-enum InventorySlots                                         // 4 slots
+enum InventorySlots : uint8                                 // 4 slots
 {
     INVENTORY_SLOT_BAG_START    = 19,
     INVENTORY_SLOT_BAG_END      = 23
 };
 
-enum InventoryPackSlots                                     // 16 slots
+enum InventoryPackSlots : uint8                             // 16 slots
 {
     INVENTORY_SLOT_ITEM_START   = 23,
     INVENTORY_SLOT_ITEM_END     = 39
@@ -859,39 +860,26 @@ typedef std::vector<ItemPosCount> ItemPosCountVec;
 enum TransferAbortReason
 {
     TRANSFER_ABORT_NONE                          = 0,
-    TRANSFER_ABORT_LOCKED_TO_DIFFERENT_INSTANCE  = 1,   // You are already locked to %s
-    TRANSFER_ABORT_MAP_NOT_ALLOWED               = 2,   // Map cannot be entered at this time.
-    TRANSFER_ABORT_ALREADY_COMPLETED_ENCOUNTER   = 3,   // You are ineligible to participate in at least one encounter in this instance because you are already locked to an instance in which it has been defeated.
-    TRANSFER_ABORT_NOT_FOUND                     = 4,   // Transfer Aborted: instance not found
-    TRANSFER_ABORT_NEED_GROUP                    = 5,   // Transfer Aborted: you must be in a raid group to enter this instance
-    TRANSFER_ABORT_TOO_MANY_REALM_INSTANCES      = 6,   // Additional instances cannot be launched, please try again later.
-    TRANSFER_ABORT_DIFFICULTY                    = 7,   // <Normal, Heroic, Epic> difficulty mode is not available for %s.
-    TRANSFER_ABORT_REALM_ONLY                    = 8,   // All players in the party must be from the same realm to enter %s.
-    TRANSFER_ABORT_NOT_FOUND_2                   = 13,  // Transfer Aborted: instance not found
-    TRANSFER_ABORT_SOLO_PLAYER_SWITCH_DIFFICULTY = 15,  // This instance is already in progress. You may only switch difficulties from inside the instance.
-    TRANSFER_ABORT_TOO_MANY_INSTANCES            = 16,  // You have entered too many instances recently.
-    TRANSFER_ABORT_MAX_PLAYERS                   = 17,  // Transfer Aborted: instance is full
-    TRANSFER_ABORT_NOT_FOUND_3                   = 19,  // Transfer Aborted: instance not found
-    TRANSFER_ABORT_ERROR                         = 21,
-    TRANSFER_ABORT_NOT_FOUND_4                   = 23,  // Transfer Aborted: instance not found
-    TRANSFER_ABORT_UNIQUE_MESSAGE                = 24,  // Until you've escaped TLK's grasp, you cannot leave this place!
-    TRANSFER_ABORT_DIFFICULTY_NOT_FOUND          = 27,  // client writes to console "Unable to resolve requested difficultyID %u to actual difficulty for map %d"
-    TRANSFER_ABORT_XREALM_ZONE_DOWN              = 28,  // Transfer Aborted: cross-realm zone is down
-    TRANSFER_ABORT_ZONE_IN_COMBAT                = 29,  // Unable to zone in while an encounter is in progress.
-    TRANSFER_ABORT_INSUF_EXPAN_LVL               = 31,  // You must have <TBC, WotLK> expansion installed to access this area.
-
-    /*
-    // Unknown values - not used by the client to display any error
-    TRANSFER_ABORT_MANY_REALM_INSTANCES
-    TRANSFER_ABORT_AREA_NOT_ZONED
-    TRANSFER_ABORT_TIMEOUT
-    TRANSFER_ABORT_SHUTTING_DOWN
-    TRANSFER_ABORT_PLAYER_CONDITION
-    TRANSFER_ABORT_BUSY
-    TRANSFER_ABORT_DISCONNECTED
-    TRANSFER_ABORT_LOGGING_OUT
-    TRANSFER_ABORT_NEED_SERVER
-    */
+    TRANSFER_ABORT_ERROR                         = 1,
+    TRANSFER_ABORT_MAX_PLAYERS                   = 2,   // Transfer Aborted: instance is full
+    TRANSFER_ABORT_NOT_FOUND                     = 3,   // Transfer Aborted: instance not found
+    TRANSFER_ABORT_TOO_MANY_INSTANCES            = 4,   // You have entered too many instances recently.
+    TRANSFER_ABORT_ZONE_IN_COMBAT                = 6,   // Unable to zone in while an encounter is in progress.
+    TRANSFER_ABORT_INSUF_EXPAN_LVL               = 7,   // You must have <TBC, WotLK> expansion installed to access this area.
+    TRANSFER_ABORT_DIFFICULTY                    = 8,   // <Normal, Heroic, Epic> difficulty mode is not available for %s.
+    TRANSFER_ABORT_UNIQUE_MESSAGE                = 9,   // Until you've escaped TLK's grasp, you cannot leave this place!
+    TRANSFER_ABORT_TOO_MANY_REALM_INSTANCES      = 10,  // Additional instances cannot be launched, please try again later.
+    TRANSFER_ABORT_NEED_GROUP                    = 11,  // Transfer Aborted: you must be in a raid group to enter this instance
+    TRANSFER_ABORT_NOT_FOUND_2                   = 12,  // Transfer Aborted: instance not found
+    TRANSFER_ABORT_NOT_FOUND_3                   = 13,  // Transfer Aborted: instance not found
+    TRANSFER_ABORT_NOT_FOUND_4                   = 14,  // Transfer Aborted: instance not found
+    TRANSFER_ABORT_REALM_ONLY                    = 15,  // All players in the party must be from the same realm to enter %s.
+    TRANSFER_ABORT_MAP_NOT_ALLOWED               = 16,  // Map cannot be entered at this time.
+    TRANSFER_ABORT_LOCKED_TO_DIFFERENT_INSTANCE  = 18,  // You are already locked to %s
+    TRANSFER_ABORT_ALREADY_COMPLETED_ENCOUNTER   = 19,  // You are ineligible to participate in at least one encounter in this instance because you are already locked to an instance in which it has been defeated.
+    TRANSFER_ABORT_DIFFICULTY_NOT_FOUND          = 22,  // client writes to console "Unable to resolve requested difficultyID %u to actual difficulty for map %d"
+    TRANSFER_ABORT_XREALM_ZONE_DOWN              = 24,  // Transfer Aborted: cross-realm zone is down
+    TRANSFER_ABORT_SOLO_PLAYER_SWITCH_DIFFICULTY = 26,  // This instance is already in progress. You may only switch difficulties from inside the instance.
 };
 
 enum NewWorldReason
@@ -942,7 +930,7 @@ enum TeleportToOptions
 };
 
 /// Type of environmental damages
-enum EnviromentalDamage
+enum EnviromentalDamage : uint8
 {
     DAMAGE_EXHAUSTED = 0,
     DAMAGE_DROWNING  = 1,
@@ -1028,14 +1016,27 @@ enum PlayerDelayedOperations
 // Maximum money amount : 2^31 - 1
 TC_GAME_API extern uint64 const MAX_MONEY_AMOUNT;
 
+enum BindExtensionState
+{
+    EXTEND_STATE_EXPIRED  =   0,
+    EXTEND_STATE_NORMAL   =   1,
+    EXTEND_STATE_EXTENDED =   2,
+    EXTEND_STATE_KEEP     = 255   // special state: keep current save type
+};
 struct InstancePlayerBind
 {
     InstanceSave* save;
-    bool perm;
     /* permanent PlayerInstanceBinds are created in Raid/Heroic instances for players
-       that aren't already permanently bound when they are inside when a boss is killed
-       or when they enter an instance that the group leader is permanently bound to. */
-    InstancePlayerBind() : save(nullptr), perm(false) { }
+    that aren't already permanently bound when they are inside when a boss is killed
+    or when they enter an instance that the group leader is permanently bound to. */
+    bool perm;
+    /* extend state listing:
+    EXPIRED  - doesn't affect anything unless manually re-extended by player
+    NORMAL   - standard state
+    EXTENDED - won't be promoted to EXPIRED at next reset period, will instead be promoted to NORMAL */
+    BindExtensionState extendState;
+
+    InstancePlayerBind() : save(NULL), perm(false), extendState(EXTEND_STATE_NORMAL) { }
 };
 
 struct AccessRequirement
@@ -1077,7 +1078,7 @@ enum ReferAFriendError
     ERR_REFER_A_FRIEND_MAP_INCOMING_TRANSFER_NOT_ALLOWED = 15
 };
 
-enum PlayerRestState
+enum PlayerRestState : uint8
 {
     REST_STATE_RESTED                                = 0x01,
     REST_STATE_NOT_RAF_LINKED                        = 0x02,
@@ -1094,7 +1095,7 @@ enum PlayerCommandStates
     CHEAT_WATERWALK = 0x10
 };
 
-enum PlayerLogXPReason
+enum PlayerLogXPReason : uint8
 {
     LOG_XP_REASON_KILL    = 0,
     LOG_XP_REASON_NO_KILL = 1
@@ -1205,6 +1206,8 @@ class TC_GAME_API Player : public Unit, public GridObject<Player>
         explicit Player(WorldSession* session);
         ~Player();
 
+        PlayerAI* AI() const { return reinterpret_cast<PlayerAI*>(i_AI); }
+
         void CleanupsBeforeDelete(bool finalCleanup = true) override;
 
         void AddToWorld() override;
@@ -1221,7 +1224,8 @@ class TC_GAME_API Player : public Unit, public GridObject<Player>
         bool TeleportTo(WorldLocation const &loc, uint32 options = 0);
         bool TeleportToBGEntryPoint();
 
-        void SetSummonPoint(uint32 mapid, float x, float y, float z);
+        bool HasSummonPending() const;
+        void SendSummonRequestFrom(Unit* summoner);
         void SummonIfPossible(bool agree);
 
         bool Create(ObjectGuid::LowType guidlow, WorldPackets::Character::CharacterCreateInfo const* createInfo);
@@ -1314,12 +1318,16 @@ class TC_GAME_API Player : public Unit, public GridObject<Player>
 
         /// Handles said message in regular chat based on declared language and in config pre-defined Range.
         void Say(std::string const& text, Language language, WorldObject const* = nullptr) override;
+        void Say(uint32 textId, WorldObject const* target = nullptr) override;
         /// Handles yelled message in regular chat based on declared language and in config pre-defined Range.
         void Yell(std::string const& text, Language language, WorldObject const* = nullptr) override;
+        void Yell(uint32 textId, WorldObject const* target = nullptr) override;
         /// Outputs an universal text which is supposed to be an action.
         void TextEmote(std::string const& text, WorldObject const* = nullptr, bool = false) override;
+        void TextEmote(uint32 textId, WorldObject const* target = nullptr, bool isBossEmote = false) override;
         /// Handles whispers from Addons and players based on sender, receiver's guid and language.
         void Whisper(std::string const& text, Language language, Player* receiver, bool = false) override;
+        void Whisper(uint32 textId, Player* target, bool isBossWhisper = false) override;
         void WhisperAddon(std::string const& text, std::string const& prefix, Player* receiver);
 
         /*********************************************************/
@@ -1685,7 +1693,7 @@ class TC_GAME_API Player : public Unit, public GridObject<Player>
         void SetTarget(ObjectGuid const& /*guid*/) override { } /// Used for serverside target changes, does not apply to players
         void SetSelection(ObjectGuid const& guid) { SetGuidValue(UNIT_FIELD_TARGET, guid); }
 
-        uint8 GetComboPoints() const { return GetPower(POWER_COMBO_POINTS); }
+        uint32 GetComboPoints() const { return uint32(GetPower(POWER_COMBO_POINTS)); }
         void AddComboPoints(int8 count, Spell* spell = nullptr);
         void GainSpellComboPoints(int8 count);
         void ClearComboPoints();
@@ -2283,13 +2291,8 @@ class TC_GAME_API Player : public Unit, public GridObject<Player>
         uint32 GetSaveTimer() const { return m_nextSave; }
         void   SetSaveTimer(uint32 timer) { m_nextSave = timer; }
 
-        // Recall position
-        uint32 m_recallMap;
-        float  m_recallX;
-        float  m_recallY;
-        float  m_recallZ;
-        float  m_recallO;
-        void   SaveRecallPosition();
+        void SaveRecallPosition() { m_recall_location.WorldRelocate(*this); }
+        void Recall() { TeleportTo(m_recall_location); }
 
         void SetHomebind(WorldLocation const& loc, uint32 areaId);
         void SendBindPointUpdate() const;
@@ -2306,7 +2309,7 @@ class TC_GAME_API Player : public Unit, public GridObject<Player>
         // currently visible objects at player client
         GuidUnorderedSet m_clientGUIDs;
 
-        bool HaveAtClient(WorldObject const* u) const;
+        bool HaveAtClient(Object const* u) const;
 
         bool IsNeverVisible() const override;
 
@@ -2345,6 +2348,8 @@ class TC_GAME_API Player : public Unit, public GridObject<Player>
         void SendCinematicStart(uint32 CinematicSequenceId) const;
         void SendMovieStart(uint32 MovieId) const;
 
+        uint32 DoRandomRoll(uint32 minimum, uint32 maximum);
+
         /*********************************************************/
         /***                 INSTANCE SYSTEM                   ***/
         /*********************************************************/
@@ -2357,13 +2362,13 @@ class TC_GAME_API Player : public Unit, public GridObject<Player>
         bool m_InstanceValid;
         // permanent binds and solo binds by difficulty
         BoundInstancesMap m_boundInstances[MAX_DIFFICULTY];
-        InstancePlayerBind* GetBoundInstance(uint32 mapid, Difficulty difficulty);
+        InstancePlayerBind* GetBoundInstance(uint32 mapid, Difficulty difficulty, bool withExpired = false);
         InstancePlayerBind const* GetBoundInstance(uint32 mapid, Difficulty difficulty) const;
         BoundInstancesMap& GetBoundInstances(Difficulty difficulty) { return m_boundInstances[difficulty]; }
         InstanceSave* GetInstanceSave(uint32 mapid);
         void UnbindInstance(uint32 mapid, Difficulty difficulty, bool unload = false);
         void UnbindInstance(BoundInstancesMap::iterator &itr, Difficulty difficulty, bool unload = false);
-        InstancePlayerBind* BindToInstance(InstanceSave* save, bool permanent, bool load = false);
+        InstancePlayerBind* BindToInstance(InstanceSave* save, bool permanent, BindExtensionState extendState = EXTEND_STATE_NORMAL, bool load = false);
         void BindToInstance();
         void SetPendingBind(uint32 instanceId, uint32 bindTimer);
         bool HasPendingBind() const { return _pendingBindId > 0; }
@@ -2755,10 +2760,10 @@ class TC_GAME_API Player : public Unit, public GridObject<Player>
 
         // Player summoning
         time_t m_summon_expire;
-        uint32 m_summon_mapid;
-        float  m_summon_x;
-        float  m_summon_y;
-        float  m_summon_z;
+        WorldLocation m_summon_location;
+
+        // Recall position
+        WorldLocation m_recall_location;
 
         DeclinedName *m_declinedname;
         Runes *m_runes;
@@ -2797,7 +2802,6 @@ class TC_GAME_API Player : public Unit, public GridObject<Player>
 
         MapReference m_mapRef;
 
-        void UpdateCharmedAI();
         uint32 m_lastFallTime;
         float  m_lastFallZ;
 

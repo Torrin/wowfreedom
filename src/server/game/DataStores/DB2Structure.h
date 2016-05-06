@@ -157,7 +157,7 @@ struct CreatureDisplayInfoEntry
     uint32 SoundID;                                                 // 2
     uint32 ExtendedDisplayInfoID;                                   // 3
     float  CreatureModelScale;                                      // 4
-    float  Unknown620;                                              // 5
+    float  PlayerModelScale;                                        // 5 Used for players if greater than 0, see client's CGUnit_C::GetModelScale
     uint32 CreatureModelAlpha;                                      // 6
     LocalizedString* TextureVariation[3];                           // 7-9
     LocalizedString* PortraitTextureName;                           // 10
@@ -1259,6 +1259,22 @@ struct SpellPowerDifficultyEntry
     uint32 SpellPowerID;                                            // 0
     uint32 DifficultyID;                                            // 1
     uint32 PowerIndex;                                              // 2
+};
+
+struct SpellProcsPerMinuteEntry
+{
+    uint32 ID;
+    float BaseProcRate;
+    uint32 Flags;
+};
+
+struct SpellProcsPerMinuteModEntry
+{
+    uint32 ID;
+    uint32 Type;
+    uint32 Param;
+    float Coeff;
+    uint32 SpellProcsPerMinuteID;
 };
 
 struct SpellRadiusEntry
