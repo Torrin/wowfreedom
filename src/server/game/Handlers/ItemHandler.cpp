@@ -437,7 +437,7 @@ void WorldSession::HandleSellItemOpcode(WorldPackets::Item::SellItem& packet)
 
                 uint32 money = pProto->GetSellPrice() * packet.Amount;
                 _player->ModifyMoney(money);
-                _player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_MONEY_FROM_VENDORS, money);
+                _player->UpdateCriteria(CRITERIA_TYPE_MONEY_FROM_VENDORS, money);
             }
             else
                 _player->SendSellError(SELL_ERR_CANT_SELL_ITEM, creature, packet.ItemGUID);
@@ -481,7 +481,7 @@ void WorldSession::HandleBuybackItem(WorldPackets::Item::BuyBackItem& packet)
             _player->ModifyMoney(-(int32)price);
             _player->RemoveItemFromBuyBackSlot(packet.Slot, false);
             _player->ItemAddedQuestCheck(pItem->GetEntry(), pItem->GetCount());
-            _player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_RECEIVE_EPIC_ITEM, pItem->GetEntry(), pItem->GetCount());
+            _player->UpdateCriteria(CRITERIA_TYPE_RECEIVE_EPIC_ITEM, pItem->GetEntry(), pItem->GetCount());
             _player->StoreItem(dest, pItem, true);
         }
         else
@@ -1291,4 +1291,66 @@ void WorldSession::HandleUseCritterItem(WorldPackets::Item::UseCritterItem& useC
 
     GetBattlePetMgr()->AddPet(battlePetSpecies->ID, battlePetSpecies->CreatureID, BattlePetMgr::RollPetBreed(battlePetSpecies->ID), BattlePetMgr::GetDefaultPetQuality(battlePetSpecies->ID));
     _player->DestroyItem(item->GetBagSlot(), item->GetSlot(), true);
+}
+
+void WorldSession::HandleUpgradeItem(WorldPackets::Item::UpgradeItem& upgradeItem)
+{
+    WorldPackets::Item::ItemUpgradeResult itemUpgradeResult;
+    if (!_player->GetNPCIfCanInteractWith(upgradeItem.ItemMaster, UNIT_NPC_FLAG_ITEM_UPGRADE_MASTER))
+    {
+        TC_LOG_DEBUG("network", "WORLD: HandleUpgradeItems - %s not found or player can't interact with it.", upgradeItem.ItemMaster.ToString().c_str());
+        itemUpgradeResult.Success = false;
+        SendPacket(itemUpgradeResult.Write());
+        return;
+    }
+
+    Item* item = _player->GetItemByGuid(upgradeItem.ItemGUID);
+    if (!item)
+    {
+        TC_LOG_DEBUG("network", "WORLD: HandleUpgradeItems: Item %s not found!", upgradeItem.ItemGUID.ToString().c_str());
+        itemUpgradeResult.Success = false;
+        SendPacket(itemUpgradeResult.Write());
+        return;
+    }
+
+    ItemUpgradeEntry const* itemUpgradeEntry = sItemUpgradeStore.LookupEntry(upgradeItem.UpgradeID);
+    if (!itemUpgradeEntry)
+    {
+        TC_LOG_DEBUG("network", "WORLD: HandleUpgradeItems - ItemUpgradeEntry (%u) not found.", upgradeItem.UpgradeID);
+        itemUpgradeResult.Success = false;
+        SendPacket(itemUpgradeResult.Write());
+        return;
+    }
+
+    // Check if player has enough currency
+    if (!_player->HasCurrency(itemUpgradeEntry->CurrencyID, itemUpgradeEntry->CurrencyCost))
+    {
+        TC_LOG_DEBUG("network", "WORLD: HandleUpgradeItems - Player has not enougth currency (ID: %u, Cost: %u) not found.", itemUpgradeEntry->CurrencyID, itemUpgradeEntry->CurrencyCost);
+        itemUpgradeResult.Success = false;
+        SendPacket(itemUpgradeResult.Write());
+        return;
+    }
+
+    uint32 currentUpgradeId = item->GetModifier(ITEM_MODIFIER_UPGRADE_ID);
+    if (currentUpgradeId != itemUpgradeEntry->PrevItemUpgradeID)
+    {
+        TC_LOG_DEBUG("network", "WORLD: HandleUpgradeItems - ItemUpgradeEntry (%u) is not related to this ItemUpgradePath (%u).", itemUpgradeEntry->ID, currentUpgradeId);
+        itemUpgradeResult.Success = false;
+        SendPacket(itemUpgradeResult.Write());
+        return;
+    }
+
+    itemUpgradeResult.Success = true;
+    SendPacket(itemUpgradeResult.Write());
+
+    if (item->IsEquipped())
+        _player->_ApplyItemBonuses(item, item->GetSlot(), false);
+
+    item->SetModifier(ITEM_MODIFIER_UPGRADE_ID, itemUpgradeEntry->ID);
+
+    if (item->IsEquipped())
+        _player->_ApplyItemBonuses(item, item->GetSlot(), true);
+
+    item->SetState(ITEM_CHANGED, _player);
+    _player->ModifyCurrency(itemUpgradeEntry->CurrencyID, -int32(itemUpgradeEntry->CurrencyCost));
 }
