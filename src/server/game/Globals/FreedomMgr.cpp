@@ -5,6 +5,7 @@
 #include "MovementPackets.h"
 #include "MoveSpline.h"
 #include "MapManager.h"
+#include "GameObject.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/tokenizer.hpp>
@@ -231,6 +232,95 @@ void FreedomMgr::SetGameobjectSelectionForPlayer(ObjectGuid::LowType playerId, O
 ObjectGuid::LowType FreedomMgr::GetSelectedGameobjectGuidFromPlayer(ObjectGuid::LowType playerId)
 {
     return _playerExtraDataStore[playerId].selectedGameobjectGuid;
+}
+
+// https://github.com/TrinityCore/TrinityCore/commit/e68ff4186e685de00362b12bc0b5084a4d6065dd
+GameObject* FreedomMgr::GameObjectRefresh(GameObject* go)
+{
+    ObjectGuid::LowType guidLow = go->GetSpawnId();
+    Map* map = go->GetMap();
+    go->Delete();
+    go = new GameObject();
+    if (!go->LoadGameObjectFromDB(guidLow, map))
+    {
+        delete go;
+        return nullptr;
+    }
+
+    return go;
+}
+
+void FreedomMgr::GameObjectMove(GameObject* go, float x, float y, float z, float o)
+{
+    go->Relocate(x, y, z, o);
+    go->UpdateRotationFields();
+}
+
+void FreedomMgr::GameObjectTurn(GameObject* go, float o)
+{
+    GameObjectMove(go, go->GetPositionX(), go->GetPositionY(), go->GetPositionZ(), o);
+}
+
+void FreedomMgr::GameObjectScale(GameObject* go, float scale)
+{
+
+}
+
+void FreedomMgr::GameObjectDelete(GameObject* go)
+{
+    go->SetRespawnTime(0);
+    go->Delete();
+    go->DeleteFromDB();
+}
+
+GameObject* FreedomMgr::GameObjectCreate(Player* creator, GameObjectTemplate const* gobTemplate, uint32 spawnTimeSecs)
+{
+    if (gobTemplate->displayId && !sGameObjectDisplayInfoStore.LookupEntry(gobTemplate->displayId))
+    {
+        // report to DB errors log as in loading case
+        TC_LOG_ERROR("sql.sql", "Gameobject (Entry %u GoType: %u) have invalid displayId (%u), not spawned.", gobTemplate->entry, gobTemplate->type, gobTemplate->displayId);
+        return nullptr;
+    }
+
+    float x, y, z, o;
+    creator->GetPosition(x, y, z, o);
+    Map* map = creator->GetMap();
+
+    GameObject* object = new GameObject;
+
+    if (!object->Create(gobTemplate->entry, map, 0, x, y, z, o, 0.0f, 0.0f, 0.0f, 0.0f, 0, GO_STATE_READY))
+    {
+        delete object;
+        return nullptr;
+    }
+
+    object->CopyPhaseFrom(creator);
+
+    if (spawnTimeSecs)
+    {
+        object->SetRespawnTime(spawnTimeSecs);
+    }
+
+    // fill the gameobject data and save to the db
+    object->SaveToDB(map->GetId(), (1 << map->GetSpawnMode()), creator->GetPhaseMask());
+    ObjectGuid::LowType spawnId = object->GetSpawnId();
+
+    // delete the old object and do a clean load from DB with a fresh new GameObject instance.
+    // this is required to avoid weird behavior and memory leaks
+    delete object;
+
+    object = new GameObject();
+    // this will generate a new guid if the object is in an instance
+    if (!object->LoadGameObjectFromDB(spawnId, map))
+    {
+        delete object;
+        return nullptr;
+    }
+
+    /// @todo is it really necessary to add both the real and DB table guid here ?
+    sObjectMgr->AddGameobjectToGrid(spawnId, ASSERT_NOTNULL(sObjectMgr->GetGOData(spawnId)));
+
+    return object;
 }
 #pragma endregion
 

@@ -99,6 +99,21 @@ INSERT INTO wod_world.trinity_string (entry, content_default) VALUES
 /* FREEDOM_CMDE_TEMPLATE_DOES_NOT_EXIST				*/ (100081, CONCAT(@T_CMD_ERROR, 'Template (GUID: %llu, Entry ID: %u) cannot be found. Contact developers about this!')),
 /* FREEDOM_CMDH_GAMEOBJECT_SPAWN							*/ (100082, CONCAT(@T_CMD_SYNTAX, '.gobject add/spawn [temp] $entryId [$spawnTimeSecs]')),
 /* FREEDOM_CMDE_GAMEOBJECT_SPAWN_INVALID_ID			*/ (100083, CONCAT(@T_CMD_ERROR, 'Invalid gameobject entry ID')),
+/* FREEDOM_CMDE_GAMEOBJECT_SPAWN_FAIL					*/ (100084, CONCAT(@T_CMD_ERROR, 'Failed to spawn gameobject with entry %u (Invalid data, db fail or instance creation fail).')),
+/* FREEDOM_CMDI_GAMEOBJECT_SPAWN							*/ (100085, CONCAT(@T_CMD_INFO, 'Gameobject %s spawned (GUID: %llu, Entry ID: %u)')),
+/* FREEDOM_CMDE_GAMEOBJECT_SPAWN_INVALID_DISPLAY	*/ (100086, CONCAT(@T_CMD_ERROR, 'Failed to spawn gameobject with entry %u (Invalid display: cannot find display with id %u). Contact developers about this!')),
+/* FREEDOM_CMDI_GAMEOBJECT_NEAR							*/ (100087, CONCAT(@T_CMD_INFO, 'Found %u gameobjects in %.3f yards.')),
+/* FREEDOM_CMDI_GAMEOBJECT_NEAR_MAX_RESULT_COUNT	*/ (100088, CONCAT(@T_CMD_INFO, 'Found %u (Max result count) gameobjects in %.3f yards.')),
+/* FREEDOM_CMDE_GAMEOBJECT_GUID_NOT_EXISTS			*/ (100089, CONCAT(@T_CMD_ERROR, 'Gameobject with GUID %llu does not exist!')),
+/* FREEDOM_CMDE_GAMEOBJECT_ENTRY_NOT_EXISTS			*/ (100090, CONCAT(@T_CMD_ERROR, 'Gameobject with entry %u does not exist!')),
+/* FREEDOM_CMDI_GAMEOBJECT_NEAR_LIST_ITEM				*/ (100091, '%.3f yards - Entry: %u : %s'),
+/* FREEDOM_CMDI_GAMEOBJECT_MOVE							*/ (100092, CONCAT(@T_CMD_INFO, 'Gameobject %s (GUID: %llu) moved')),
+/* FREEDOM_CMDE_INVALID_TARGET_COORDS					*/ (100093, CONCAT(@T_CMD_ERROR, 'Invalid target coordinates (X: %.4f, Y: %.4f, Z: %.4f, MapID: %u)')),
+/* FREEDOM_CMDE_GAMEOBJECT_NOT_FOUND					*/ (100094, CONCAT(@T_CMD_ERROR, 'Gameobject not found!')),
+/* FREEDOM_CMDI_GAMEOBJECT_TURNED						*/ (100095, CONCAT(@T_CMD_INFO, 'Gameobject %s (GUID: %llu) turned')),
+/* FREEDOM_CMDI_GAMEOBJECT_DELETE						*/ (100096, CONCAT(@T_CMD_INFO, 'Gameobject deleted')),
+/* FREEDOM_CMDI_GAMEOBJECT_SET_STATE					*/ (100097, CONCAT(@T_CMD_INFO, 'Gameobject state/type set (Type: %u, State: %u)')),
+/* FREEDOM_CMDH_GAMEOBJECT_SET_STATE					*/ (100098, CONCAT(@T_CMD_SYNTAX, '.gobject set state $type $state [$guid]')),
 
 (200000, 'Dummy');
 -- Select new changes

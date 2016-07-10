@@ -95,4 +95,5 @@ void WorldDatabaseConnection::DoPrepareStatements()
     // CUSTOM FREEDOM DB STMT
     PrepareStatement(WORLD_SEL_NEAREST_GAMEOBJECT_BY_EID, "SELECT guid, id, SQRT(POW(position_x - ?, 2) + POW(position_y - ?, 2) + POW(position_z - ?, 2)) AS distance FROM gameobject WHERE map = ? AND id = ? ORDER BY distance LIMIT 1", CONNECTION_SYNCH);
     PrepareStatement(WORLD_SEL_NEAREST_GAMEOBJECT, "SELECT guid, id, SQRT(POW(position_x - ?, 2) + POW(position_y - ?, 2) + POW(position_z - ?, 2)) AS distance FROM gameobject WHERE map = ? ORDER BY distance LIMIT 1", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_NEAREST_GAMEOBJECTS, "SELECT guid, id, SQRT(POW(position_x - ?, 2) + POW(position_y - ?, 2) + POW(position_z - ?, 2)) AS distance FROM gameobject WHERE map = ? AND (POW(position_x - ?, 2) + POW(position_y - ?, 2) + POW(position_z - ?, 2)) <= ? ORDER BY distance DESC LIMIT ?", CONNECTION_SYNCH);
 }

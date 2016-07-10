@@ -2,6 +2,7 @@
 #define _FREEDOMMGR_H
 
 #include "ObjectMgr.h"
+#include "GameObject.h"
 
 class AdvancedArgumentTokenizer
 {
@@ -101,7 +102,6 @@ struct PlayerExtraData
 typedef std::unordered_map<ObjectGuid::LowType, PlayerExtraData> PlayerExtraDataContainer;
 
 class Map;
-class GameObject;
 
 class FreedomMgr
 {
@@ -116,6 +116,12 @@ class FreedomMgr
         void SetGameobjectSelectionForPlayer(ObjectGuid::LowType playerId, ObjectGuid::LowType gameobjectId);
         ObjectGuid::LowType GetSelectedGameobjectGuidFromPlayer(ObjectGuid::LowType playerId);
         GameObject* GetAnyGameObject(Map* objMap, ObjectGuid::LowType lowguid, uint32 entry);
+        GameObject* GameObjectRefresh(GameObject* go);
+        void GameObjectMove(GameObject* go, float x, float y, float z, float o);
+        void GameObjectTurn(GameObject* go, float o);
+        void GameObjectScale(GameObject* go, float scale);
+        void GameObjectDelete(GameObject* go);
+        GameObject* GameObjectCreate(Player* creator, GameObjectTemplate const* gobTemplate, uint32 spawnTimeSecs = 0);
 
         // Creature
         void SetCreatureSelectionForPlayer(ObjectGuid::LowType playerId, ObjectGuid::LowType creatureId);
