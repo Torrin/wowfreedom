@@ -76,7 +76,7 @@ INSERT INTO wod_world.trinity_string (entry, content_default) VALUES
 /* FREEDOM_CMDH_MORPH_ADD									*/ (100058, CONCAT(@T_CMD_SYNTAX, '.freedom morph add $name $displayId [$playerName (if not supplied, then add morph to selected player)]')),
 /* FREEDOM_CMDH_MORPH_DEL									*/ (100059, CONCAT(@T_CMD_SYNTAX, '.freedom morph delete $name/$displayId [$playerName (if not supplied, then add morph to selected player)]')),
 /* FREEDOM_CMDE_INVALID_SELECTION 						*/ (100060, CONCAT(@T_CMD_ERROR, @C_TEXT, 'Invalid selection.', @C_CLOSE)),
-/* FREEDOM_CMDI_X_NONE_FOUND								*/ (100061, CONCAT(@T_CMD_INFO, @C_TEXT, 'No %s were found.', @C_CLOSE)),
+/* FREEDOM_CMDI_X_NOT_FOUND								*/ (100061, CONCAT(@T_CMD_INFO, @C_TEXT, '%s not found.', @C_CLOSE)),
 /* FREEDOM_CMDE_INVALID_ARGUMENT_X						*/ (100062, CONCAT(@T_CMD_ERROR, @C_TEXT, 'Invalid argument for: ', @C_CLOSE, '%s')),
 /* FREEDOM_CMDI_MORPH										*/ (100063, CONCAT(@T_CMD_INFO, @C_TEXT, 'Your model display was set to following morph: ', @C_LINK, '%s', @C_TEXT, ' (Display ID: ', @C_LINK, '%u', @C_TEXT, ')', @C_CLOSE)),
 /* FREEDOM_CMDI_MORPH_ADD									*/ (100064, CONCAT(@T_CMD_INFO, @C_TEXT, 'Morph (Name: ', @C_LINK, '%s', @C_TEXT, ', Display ID: ', @C_LINK, '%u', @C_TEXT, ') successfully added to following player: ', @C_LINK, '%s', @C_CLOSE)),
@@ -86,6 +86,19 @@ INSERT INTO wod_world.trinity_string (entry, content_default) VALUES
 /* FREEDOM_CMDH_HOVER 										*/ (100068, CONCAT(@T_CMD_SYNTAX, '.freedom hover on/off')),
 /* FREEDOM_CMDI_HOVER										*/ (100069, CONCAT(@T_CMD_INFO, @C_TEXT, 'Hover toggle: ', @C_LINK, '%s', @C_CLOSE)),
 /* FREEDOM_CMDE_SUMMON_PENDING							*/ (100070, CONCAT(@T_CMD_ERROR, @C_TEXT, 'Player ', @C_LINK, '%s ', @C_TEXT, 'already has a pending summon request from someone.', @C_CLOSE)),
+/* FREEDOM_CMDE_X_IS_BLACKLISTED							*/ (100071, CONCAT(@T_CMD_ERROR, @C_TEXT, '%s is blacklisted. Only GMs or higher can bypass this.', @C_CLOSE)),
+/* FREEDOM_CMDH_BLACKLIST_ITEM							*/ (100072, CONCAT(@T_CMD_SYNTAX, '.blacklist item $itemId/$itemLink [$flag] ($flag = 1 by default)')),
+/* FREEDOM_CMDI_BLACKLIST_ITEM							*/ (100073, CONCAT(@T_CMD_INFO, 'Item successfully ', @C_LINK, '%s', @C_CLOSE)),
+/* FREEDOM_CMDNOSTYLE_ID_AND_NAME_LIST_ITEM			*/ (100074, '%u - %s'),
+/* FREEDOM_CMDI_ID_AND_NAME_LIST_ITEM_BLACKLISTED  */ (100075, CONCAT('%u - %s ', @C_ERR, 'BLACKLISTED', @C_CLOSE)),
+/* FREEDOM_CMDE_X_WITH_GUID_NOT_FOUND					*/ (100076, CONCAT(@T_CMD_ERROR, @C_TEXT, '%s with guid ', @C_LINK, '%llu', @C_TEXT, ' was not found.', @C_CLOSE)),
+/* FREEDOM_CMDE_GAMEOBJECT_SELECT_ENTRY_ID			*/ (100077, CONCAT(@T_CMD_ERROR, 'Cannot find gameobject template (Entry ID: %u) for selected game object with guid %llu. Contact developers about this!')),
+/* FREEDOM_CMDE_GAMEOBJECT_SELECT_NOT_IN_WORLD		*/ (100078, CONCAT(@T_CMD_ERROR, 'Cannot find gameobject object instance for selected gameobject with guid %llu (Entry ID: %u). Contact developers about this!')),
+/* FREEDOM_CMDI_GAMEOBJECT_SELECT						*/ (100079, CONCAT(@T_CMD_INFO, 'Selected gameobject %s (GUID: %llu, Entry ID: %u, Distance: %.3f yards)')),
+/* FREEDOM_CMDI_GAMEOBJECT_ACTIVATED 					*/ (100080, CONCAT(@T_CMD_INFO, 'Gameobject %s activated!')),
+/* FREEDOM_CMDE_TEMPLATE_DOES_NOT_EXIST				*/ (100081, CONCAT(@T_CMD_ERROR, 'Template (GUID: %llu, Entry ID: %u) cannot be found. Contact developers about this!')),
+/* FREEDOM_CMDH_GAMEOBJECT_SPAWN							*/ (100082, CONCAT(@T_CMD_SYNTAX, '.gobject add/spawn [temp] $entryId [$spawnTimeSecs]')),
+/* FREEDOM_CMDE_GAMEOBJECT_SPAWN_INVALID_ID			*/ (100083, CONCAT(@T_CMD_ERROR, 'Invalid gameobject entry ID')),
 
 (200000, 'Dummy');
 -- Select new changes

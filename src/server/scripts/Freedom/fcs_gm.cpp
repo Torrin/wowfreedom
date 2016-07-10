@@ -16,19 +16,61 @@ public:
     {
         static std::vector<ChatCommand> gmCommandTable =
         {
-            { "chat",    rbac::RBAC_PERM_COMMAND_GM_CHAT,    false, &HandleGMChatCommand,       "" },
-            { "fly",     rbac::RBAC_PERM_COMMAND_GM_FLY,     false, &HandleGMFlyCommand,        "" },
-            { "ingame",  rbac::RBAC_PERM_COMMAND_GM_INGAME,   true, &HandleGMListIngameCommand, "" },
-            { "list",    rbac::RBAC_PERM_COMMAND_GM_LIST,     true, &HandleGMListFullCommand,   "" },
-            { "visible", rbac::RBAC_PERM_COMMAND_GM_VISIBLE, false, &HandleGMVisibleCommand,    "" },
-            { "",        rbac::RBAC_PERM_COMMAND_GM,         false, &HandleGMCommand,           "" },
+            { "chat",           rbac::RBAC_PERM_COMMAND_GM_CHAT,        false,  &HandleGMChatCommand,           "" },
+            { "fly",            rbac::RBAC_PERM_COMMAND_GM_FLY,         false,  &HandleGMFlyCommand,            "" },
+            { "ingame",         rbac::RBAC_PERM_COMMAND_GM_INGAME,      true,   &HandleGMListIngameCommand,     "" },
+            { "list",           rbac::RBAC_PERM_COMMAND_GM_LIST,        true,   &HandleGMListFullCommand,       "" },
+            { "visible",        rbac::RBAC_PERM_COMMAND_GM_VISIBLE,     false,  &HandleGMVisibleCommand,        "" },
+            { "",               rbac::RBAC_PERM_COMMAND_GM,             false,  &HandleGMCommand,               "" },
+        };
+        static std::vector<ChatCommand> blacklistCommandTable =
+        {
+            { "item",           rbac::RBAC_FPERM_ADMINISTRATION,        false,  &HandleBlacklistItemCommand,    "" },
         };
         static std::vector<ChatCommand> commandTable =
         {
-            { "gm", rbac::RBAC_PERM_COMMAND_GM, false, NULL, "", gmCommandTable },
+            { "gm",             rbac::RBAC_PERM_COMMAND_GM,             false,  NULL, "", gmCommandTable },
+            { "blacklist",      rbac::RBAC_FPERM_ADMINISTRATION,        false,  NULL, "", blacklistCommandTable },
         };
         return commandTable;
     }
+
+#pragma region BLACKLIST
+    static bool HandleBlacklistItemCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_BLACKLIST_ITEM);
+            return true;
+        }
+
+        char* id = handler->extractKeyFromLink((char*)args, "Hitem");
+        char* flagStr = strtok(NULL, " ");
+
+        uint32 itemId = atoul(id);
+        uint32 flag = flagStr ? atoul(flagStr) : 1;
+
+        ItemTemplate const* itemTemplate = sObjectMgr->GetItemTemplate(itemId);
+        if (!itemTemplate)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_X_WITH_ID_NOT_FOUND, "Item", itemId);
+            return true;
+        }
+
+        if (flag)
+        {
+            sFreedomMgr->SetItemTemplateExtraHiddenFlag(itemId, true);
+            handler->PSendSysMessage(FREEDOM_CMDI_BLACKLIST_ITEM, "added to the blacklist");
+        }
+        else
+        {
+            sFreedomMgr->SetItemTemplateExtraHiddenFlag(itemId, false);
+            handler->PSendSysMessage(FREEDOM_CMDI_BLACKLIST_ITEM, "removed from the blacklist");
+        }
+        
+        return true;
+    }
+#pragma endregion
 
     // Enables or disables hiding of the staff badge
     static bool HandleGMChatCommand(ChatHandler* handler, char const* args)

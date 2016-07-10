@@ -4,8 +4,175 @@
 #include "AccountMgr.h"
 #include "MovementPackets.h"
 #include "MoveSpline.h"
+#include "MapManager.h"
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/tokenizer.hpp>
 
+#pragma region ADVANCED_TOKENIZER
+AdvancedArgumentTokenizer::AdvancedArgumentTokenizer(const std::string &src, bool preserveQuotes)
+{
+    bool trim = true;
+    bool quoteMode = false;
+    bool chatLinkMode = false;
+    char cPrev = '\0';
+    std::string token = "";
+
+    for (auto it = src.begin(); it != src.end(); it++)
+    {
+        char c = *it;
+
+        if (c == ' ' || c == '\t' || c == '\b') // whitespace case
+        {
+            if (trim) 
+            {
+                cPrev = c;
+                continue;
+            }
+
+            if (quoteMode || chatLinkMode)
+            {               
+                token += c;
+            }
+            else
+            {
+                if (token != "")
+                    m_storage.push_back(token);
+                token = "";
+                trim = true;
+            }
+        }
+        else if (c == '\"') // quote case
+        {
+            if (quoteMode)
+            {
+                if (token != "")
+                    m_storage.push_back(token);
+                token = "";
+                trim = true;
+                quoteMode = false;
+            }
+            else
+            {
+                quoteMode = true;
+                trim = false;
+                if (preserveQuotes)
+                    token += c;
+            }
+        }
+        else if (c == 'c')
+        {
+            trim = false;
+            token += c;
+
+            if (cPrev == '|' && !quoteMode)
+                chatLinkMode = true;            
+        }
+        else if (c == 'r')
+        {                
+            trim = false;
+            token += c;
+
+            if (cPrev == '|' && !quoteMode)
+            {
+                chatLinkMode = false;
+                m_storage.push_back(token);
+                token = "";
+                trim = true;
+            }
+        }
+        else
+        {
+            trim = false;
+            token += c;
+        }
+
+        cPrev = c;
+    }
+
+    if (token != "")
+        m_storage.push_back(token);
+}
+
+AdvancedArgumentTokenizer::~AdvancedArgumentTokenizer()
+{
+}
+
+void AdvancedArgumentTokenizer::LoadModifier(std::string modifier, uint32 paramCount)
+{
+    // Do not override previously defined modifier due to potential missing parameters from normal token storage
+    if (m_modifiers.find(modifier) != m_modifiers.end())
+        return;
+
+    ModifierValueStorageType valueStorage;
+    valueStorage.first = paramCount;
+    valueStorage.second = TokenStorage(paramCount);    
+
+    bool modifierCheck = true;
+    bool extract = false;
+    int extractCount = paramCount;
+    int modifierParamIndex = 0;
+    int paramIndex = 0;
+    std::vector<uint32> removeIndexes;
+
+    // Copy modifier and its paramaters (if it has any) to modifier storage
+    for (auto param : m_storage)
+    {
+        if (!IsModifier(param) && modifierCheck)
+            break;
+        else
+            modifierCheck = false;
+
+        if (param == modifier && !extract)
+        {
+            extract = true;
+            removeIndexes.push_back(paramIndex);
+
+            if (extractCount == 0)
+                break;
+        } 
+        else if (extract && extractCount > 0)
+        {
+            valueStorage.second[modifierParamIndex] = param;
+            removeIndexes.push_back(paramIndex);
+            modifierParamIndex++;
+            extractCount--;
+        }
+
+        paramIndex++;
+    }
+
+    // If extract is still false, then given modifier doesn't exist, remove it from modifier storage
+    if (!extract)
+    {
+        return;        
+    }
+
+    m_modifiers[modifier] = valueStorage;
+
+    // Remove modifier and its parameters (if it has any) from normal token storage
+    int indexOffset = 0;
+    for (auto index : removeIndexes)
+    {
+        m_storage.erase(m_storage.begin() + index - indexOffset);
+        indexOffset++;
+    }
+}
+
+std::string AdvancedArgumentTokenizer::GetModifierValue(std::string modifier, uint32 index)
+{
+    auto it = m_modifiers.find(modifier);
+    if (it != m_modifiers.end())
+    {
+        if (index < it->second.second.size())
+            return it->second.second[index];
+    }
+
+    return "";
+}
+#pragma endregion
+
+#pragma region FREEDOM_MANAGER
 FreedomMgr::FreedomMgr()
 {
 }
@@ -28,9 +195,93 @@ void FreedomMgr::LoadAllTables()
     LoadPrivateTeleports();
     LoadPublicSpells();
     LoadMorphs();
+    LoadItemTemplateExtras();
 
     TC_LOG_INFO("server.loading", ">> Loaded FreedomMgr tables in %u ms", GetMSTimeDiffToNow(oldMSTime));
 }
+
+#pragma region GAMEOBJECT
+GameObject* FreedomMgr::GetAnyGameObject(Map* objMap, ObjectGuid::LowType lowguid, uint32 entry)
+{
+    GameObject* obj = nullptr;
+
+    obj = objMap->GetGameObject(ObjectGuid::Create<HighGuid::GameObject>(objMap->GetId(), entry, lowguid));
+
+    // guid is DB guid of object
+    if (!obj && sObjectMgr->GetGOData(lowguid))
+    {
+        auto bounds = objMap->GetGameObjectBySpawnIdStore().equal_range(lowguid);
+        if (bounds.first == bounds.second)
+            return nullptr;
+
+        return bounds.first->second;
+    }
+
+    if (!obj)
+        objMap->GetGameObject(ObjectGuid::Create<HighGuid::Transport>(lowguid));
+
+    return obj;
+}
+
+void FreedomMgr::SetGameobjectSelectionForPlayer(ObjectGuid::LowType playerId, ObjectGuid::LowType gameobjectId)
+{
+    _playerExtraDataStore[playerId].selectedGameobjectGuid = gameobjectId;
+}
+
+ObjectGuid::LowType FreedomMgr::GetSelectedGameobjectGuidFromPlayer(ObjectGuid::LowType playerId)
+{
+    return _playerExtraDataStore[playerId].selectedGameobjectGuid;
+}
+#pragma endregion
+
+#pragma region ITEMS
+void FreedomMgr::LoadItemTemplateExtras()
+{
+    // clear current storage
+    _itemTemplateExtraStore.clear();
+
+    // entry_id, hidden
+    PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_SEL_ITEMTEMPLATEEXTRA);
+    PreparedQueryResult result = FreedomDatabase.Query(stmt);
+
+    if (!result)
+        return;
+
+    do
+    {
+        Field * fields = result->Fetch();
+        ItemTemplateExtraData data;
+        uint32 itemId = fields[0].GetUInt32();
+        data.hidden = fields[1].GetBool();
+
+        _itemTemplateExtraStore[itemId] = data;
+    } while (result->NextRow());
+}
+
+ItemTemplateExtraData const* FreedomMgr::GetItemTemplateExtraById(uint32 itemId)
+{
+    auto it = _itemTemplateExtraStore.find(itemId);
+    if (it != _itemTemplateExtraStore.end())
+        return &it->second;
+    else
+        return nullptr;
+}
+
+void FreedomMgr::SetItemTemplateExtraHiddenFlag(uint32 itemId, bool hidden)
+{
+    auto it = _itemTemplateExtraStore.find(itemId);
+    if (it == _itemTemplateExtraStore.end())
+        return;
+
+    _itemTemplateExtraStore[itemId].hidden = hidden;
+
+    // DB update
+    PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_UPD_ITEMTEMPLATEEXTRA);
+    stmt->setBool(0, hidden);
+    stmt->setUInt32(1, itemId);
+    FreedomDatabase.Execute(stmt);
+}
+#pragma endregion
 
 #pragma region PLAYERS
 void FreedomMgr::RemoveHoverFromPlayer(Player* player)
@@ -92,6 +343,44 @@ std::string FreedomMgr::GetMapName(uint32 mapId)
         return map->MapName_lang;
     else
         return "Unknown";
+}
+
+std::string FreedomMgr::GetChatLinkKey(std::string const &src, std::string type)
+{
+    if (src.empty())
+        return "";
+
+    std::string typePart = "|" + type + ":";
+    std::string key = "";
+    std::size_t pos = src.find(typePart); // find start pos of "|Hkeytype:" fragment first
+
+    // Check for plain number first
+    std::string plainNumber = src;
+    boost::trim(plainNumber); // trim spaces
+    plainNumber = plainNumber.substr(0, plainNumber.find(' ')); // get first token in case src had multiple ones
+    if (isNumeric(plainNumber.c_str()))
+        return plainNumber;
+
+    // Do ChatLink check
+    if (pos != std::string::npos)
+    {
+        auto it = src.begin();
+        std::advance(it, pos + typePart.length());
+        
+        // if key part iteration ends without encountering ':' or '|', 
+        // then link was malformed and we return empty string later on
+        for (; it != src.end(); it++)
+        {
+            char c = *it;
+
+            if (c == ':' || c == '|')
+                return key;
+
+            key += c;
+        }
+    }
+
+    return "";
 }
 
 #pragma endregion
@@ -429,7 +718,7 @@ void FreedomMgr::LoadMorphs()
     } while (result->NextRow());
 }
 
-#pragma endregion MORPHS
+#pragma endregion
 
 #pragma region SELECTION
 
@@ -443,14 +732,6 @@ ObjectGuid::LowType FreedomMgr::GetSelectedCreatureGuidFromPlayer(ObjectGuid::Lo
     return _playerExtraDataStore[playerId].selectedCreatureGuid;
 }
 
-void FreedomMgr::SetGameobjectSelectionForPlayer(ObjectGuid::LowType playerId, ObjectGuid::LowType gameobjectId)
-{
-    _playerExtraDataStore[playerId].selectedGameobjectGuid = gameobjectId;
-}
-
-ObjectGuid::LowType FreedomMgr::GetSelectedGameobjectGuidFromPlayer(ObjectGuid::LowType playerId)
-{
-    return _playerExtraDataStore[playerId].selectedGameobjectGuid;
-}
+#pragma endregion
 
 #pragma endregion

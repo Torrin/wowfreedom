@@ -31,6 +31,7 @@ EndScriptData */
 #include "ReputationMgr.h"
 #include "ScriptMgr.h"
 #include "SpellInfo.h"
+#include <boost/algorithm/string/predicate.hpp>
 
 class flookup_commandscript : public CommandScript
 {
@@ -357,14 +358,6 @@ public:
             return false;
 
         std::string namePart = args;
-        std::wstring wNamePart;
-
-        // converting string that we try to find to lower case
-        if (!Utf8toWStr(namePart, wNamePart))
-            return false;
-
-        wstrToLower(wNamePart);
-
         bool found = false;
         uint32 count = 0;
         uint32 maxResults = sWorld->getIntConfig(CONFIG_MAX_RESULTS_LOOKUP_COMMANDS);
@@ -377,7 +370,9 @@ public:
             if (name.empty())
                 continue;
 
-            if (Utf8FitTo(name, wNamePart))
+            ItemTemplateExtraData const* data = sFreedomMgr->GetItemTemplateExtraById(itr->second.GetId());
+            
+            if (boost::icontains(name, namePart))
             {
                 if (maxResults && count++ == maxResults)
                 {
@@ -386,9 +381,11 @@ public:
                 }
 
                 if (handler->GetSession())
-                    handler->PSendSysMessage(LANG_ITEM_LIST_CHAT, itr->second.GetId(), itr->second.GetId(), name.c_str());
+                    handler->PSendSysMessage(data->hidden ? FREEDOM_CMDI_ID_AND_NAME_LIST_ITEM_BLACKLISTED : FREEDOM_CMDNOSTYLE_ID_AND_NAME_LIST_ITEM,
+                        itr->second.GetId(), 
+                        sFreedomMgr->ToChatLink("Hitem", itr->second.GetId(), name));
                 else
-                    handler->PSendSysMessage(LANG_ITEM_LIST_CONSOLE, itr->second.GetId(), name.c_str());
+                    handler->PSendSysMessage(LANG_ITEM_LIST_CONSOLE, itr->second.GetId(), name.c_str());                    
 
                 if (!found)
                     found = true;

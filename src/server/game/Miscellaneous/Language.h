@@ -114,7 +114,6 @@ enum TrinityStrings
     LANG_PVPSTATS_DISABLED              = 81,
     // Free 82 - 95
 
-
     LANG_GUILD_RENAME_ALREADY_EXISTS    = 96,
     LANG_GUILD_RENAME_DONE              = 97,
     LANG_RENAME_PLAYER_ALREADY_EXISTS   = 98,
@@ -1282,7 +1281,7 @@ enum TrinityStrings
     FREEDOM_CMDH_MORPH_ADD                          = 100058,
     FREEDOM_CMDH_MORPH_DEL                          = 100059,
     FREEDOM_CMDE_INVALID_SELECTION                  = 100060,
-    FREEDOM_CMDI_X_NONE_FOUND                       = 100061,
+    FREEDOM_CMDI_X_NOT_FOUND                        = 100061,
     FREEDOM_CMDE_INVALID_ARGUMENT_X                 = 100062,
     FREEDOM_CMDI_MORPH                              = 100063,
     FREEDOM_CMDI_MORPH_ADD                          = 100064,
@@ -1292,5 +1291,18 @@ enum TrinityStrings
     FREEDOM_CMDH_HOVER                              = 100068,
     FREEDOM_CMDI_HOVER                              = 100069,
     FREEDOM_CMDE_SUMMON_PENDING                     = 100070,
+    FREEDOM_CMDE_X_IS_BLACKLISTED                   = 100071,
+    FREEDOM_CMDH_BLACKLIST_ITEM                     = 100072,
+    FREEDOM_CMDI_BLACKLIST_ITEM                     = 100073,
+    FREEDOM_CMDNOSTYLE_ID_AND_NAME_LIST_ITEM        = 100074,
+    FREEDOM_CMDI_ID_AND_NAME_LIST_ITEM_BLACKLISTED  = 100075,
+    FREEDOM_CMDE_X_WITH_GUID_NOT_FOUND              = 100076,
+    FREEDOM_CMDE_GAMEOBJECT_SELECT_ENTRY_ID         = 100077,
+    FREEDOM_CMDE_GAMEOBJECT_SELECT_NOT_IN_WORLD     = 100078,
+    FREEDOM_CMDI_GAMEOBJECT_SELECT                  = 100079,
+    FREEDOM_CMDI_GAMEOBJECT_ACTIVATED               = 100080,
+    FREEDOM_CMDE_TEMPLATE_DOES_NOT_EXIST            = 100081,
+    FREEDOM_CMDH_GAMEOBJECT_SPAWN                   = 100082,
+    FREEDOM_CMDE_GAMEOBJECT_SPAWN_INVALID_ID        = 100083,
 };
 #endif
