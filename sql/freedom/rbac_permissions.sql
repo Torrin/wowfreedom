@@ -123,6 +123,7 @@ INSERT INTO rbac_linked_permissions (`id`, `linkedId`) VALUES
 (@MODERATOR, 270), -- cast self
 (@MODERATOR, 271), -- cast target
 (@MODERATOR, 272), -- cast dest
+(@MODERATOR, 373), -- gm fly
 (@MODERATOR, 377), -- go
 (@MODERATOR, 378), -- go creature
 (@MODERATOR, 379), -- go graveyard
@@ -272,7 +273,6 @@ INSERT INTO rbac_linked_permissions (`id`, `linkedId`) VALUES
 (@GM, 294), -- cheat explore
 (@GM, 371), -- gm
 (@GM, 372), -- gm chat
-(@GM, 373), -- gm fly
 -- (@GM, 374), -- gm ingame
 (@GM, 375), -- gm list
 (@GM, 376), -- gm visible
