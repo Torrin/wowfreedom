@@ -1041,18 +1041,93 @@ public:
     static bool HandleModifyPhaseCommand(ChatHandler* handler, const char* args)
     {
         if (!*args)
-            return false;
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_MODIFY_PHASE);
+            return true;
+        }
 
-        uint32 phase = (uint32)atoi((char*)args);
-
+        Player* source = handler->GetSession()->GetPlayer();
         Unit* target = handler->getSelectedUnit();
+        bool parseAsPhaseMasks = true;
+
         if (!target)
-            target = handler->GetSession()->GetPlayer();
+            target = source;
 
-        target->SetInPhase(phase, true, !target->IsInPhase(phase));
+        AdvancedArgumentTokenizer tokenizer(args);
+        tokenizer.LoadModifier("-ids", 0);
+        tokenizer.LoadModifier("-guid", 1);
 
-        if (target->GetTypeId() == TYPEID_PLAYER)
-            target->ToPlayer()->SendUpdatePhasing();
+        if (tokenizer.ModifierExists("-guid"))
+        {
+            std::string guidValue = tokenizer.GetModifierValue("-guid", 0);
+            std::string guidKey = sFreedomMgr->GetChatLinkKey(guidValue, "Hcreature");
+            ObjectGuid::LowType guidLow = atoul(guidKey.c_str());
+            Creature* creature = NULL;
+            if (auto data = sObjectMgr->GetCreatureData(guidLow))
+                creature = sFreedomMgr->GetAnyCreature(source->GetMap(), guidLow, data->id);
+
+            if (!creature)
+            {
+                handler->PSendSysMessage(FREEDOM_CMDE_CREATURE_NOT_FOUND);
+                return true;
+            }
+
+            target = creature;
+        }
+
+        if (tokenizer.ModifierExists("-ids"))
+        {
+            parseAsPhaseMasks = false;
+        }
+
+        std::string phases = "";
+        uint32 phaseMask = 0;
+
+        for (auto phaseElem : tokenizer)
+        {
+            uint32 phase = atoul(phaseElem.c_str());
+
+            if (!phase)
+                continue;
+
+            if (parseAsPhaseMasks)
+            {
+                if (!sFreedomMgr->IsValidPhaseMask(phase))
+                    continue;
+
+                phaseMask |= phase;
+                phases += " " + phaseElem;
+            }
+            else
+            {
+                if (!sFreedomMgr->IsValidPhaseId(phase))
+                    continue;
+
+                phaseMask |= sFreedomMgr->GetPhaseMask(phase);
+                phases += " " + phaseElem;
+            }
+        }
+
+        if (phaseMask)
+        {
+            if (target->GetTypeId() == TYPEID_PLAYER)
+            {
+                sFreedomMgr->PlayerPhase(target->ToPlayer(), phaseMask);
+                target->ToPlayer()->SendUpdatePhasing();
+            }
+            else
+            {
+                handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
+                return true;
+            }
+        }
+
+        if (phases.empty())
+            handler->PSendSysMessage(FREEDOM_CMDE_MODIFY_PHASE_NOT_SET);
+        else if (parseAsPhaseMasks)
+            handler->PSendSysMessage(FREEDOM_CMDI_MODIFY_PHASE_BITFIELDS, phases);
+        else
+            handler->PSendSysMessage(FREEDOM_CMDI_MODIFY_PHASE_PHASEIDS, phases);
 
         return true;
     }

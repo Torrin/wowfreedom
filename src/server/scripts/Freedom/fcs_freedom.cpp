@@ -780,6 +780,8 @@ public:
 
     static bool HandleFreedomReloadGameobjectCommand(ChatHandler* handler, char const* args)
     {
+        sFreedomMgr->LoadGameObjectTemplateExtras();
+        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD, "gameobject_template_extra").c_str());
         sFreedomMgr->LoadGameObjectExtras();
         handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD, "gameobject_extra").c_str());
         return true;

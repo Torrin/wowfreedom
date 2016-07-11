@@ -41,10 +41,22 @@ protected:
     ModifierStorageType m_modifiers;
 };
 
+struct GameObjectTemplateExtraData
+{
+    GameObjectTemplateExtraData() : disabled(false), modelName("(UNKNOWN)"), modelType("MDX"), isDefault(false) { }
+
+    bool disabled;
+    std::string modelName;
+    std::string modelType;
+    bool isDefault;
+};
+
+typedef std::unordered_map<uint32, GameObjectTemplateExtraData> GameObjectTemplateExtraContainer;
+
 struct GameObjectExtraData
 {
     GameObjectExtraData() : scale(-1.0f), creatorBnetAccId(0), creatorPlayerId(0),
-        modifierBnetAccId(0), modifierPlayerId(0), created(0), modified(0) { }
+        modifierBnetAccId(0), modifierPlayerId(0), created(0), modified(0), phaseMask(1) { }
 
     float scale;
     uint32 creatorBnetAccId;
@@ -53,6 +65,7 @@ struct GameObjectExtraData
     uint64 modifierPlayerId;
     time_t created;
     time_t modified;
+    uint32 phaseMask;
 };
 
 typedef std::unordered_map<uint64, GameObjectExtraData> GameObjectExtraContainer;
@@ -113,6 +126,7 @@ struct PlayerExtraData
     ObjectGuid::LowType selectedGameobjectGuid;
     ObjectGuid::LowType selectedCreatureGuid;
     MorphDataContainer morphDataStore;
+    uint32 phaseMask;
 };
 
 typedef std::unordered_map<ObjectGuid::LowType, PlayerExtraData> PlayerExtraDataContainer;
@@ -132,10 +146,18 @@ class FreedomMgr
 
         // Phasing
         int GetPhaseMask(uint32 phaseId);
+        int GetPhaseId(uint32 phaseMask);
         bool IsValidPhaseId(uint32 phaseId);
+        bool IsValidPhaseMask(uint32 phaseMask);
+        void GameObjectPhase(GameObject* go, uint32 phaseMask);
+        void PlayerPhase(Player* player, uint32 phaseMask);
+        uint32 GetPlayerPhase(Player* player);
 
         // Gameobject
         void LoadGameObjectExtras();
+        void LoadGameObjectTemplateExtras();
+        GameObjectTemplateExtraData const* GetGameObjectTemplateExtraData(uint32 entry);
+        void SetGameobjectTemplateExtraDisabledFlag(uint32 entryId, bool disabled);
         void SaveGameObject(GameObject* go);
         void SetGameobjectSelectionForPlayer(ObjectGuid::LowType playerId, ObjectGuid::LowType gameobjectId);
         ObjectGuid::LowType GetSelectedGameobjectGuidFromPlayer(ObjectGuid::LowType playerId);
@@ -152,6 +174,7 @@ class FreedomMgr
         // Creature
         void SetCreatureSelectionForPlayer(ObjectGuid::LowType playerId, ObjectGuid::LowType creatureId);
         ObjectGuid::LowType GetSelectedCreatureGuidFromPlayer(ObjectGuid::LowType playerId);
+        Creature* GetAnyCreature(Map* map, ObjectGuid::LowType lowguid, uint32 entry);
 
         // Public teleports
         void LoadPublicTeleports();
@@ -209,6 +232,7 @@ class FreedomMgr
         PrivateTeleContainer _privateTeleStore;
         ItemTemplateExtraContainer _itemTemplateExtraStore;
         GameObjectExtraContainer _gameObjectExtraStore;
+        GameObjectTemplateExtraContainer _gameObjectTemplateExtraStore;
         PhaseListContainer _phaseListStore;
 };
 

@@ -916,6 +916,22 @@ bool GameObject::LoadGameObjectFromDB(ObjectGuid::LowType spawnId, Map* map, boo
         for (auto ph : sDB2Manager.GetPhasesForGroup(data->phaseGroup))
             SetInPhase(ph, false, true);
     }
+    else if (GameObjectExtraData const* extraData = sFreedomMgr->GetGameObjectExtraData(GetSpawnId()))
+    {
+        for (int i = 1; i < 512; i = i << 1)
+        {
+            uint32 phase = extraData->phaseMask & i;
+
+            if (phase)
+                SetInPhase(sFreedomMgr->GetPhaseId(phase), false, true);
+        }
+
+        SetPhaseMask(extraData->phaseMask, false);            
+    }
+    else
+    {
+        SetPhaseMask(1, false);
+    }
 
     if (data->spawntimesecs >= 0)
     {

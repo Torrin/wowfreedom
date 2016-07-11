@@ -210,6 +210,7 @@ void FreedomMgr::LoadAllTables()
     LoadPublicSpells();
     LoadMorphs();
     LoadItemTemplateExtras();
+    LoadGameObjectTemplateExtras();
     LoadGameObjectExtras();
 
     TC_LOG_INFO("server.loading", ">> Loaded FreedomMgr tables in %u ms", GetMSTimeDiffToNow(oldMSTime));
@@ -239,6 +240,17 @@ int FreedomMgr::GetPhaseMask(uint32 phaseId)
     return -1;
 }
 
+int FreedomMgr::GetPhaseId(uint32 phaseMask)
+{
+    for (auto phase : _phaseListStore)
+    {
+        if (phase.first == phaseMask)
+            return phase.second;
+    }
+
+    return -1;
+}
+
 bool FreedomMgr::IsValidPhaseId(uint32 phaseId)
 {
     for (auto phase : _phaseListStore)
@@ -249,15 +261,76 @@ bool FreedomMgr::IsValidPhaseId(uint32 phaseId)
 
     return false;
 }
+
+bool FreedomMgr::IsValidPhaseMask(uint32 phaseMask)
+{
+    for (auto phase : _phaseListStore)
+    {
+        if (phase.first == phaseMask)
+            return true;
+    }
+
+    return false;
+}
+
+void FreedomMgr::GameObjectPhase(GameObject* go, uint32 phaseMask)
+{
+    go->ClearPhases();
+
+    for (int i = 1; i < 512; i = i << 1)
+    {
+        uint32 phase = phaseMask & i;
+        
+        if (phase)
+            go->SetInPhase(GetPhaseId(phase), false, true);
+    }
+
+    go->SetPhaseMask(phaseMask, false);
+
+    _gameObjectExtraStore[go->GetSpawnId()].phaseMask = phaseMask;
+}
+
+void FreedomMgr::PlayerPhase(Player* player, uint32 phaseMask)
+{
+    player->ClearPhases();
+
+    for (int i = 1; i < 512; i = i << 1)
+    {
+        uint32 phase = phaseMask & i;
+
+        if (phase)
+            player->SetInPhase(GetPhaseId(phase), false, true);
+    }
+
+    player->SetPhaseMask(phaseMask, false);
+
+    _playerExtraDataStore[player->GetGUID().GetCounter()].phaseMask = phaseMask;
+    player->UpdateObjectVisibility();
+}
+
+uint32 FreedomMgr::GetPlayerPhase(Player* player)
+{
+    return _playerExtraDataStore[player->GetGUID().GetCounter()].phaseMask;
+}
+
+#pragma endregion
+
+#pragma region CREATURE
+Creature* FreedomMgr::GetAnyCreature(Map* map, ObjectGuid::LowType lowguid, uint32 entry)
+{
+    Creature* creature = map->GetCreature(ObjectGuid::Create<HighGuid::Creature>(map->GetId(), entry, lowguid));
+
+    return creature;
+}
 #pragma endregion
 
 #pragma region GAMEOBJECT
 void FreedomMgr::LoadGameObjectExtras()
 {
     // clear current storage
-    _itemTemplateExtraStore.clear();
+    _gameObjectExtraStore.clear();
 
-    // guid, scale, id_creator_bnet, id_creator_player, id_modifier_bnet, id_modifier_player, UNIX_TIMESTAMP(created), UNIX_TIMESTAMP(modified)
+    // guid, scale, id_creator_bnet, id_creator_player, id_modifier_bnet, id_modifier_player, UNIX_TIMESTAMP(created), UNIX_TIMESTAMP(modified), phaseMask
     PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_SEL_GAMEOBJECTEXTRA);
     PreparedQueryResult result = FreedomDatabase.Query(stmt);
 
@@ -276,9 +349,63 @@ void FreedomMgr::LoadGameObjectExtras()
         data.modifierPlayerId = fields[5].GetUInt64();
         data.created = fields[6].GetUInt64();
         data.modified = fields[7].GetUInt64();
+        data.phaseMask = fields[8].GetUInt32();
 
         _gameObjectExtraStore[guid] = data;
     } while (result->NextRow());
+}
+
+void FreedomMgr::LoadGameObjectTemplateExtras()
+{
+    // clear current storage
+    _gameObjectTemplateExtraStore.clear();
+
+    // id_entry, disabled, model_name, model_type, is_default
+    PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_SEL_GAMEOBJECTEXTRA_TEMPLATE);
+    PreparedQueryResult result = FreedomDatabase.Query(stmt);
+
+    if (!result)
+        return;
+
+    do
+    {
+        Field * fields = result->Fetch();
+        GameObjectTemplateExtraData data;
+        uint32 entry = fields[0].GetUInt32();
+        data.disabled = fields[1].GetBool();
+        data.modelName = fields[2].GetString();
+        data.modelType = fields[3].GetString();
+        data.isDefault = fields[4].GetBool();
+
+        _gameObjectTemplateExtraStore[entry] = data;
+    } while (result->NextRow());
+}
+
+GameObjectTemplateExtraData const* FreedomMgr::GetGameObjectTemplateExtraData(uint32 entry)
+{
+    auto it = _gameObjectTemplateExtraStore.find(entry);
+
+    if (it != _gameObjectTemplateExtraStore.end())
+    {
+        return &it->second;
+    }
+
+    return nullptr;
+}
+
+void FreedomMgr::SetGameobjectTemplateExtraDisabledFlag(uint32 entryId, bool disabled)
+{
+    auto it = _gameObjectTemplateExtraStore.find(entryId);
+    if (it == _gameObjectTemplateExtraStore.end())
+        return;
+
+    _gameObjectTemplateExtraStore[entryId].disabled = disabled;
+
+    // DB update
+    PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_UPD_GAMEOBJECTEXTRA_TEMPLATE);
+    stmt->setBool(0, disabled);
+    stmt->setUInt32(1, entryId);
+    FreedomDatabase.Execute(stmt);
 }
 
 void FreedomMgr::SaveGameObject(GameObject* go)
@@ -301,6 +428,7 @@ void FreedomMgr::SaveGameObject(GameObject* go)
         stmt->setUInt64(index++, data.modifierPlayerId);
         stmt->setUInt64(index++, data.created);
         stmt->setUInt64(index++, data.modified);
+        stmt->setUInt32(index++, data.phaseMask);
 
         FreedomDatabase.Execute(stmt);
     }
@@ -459,6 +587,14 @@ GameObject* FreedomMgr::GameObjectCreate(Player* creator, GameObjectTemplate con
     data.modified = time(NULL);
     _gameObjectExtraStore[spawnId] = data;
 
+    for (uint32 phase : creator->GetPhases())
+    {
+        if (!sFreedomMgr->IsValidPhaseId(phase))
+            continue;
+
+        data.phaseMask |= sFreedomMgr->GetPhaseMask(phase);
+    }
+
     int index = 0;
     PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_REP_GAMEOBJECTEXTRA);
     stmt->setUInt64(index++, spawnId);
@@ -469,6 +605,7 @@ GameObject* FreedomMgr::GameObjectCreate(Player* creator, GameObjectTemplate con
     stmt->setUInt64(index++, data.modifierPlayerId);
     stmt->setUInt64(index++, data.created);
     stmt->setUInt64(index++, data.modified);
+    stmt->setUInt64(index++, data.phaseMask);
 
     FreedomDatabase.Execute(stmt);
 

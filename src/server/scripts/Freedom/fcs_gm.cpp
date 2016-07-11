@@ -16,16 +16,17 @@ public:
     {
         static std::vector<ChatCommand> gmCommandTable =
         {
-            { "chat",           rbac::RBAC_PERM_COMMAND_GM_CHAT,        false,  &HandleGMChatCommand,           "" },
-            { "fly",            rbac::RBAC_PERM_COMMAND_GM_FLY,         false,  &HandleGMFlyCommand,            "" },
-            { "ingame",         rbac::RBAC_PERM_COMMAND_GM_INGAME,      true,   &HandleGMListIngameCommand,     "" },
-            { "list",           rbac::RBAC_PERM_COMMAND_GM_LIST,        true,   &HandleGMListFullCommand,       "" },
-            { "visible",        rbac::RBAC_PERM_COMMAND_GM_VISIBLE,     false,  &HandleGMVisibleCommand,        "" },
-            { "",               rbac::RBAC_PERM_COMMAND_GM,             false,  &HandleGMCommand,               "" },
+            { "chat",           rbac::RBAC_PERM_COMMAND_GM_CHAT,        false,  &HandleGMChatCommand,                   "" },
+            { "fly",            rbac::RBAC_PERM_COMMAND_GM_FLY,         false,  &HandleGMFlyCommand,                    "" },
+            { "ingame",         rbac::RBAC_PERM_COMMAND_GM_INGAME,      true,   &HandleGMListIngameCommand,             "" },
+            { "list",           rbac::RBAC_PERM_COMMAND_GM_LIST,        true,   &HandleGMListFullCommand,               "" },
+            { "visible",        rbac::RBAC_PERM_COMMAND_GM_VISIBLE,     false,  &HandleGMVisibleCommand,                "" },
+            { "",               rbac::RBAC_PERM_COMMAND_GM,             false,  &HandleGMCommand,                       "" },
         };
         static std::vector<ChatCommand> blacklistCommandTable =
         {
-            { "item",           rbac::RBAC_FPERM_ADMINISTRATION,        false,  &HandleBlacklistItemCommand,    "" },
+            { "item",           rbac::RBAC_FPERM_ADMINISTRATION,        false,  &HandleBlacklistItemCommand,            "" },
+            { "gobject",        rbac::RBAC_FPERM_ADMINISTRATION,        false,  &HandleBlacklistGameobjectCommand,      "" },
         };
         static std::vector<ChatCommand> commandTable =
         {
@@ -68,6 +69,41 @@ public:
             handler->PSendSysMessage(FREEDOM_CMDI_BLACKLIST_ITEM, "removed from the blacklist");
         }
         
+        return true;
+    }
+
+    static bool HandleBlacklistGameobjectCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_BLACKLIST_GAMEOBJECT);
+            return true;
+        }
+
+        char* id = handler->extractKeyFromLink((char*)args, "Hgameobject_entry");
+        char* flagStr = strtok(NULL, " ");
+
+        uint32 entryId = atoul(id);
+        uint32 flag = flagStr ? atoul(flagStr) : 1;
+
+        GameObjectTemplate const* objectTemplate = sObjectMgr->GetGameObjectTemplate(entryId);
+        if (!objectTemplate)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_X_WITH_ID_NOT_FOUND, "Gameobject", entryId);
+            return true;
+        }
+
+        if (flag)
+        {
+            sFreedomMgr->SetGameobjectTemplateExtraDisabledFlag(entryId, true);
+            handler->PSendSysMessage(FREEDOM_CMDI_BLACKLIST_GAMEOBJECT, "added to the blacklist");
+        }
+        else
+        {
+            sFreedomMgr->SetGameobjectTemplateExtraDisabledFlag(entryId, false);
+            handler->PSendSysMessage(FREEDOM_CMDI_BLACKLIST_GAMEOBJECT, "removed from the blacklist");
+        }
+
         return true;
     }
 #pragma endregion

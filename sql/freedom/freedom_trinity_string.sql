@@ -126,7 +126,7 @@ INSERT INTO wod_world.trinity_string (entry, content_default) VALUES
 /* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_AI_NAME			*/ (100108, '> AIName: %s'),
 /* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_PHASEMASK			*/ (100109, '> PhaseMask: %u'),
 /* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_PHASELIST			*/ (100110, '> Active phase list (PhaseID - PhaseMask):'),
-/* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_PHASE_LI			*/ (100111, '\t* %u - %u'),
+/* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_PHASE_LI			*/ (100111, '  %u - %u'),
 /* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_POS_X				*/ (100112, '> X: %.4f'),
 /* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_POS_Y				*/ (100113, '> Y: %.4f'),
 /* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_POS_Z				*/ (100114, '> Z: %.4f'),
@@ -141,7 +141,18 @@ INSERT INTO wod_world.trinity_string (entry, content_default) VALUES
 /* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_CREATED			*/ (100123, '> Created: %s'),
 /* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_MODIFIED			*/ (100124, '> Modified: %s'),
 /* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_NO_HISTORY		*/ (100125, '> [History unavailable/not found]'),
-
+/* FREEDOM_CMDH_GAMEOBJECT_PHASE							*/ (100126, CONCAT(@T_CMD_SYNTAX, '.gobject phase [modifiers] $phaseList')),
+/* FREEDOM_CMDI_GAMEOBJECT_PHASE_BITFIELDS			*/ (100127, CONCAT(@T_CMD_INFO, 'Gameobject phase set to following phasemask bit-fields:%s')),
+/* FREEDOM_CMDI_GAMEOBJECT_PHASE_PHASEIDS				*/ (100128, CONCAT(@T_CMD_INFO, 'Gameobject phase set to following phaemask PhaseIDs:%s')),
+/* FREEDOM_CMDE_GAMEOBJECT_PHASE_NOT_SET				*/ (100129, CONCAT(@T_CMD_ERROR, 'Gameobject phase was not modified (invalid $phaseList elements?).')),
+/* FREEDOM_CMDH_MODIFY_PHASE								*/ (100130, CONCAT(@T_CMD_SYNTAX, '.modify phase [modifiers] $phaseList')),
+/* FREEDOM_CMDI_MODIFY_PHASE_BITFIELDS					*/ (100131, CONCAT(@T_CMD_INFO, 'Phase modified to following phasemask bit-fields:%s')),
+/* FREEDOM_CMDI_MODIFY_PHASE_PHASEIDS					*/ (100132, CONCAT(@T_CMD_INFO, 'Phase modified to following phaemask PhaseIDs:%s')),
+/* FREEDOM_CMDE_MODIFY_PHASE_NOT_SET					*/ (100133, CONCAT(@T_CMD_ERROR, 'Phase was not modified (invalid $phaseList elements?).')),
+/* FREEDOM_CMDE_CREATURE_NOT_FOUND						*/ (100134, CONCAT(@T_CMD_ERROR, 'Creature not found!')),
+/* FREEDOM_CMDE_GAMEOBJECT_IS_BLACKLISTED				*/ (100135, CONCAT(@T_CMD_ERROR, @C_TEXT, 'Gameobject is blacklisted, it cannot be spawned.', @C_CLOSE)),
+/* FREEDOM_CMDH_BLACKLIST_GAMEOBJECT					*/ (100136, CONCAT(@T_CMD_SYNTAX, '.blacklist gobject $entryId/$gobjectLink [$flag] ($flag = 1 by default)')),
+/* FREEDOM_CMDI_BLACKLIST_GAMEOBJECT					*/ (100137, CONCAT(@T_CMD_INFO, 'Gameobject successfully ', @C_LINK, '%s', @C_CLOSE)),
 
 (200000, 'Dummy');
 -- Select new changes
