@@ -41,6 +41,22 @@ protected:
     ModifierStorageType m_modifiers;
 };
 
+struct GameObjectExtraData
+{
+    GameObjectExtraData() : scale(-1.0f), creatorBnetAccId(0), creatorPlayerId(0),
+        modifierBnetAccId(0), modifierPlayerId(0), created(0), modified(0) { }
+
+    float scale;
+    uint32 creatorBnetAccId;
+    uint64 creatorPlayerId;
+    uint32 modifierBnetAccId;
+    uint64 modifierPlayerId;
+    time_t created;
+    time_t modified;
+};
+
+typedef std::unordered_map<uint64, GameObjectExtraData> GameObjectExtraContainer;
+
 struct ItemTemplateExtraData
 {
     bool hidden;
@@ -101,6 +117,8 @@ struct PlayerExtraData
 
 typedef std::unordered_map<ObjectGuid::LowType, PlayerExtraData> PlayerExtraDataContainer;
 
+typedef std::vector<std::pair<uint32, uint32>> PhaseListContainer;
+
 class Map;
 
 class FreedomMgr
@@ -112,7 +130,13 @@ class FreedomMgr
         static FreedomMgr* instance();
         void LoadAllTables();
 
+        // Phasing
+        int GetPhaseMask(uint32 phaseId);
+        bool IsValidPhaseId(uint32 phaseId);
+
         // Gameobject
+        void LoadGameObjectExtras();
+        void SaveGameObject(GameObject* go);
         void SetGameobjectSelectionForPlayer(ObjectGuid::LowType playerId, ObjectGuid::LowType gameobjectId);
         ObjectGuid::LowType GetSelectedGameobjectGuidFromPlayer(ObjectGuid::LowType playerId);
         GameObject* GetAnyGameObject(Map* objMap, ObjectGuid::LowType lowguid, uint32 entry);
@@ -121,6 +145,8 @@ class FreedomMgr
         void GameObjectTurn(GameObject* go, float o);
         void GameObjectScale(GameObject* go, float scale);
         void GameObjectDelete(GameObject* go);
+        void GameObjectSetModifyHistory(GameObject* go, Player* modifier);
+        GameObjectExtraData const* GetGameObjectExtraData(uint64 guid);
         GameObject* GameObjectCreate(Player* creator, GameObjectTemplate const* gobTemplate, uint32 spawnTimeSecs = 0);
 
         // Creature
@@ -168,6 +194,8 @@ class FreedomMgr
         std::string GetMapName(uint32 mapId);
         std::string ToChatLink(std::string type, uint64 key, std::string name) { return "|cffffffff|" + type + ":" + fmt::sprintf("%llu", key) + "|h[" + name + "]|h|r"; }
         std::string GetChatLinkKey(std::string const &src, std::string type);
+        std::string ToDateTimeString(time_t t);
+        std::string ToDateString(time_t t);
 
         // Player
         void RemoveHoverFromPlayer(Player* player);
@@ -180,6 +208,8 @@ class FreedomMgr
         PublicSpellContainer _publicSpellStore;
         PrivateTeleContainer _privateTeleStore;
         ItemTemplateExtraContainer _itemTemplateExtraStore;
+        GameObjectExtraContainer _gameObjectExtraStore;
+        PhaseListContainer _phaseListStore;
 };
 
 #define sFreedomMgr FreedomMgr::instance()

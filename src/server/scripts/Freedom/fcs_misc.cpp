@@ -340,10 +340,6 @@ public:
 
         if (target)
         {
-            // check online security
-            if (handler->HasLowerSecurity(target, ObjectGuid::Empty))
-                return false;
-
             std::string chrNameLink = handler->playerLink(targetName);
 
             Map* map = target->GetMap();
@@ -436,10 +432,6 @@ public:
         }
         else
         {
-            // check offline security
-            if (handler->HasLowerSecurity(NULL, targetGuid))
-                return false;
-
             std::string nameLink = handler->playerLink(targetName);
 
             handler->PSendSysMessage(LANG_APPEARING_AT, nameLink.c_str());

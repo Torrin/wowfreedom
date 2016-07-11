@@ -7,6 +7,8 @@
 #include "Language.h"
 #include "Player.h"
 #include "Opcodes.h"
+#include "Config.h"
+#include "BattlenetAccountMgr.h"
 
 class fgobject_commandscript : public CommandScript
 {
@@ -34,6 +36,7 @@ public:
             { "near",       rbac::RBAC_PERM_COMMAND_GOBJECT_NEAR,       false, &HandleGameObjectNearCommand,        "" },
             { "turn",       rbac::RBAC_PERM_COMMAND_GOBJECT_TURN,       false, &HandleGameObjectTurnCommand,        "" },
             { "select",     rbac::RBAC_PERM_COMMAND_GOBJECT,            false, &HandleGameObjectSelectCommand,      "" },
+            { "scale",      rbac::RBAC_PERM_COMMAND_GOBJECT,            false, &HandleGameObjectScaleCommand,       "" },
             { "add",        rbac::RBAC_PERM_COMMAND_GOBJECT_ADD,        false, NULL,            "", gobjectAddCommandTable },
             { "spawn",      rbac::RBAC_PERM_COMMAND_GOBJECT_ADD,        false, NULL,            "", gobjectAddCommandTable },
             { "set",        rbac::RBAC_PERM_COMMAND_GOBJECT_SET,        false, NULL,            "", gobjectSetCommandTable },
@@ -43,6 +46,259 @@ public:
             { "gobject", rbac::RBAC_PERM_COMMAND_GOBJECT, false, NULL, "", gobjectCommandTable },
         };
         return commandTable;
+    }
+
+    //show info of gameobject
+    static bool HandleGameObjectInfoCommand(ChatHandler* handler, char const* args)
+    {
+        Player* source = handler->GetSession()->GetPlayer();
+        ObjectGuid::LowType guidLow = sFreedomMgr->GetSelectedGameobjectGuidFromPlayer(source->GetGUID().GetCounter());        
+        bool historyInfo = false;
+        bool positionInfo = false;
+        bool advancedInfo = false;
+
+        AdvancedArgumentTokenizer tokenizer(*args ? args : "");
+        tokenizer.LoadModifier("-full", 0);
+        tokenizer.LoadModifier("-pos", 0);
+        tokenizer.LoadModifier("-history", 0);
+        tokenizer.LoadModifier("-advanced", 0);
+
+        std::string id = tokenizer.TryGetParam(0);
+        if (!id.empty())
+            guidLow = atoul(id.c_str());
+
+        if (!guidLow)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_GAMEOBJECT_NOT_FOUND);
+            return true;
+        }
+
+        if (tokenizer.ModifierExists("-full"))
+        {
+            historyInfo = true;
+            positionInfo = true;
+            advancedInfo = true;
+        }
+
+        if (tokenizer.ModifierExists("-history"))
+            historyInfo = true;
+
+        if (tokenizer.ModifierExists("-pos"))
+            positionInfo = true;
+
+        if (tokenizer.ModifierExists("-advanced"))
+            advancedInfo = true;
+
+        GameObject* object = NULL;
+        GameObjectData const* goData = NULL;
+
+        // by DB guid
+        if (goData = sObjectMgr->GetGOData(guidLow))
+            object = sFreedomMgr->GetAnyGameObject(source->GetMap(), guidLow, goData->id);
+
+        if (!object)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_GAMEOBJECT_GUID_NOT_EXISTS, guidLow);
+            return true;
+        }
+
+        GameObjectTemplate const* goTemplate = sObjectMgr->GetGameObjectTemplate(goData->id);
+
+        if (!goTemplate)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_TEMPLATE_DOES_NOT_EXIST, guidLow, goData->id);
+            return true;
+        }
+
+        // Gather data
+        float px, py, pz, po;
+        source->GetPosition(px, py, pz, po);
+        std::string guidString = object->GetGUID().ToString();
+        uint32 entryId = goTemplate->entry;
+        uint32 displayId = goTemplate->displayId;
+        uint32 scriptId = object->GetScriptId();
+        std::string name = goTemplate->name;
+        std::string aiName = object->GetAIName();
+        uint32 phaseMask = object->GetPhaseMask();
+        auto phaseList = object->GetPhases();
+        float ox, oy, oz, oo;
+        object->GetPosition(ox, oy, oz, oo);
+        uint32 mapId = object->GetMapId();
+        float distance = std::sqrt(std::pow(ox - px, 2) + std::pow(oy - py, 2) + std::pow(oz - pz, 2));
+        float scale = object->GetObjectScale();
+        GOState state = object->GetGoState();
+        GameObjectExtraData const* extraData = sFreedomMgr->GetGameObjectExtraData(object->GetSpawnId());
+
+        // Display data
+        handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO, sFreedomMgr->ToChatLink("Hgameobject", guidLow, name));
+        if (advancedInfo)
+            handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_GUID_FULL, guidString);
+        handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_GUID, guidLow);
+        handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_ENTRY, entryId, sFreedomMgr->ToChatLink("Hgameobject_entry", entryId, "Spawn link"));
+        handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_DISPLAY_ID, displayId);
+
+        if (advancedInfo)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_SCRIPT_ID, scriptId);
+            handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_NAME, name);
+            handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_AI_NAME, aiName);
+            handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_PHASEMASK, phaseMask);
+
+            if (!phaseList.empty())
+            {
+                handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_PHASELIST);
+
+                for (uint32 phaseId : phaseList)
+                {
+                    handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_PHASE_LI, phaseId, sFreedomMgr->GetPhaseMask(phaseId));
+                }
+            }
+
+            std::string stateEnumName;
+
+            switch (state)
+            {
+            case GO_STATE_ACTIVE:
+                stateEnumName = "GO_STATE_ACTIVE";
+                break;
+            case GO_STATE_READY:
+                stateEnumName = "GO_STATE_READY";
+                break;
+            case GO_STATE_ACTIVE_ALTERNATIVE:
+                stateEnumName = "GO_STATE_ACTIVE_ALTERNATIVE";
+                break;
+            case GO_STATE_TRANSPORT_ACTIVE:
+                stateEnumName = "GO_STATE_TRANSPORT_ACTIVE";
+                break;
+            case GO_STATE_TRANSPORT_STOPPED:
+                stateEnumName = "GO_STATE_TRANSPORT_STOPPED";
+                break;
+            default:
+                stateEnumName = "UNKNOWN";
+                break;
+            }
+
+            handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_STATE, (uint32)state, stateEnumName);
+        }
+
+        if (positionInfo)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_POS_X, ox);
+            handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_POS_Y, oy);
+            handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_POS_Z, oz);
+            handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_ORIENTATION, oo);
+        }
+
+        handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_DISTANCE, distance);
+        handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_SCALE, scale);
+
+        if (historyInfo)
+        {
+            if (!extraData)
+            {
+                handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_NO_HISTORY);
+            }
+            else
+            {
+                // Gather history data
+                uint64 creatorPlayerId = extraData->creatorPlayerId;
+                std::string creatorPlayerName = "(UNKNOWN)";       
+                uint32 creatorBnetId = extraData->creatorBnetAccId;
+                std::string creatorAccountName = "(UNKNOWN)";
+                uint64 modifierPlayerId = extraData->modifierPlayerId;
+                std::string modifierPlayerName = "(UNKNOWN)";
+                uint32 modifierBnetId = extraData->modifierBnetAccId;
+                std::string modifierAccountName = "(UNKNOWN)";
+                time_t created = extraData->created;
+                std::string createdTimestamp = "(UNKNOWN)";
+                time_t modified = extraData->modified;
+                std::string modifiedTimestamp = "(UNKNOWN)";
+
+                // Set names
+                if (auto creatorPlayerInfo = sWorld->GetCharacterInfo(ObjectGuid::Create<HighGuid::Player>(creatorPlayerId)))
+                    creatorPlayerName = creatorPlayerInfo->Name;
+                if (auto modifierPlayerInfo = sWorld->GetCharacterInfo(ObjectGuid::Create<HighGuid::Player>(modifierPlayerId)))
+                    modifierPlayerName = modifierPlayerInfo->Name;
+
+                Battlenet::AccountMgr::GetName(creatorBnetId, creatorAccountName);
+                Battlenet::AccountMgr::GetName(modifierBnetId, modifierAccountName);
+
+                // Set timestamps
+                if (created)
+                    createdTimestamp = sFreedomMgr->ToDateTimeString(created);
+
+                if (modified)
+                    modifiedTimestamp = sFreedomMgr->ToDateTimeString(modified);
+
+                handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_CREATOR_PLAYER, creatorPlayerName, creatorPlayerId);
+                if (handler->HasPermission(rbac::RBAC_FPERM_ADMINISTRATION))
+                    handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_CREATOR_ACC, creatorAccountName, creatorBnetId);
+                handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_MODIFIER_PLAYER, modifierPlayerName, modifierPlayerId);
+                if (handler->HasPermission(rbac::RBAC_FPERM_ADMINISTRATION))
+                    handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_MODIFIER_ACC, modifierAccountName, modifierBnetId);
+                handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_CREATED, createdTimestamp);
+                handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_MODIFIED, modifiedTimestamp);
+            }
+        }
+        
+        return true;
+    }
+
+    static bool HandleGameObjectScaleCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_GAMEOBJECT_SCALE);
+            return true;
+        }
+
+        Player* source = handler->GetSession()->GetPlayer();
+        ObjectGuid::LowType guidLow = sFreedomMgr->GetSelectedGameobjectGuidFromPlayer(source->GetGUID().GetCounter());
+
+        AdvancedArgumentTokenizer tokenizer(args);
+        std::string scaleToken = tokenizer.TryGetParam(0);
+        std::string id = tokenizer.TryGetParam(1);
+        float scale = atof(scaleToken.c_str());
+
+        if (!id.empty())
+        {
+            guidLow = atoul(sFreedomMgr->GetChatLinkKey(id, "Hgameobject").c_str());
+        }
+
+        if (!guidLow)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_GAMEOBJECT_NOT_FOUND);
+            return true;
+        }
+
+        GameObject* object = NULL;
+
+        // by DB guid
+        if (GameObjectData const* gameObjectData = sObjectMgr->GetGOData(guidLow))
+            object = sFreedomMgr->GetAnyGameObject(source->GetMap(), guidLow, gameObjectData->id);
+
+        if (!object)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_GAMEOBJECT_GUID_NOT_EXISTS, guidLow);
+            return true;
+        }
+
+        float maxScale = sConfigMgr->GetFloatDefault("Freedom.Gameobject.MaxScale", 15.0f);
+        float minScale = sConfigMgr->GetFloatDefault("Freedom.Gameobject.MinScale", 0.0f);
+
+        if (scale < minScale)
+            scale = minScale;
+        if (scale > maxScale)
+            scale = maxScale;
+
+        sFreedomMgr->GameObjectScale(object, scale);
+        sFreedomMgr->GameObjectSetModifyHistory(object, source);
+        sFreedomMgr->SaveGameObject(object);
+        sFreedomMgr->GameObjectRefresh(object);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_SCALE, scale);
+
+        return true;
     }
 
     //set phasemask for selected object
@@ -170,7 +426,7 @@ public:
         // number or [name] Shift-click form |color|Hgameobject:go_guid|h[name]|h|r
         char* id = handler->extractKeyFromLink((char*)args, "Hgameobject");
         if (id)
-            guidLow = strtoull(id, nullptr, 10);
+            guidLow = atoul(id);
 
         if (!guidLow)
         {
@@ -412,7 +668,8 @@ public:
         }
 
         sFreedomMgr->GameObjectTurn(object, o);
-        object->SaveToDB();
+        sFreedomMgr->GameObjectSetModifyHistory(object, source);
+        sFreedomMgr->SaveGameObject(object);
         object = sFreedomMgr->GameObjectRefresh(object);
 
         handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_TURNED,
@@ -504,7 +761,8 @@ public:
         }
 
         sFreedomMgr->GameObjectMove(object, x, y, z, o);
-        object->SaveToDB();
+        sFreedomMgr->GameObjectSetModifyHistory(object, source);
+        sFreedomMgr->SaveGameObject(object);
         object = sFreedomMgr->GameObjectRefresh(object);
 
         handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_MOVE, 
@@ -561,53 +819,6 @@ public:
             handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_NEAR_MAX_RESULT_COUNT, count, distance);
         else
             handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_NEAR, count, distance);
-        return true;
-    }
-
-    //show info of gameobject
-    static bool HandleGameObjectInfoCommand(ChatHandler* handler, char const* args)
-    {
-        uint32 entry = 0;
-        uint32 type = 0;
-        uint32 displayId = 0;
-        std::string name;
-        uint32 lootId = 0;
-        Player* source = handler->GetSession()->GetPlayer();
-
-        if (!*args)
-        {
-            uint32 guidLow = sFreedomMgr->GetSelectedGameobjectGuidFromPlayer(source->GetGUID().GetCounter());
-
-            // by DB guid
-            if (GameObjectData const* gameObjectData = sObjectMgr->GetGOData(guidLow))
-            {
-                entry = gameObjectData->id;
-            }                
-        }
-        else
-        {
-            entry = atoul(args);
-        }
-
-        GameObjectTemplate const* gameObjectInfo = sObjectMgr->GetGameObjectTemplate(entry);
-
-        if (!gameObjectInfo)
-        {
-            handler->PSendSysMessage(FREEDOM_CMDE_GAMEOBJECT_ENTRY_NOT_EXISTS, entry);
-            return true;
-        }
-
-        type = gameObjectInfo->type;
-        displayId = gameObjectInfo->displayId;
-        name = gameObjectInfo->name;
-        lootId = gameObjectInfo->GetLootId();
-
-        handler->PSendSysMessage(LANG_GOINFO_ENTRY, entry);
-        handler->PSendSysMessage(LANG_GOINFO_TYPE, type);
-        handler->PSendSysMessage(LANG_GOINFO_LOOTID, lootId);
-        handler->PSendSysMessage(LANG_GOINFO_DISPLAYID, displayId);
-        handler->PSendSysMessage(LANG_GOINFO_NAME, name.c_str());
-
         return true;
     }
 

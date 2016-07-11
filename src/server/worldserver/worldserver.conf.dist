@@ -80,6 +80,16 @@ Freedom.Modify.MaxScale = 10.0
 Freedom.Modify.MinScale = 0.1
 
 #
+#    Freedom.Gameobject.MaxScale
+#    Freedom.Gameobject.MinScale
+#        Description: Controls max/min values for .gobject scale command.
+#        Default:     MaxScale = 15.0
+#                     MinScale = 0.0
+
+Freedom.Gameobject.MaxScale = 15.0
+Freedom.Gameobject.MinScale = 0.0
+
+#
 ###################################################################################################
 
 ###################################################################################################

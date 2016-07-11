@@ -6,6 +6,7 @@
 #include "MoveSpline.h"
 #include "MapManager.h"
 #include "GameObject.h"
+#include "Config.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/tokenizer.hpp>
@@ -176,6 +177,18 @@ std::string AdvancedArgumentTokenizer::GetModifierValue(std::string modifier, ui
 #pragma region FREEDOM_MANAGER
 FreedomMgr::FreedomMgr()
 {
+    _phaseListStore = 
+    {
+        {1, 169},
+        {2, 170},
+        {4, 171},
+        {8, 172},
+        {16, 173},
+        {32, 174},
+        {64, 175},
+        {128, 176},
+        {256, 177}
+    };
 }
 
 FreedomMgr::~FreedomMgr()
@@ -197,11 +210,102 @@ void FreedomMgr::LoadAllTables()
     LoadPublicSpells();
     LoadMorphs();
     LoadItemTemplateExtras();
+    LoadGameObjectExtras();
 
     TC_LOG_INFO("server.loading", ">> Loaded FreedomMgr tables in %u ms", GetMSTimeDiffToNow(oldMSTime));
 }
 
+#pragma region PHASING
+// | PhaseMask | PhaseID |
+// | 1         | 169     |
+// | 2         | 170     |
+// | 4         | 171     |
+// | 8         | 172     |
+// | 16        | 173     |
+// | 32        | 174     |
+// | 64        | 175     |
+// | 128       | 176     |
+// | 256       | 177     |
+
+
+int FreedomMgr::GetPhaseMask(uint32 phaseId)
+{
+    for (auto phase : _phaseListStore)
+    {
+        if (phase.second == phaseId)
+            return phase.first;
+    }
+
+    return -1;
+}
+
+bool FreedomMgr::IsValidPhaseId(uint32 phaseId)
+{
+    for (auto phase : _phaseListStore)
+    {
+        if (phase.second == phaseId)
+            return true;
+    }
+
+    return false;
+}
+#pragma endregion
+
 #pragma region GAMEOBJECT
+void FreedomMgr::LoadGameObjectExtras()
+{
+    // clear current storage
+    _itemTemplateExtraStore.clear();
+
+    // guid, scale, id_creator_bnet, id_creator_player, id_modifier_bnet, id_modifier_player, UNIX_TIMESTAMP(created), UNIX_TIMESTAMP(modified)
+    PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_SEL_GAMEOBJECTEXTRA);
+    PreparedQueryResult result = FreedomDatabase.Query(stmt);
+
+    if (!result)
+        return;
+
+    do
+    {
+        Field * fields = result->Fetch();
+        GameObjectExtraData data;
+        uint64 guid = fields[0].GetUInt64();
+        data.scale = fields[1].GetFloat();
+        data.creatorBnetAccId = fields[2].GetUInt32();
+        data.creatorPlayerId = fields[3].GetUInt64();
+        data.modifierBnetAccId = fields[4].GetUInt32();
+        data.modifierPlayerId = fields[5].GetUInt64();
+        data.created = fields[6].GetUInt64();
+        data.modified = fields[7].GetUInt64();
+
+        _gameObjectExtraStore[guid] = data;
+    } while (result->NextRow());
+}
+
+void FreedomMgr::SaveGameObject(GameObject* go)
+{
+    go->SaveToDB();
+
+    // Save extra attached data if it exists
+    auto it = _gameObjectExtraStore.find(go->GetSpawnId());
+
+    if (it != _gameObjectExtraStore.end())
+    {
+        int index = 0;
+        GameObjectExtraData data = it->second;
+        PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_REP_GAMEOBJECTEXTRA);
+        stmt->setUInt64(index++, go->GetSpawnId());
+        stmt->setFloat(index++, data.scale);
+        stmt->setUInt32(index++, data.creatorBnetAccId);
+        stmt->setUInt64(index++, data.creatorPlayerId);
+        stmt->setUInt32(index++, data.modifierBnetAccId);
+        stmt->setUInt64(index++, data.modifierPlayerId);
+        stmt->setUInt64(index++, data.created);
+        stmt->setUInt64(index++, data.modified);
+
+        FreedomDatabase.Execute(stmt);
+    }
+}
+
 GameObject* FreedomMgr::GetAnyGameObject(Map* objMap, ObjectGuid::LowType lowguid, uint32 entry)
 {
     GameObject* obj = nullptr;
@@ -263,7 +367,19 @@ void FreedomMgr::GameObjectTurn(GameObject* go, float o)
 
 void FreedomMgr::GameObjectScale(GameObject* go, float scale)
 {
+    if (!go)
+        return;
 
+    float maxScale = sConfigMgr->GetFloatDefault("Freedom.Gameobject.MaxScale", 15.0f);
+    float minScale = sConfigMgr->GetFloatDefault("Freedom.Gameobject.MinScale", 0.0f);
+
+    if (scale < minScale)
+        scale = minScale;
+    if (scale > maxScale)
+        scale = maxScale;
+
+    go->SetObjectScale(scale);
+    _gameObjectExtraStore[go->GetSpawnId()].scale = scale;
 }
 
 void FreedomMgr::GameObjectDelete(GameObject* go)
@@ -271,6 +387,18 @@ void FreedomMgr::GameObjectDelete(GameObject* go)
     go->SetRespawnTime(0);
     go->Delete();
     go->DeleteFromDB();
+}
+
+void FreedomMgr::GameObjectSetModifyHistory(GameObject* go, Player* modifier)
+{
+    if (!go || !modifier)
+        return;
+
+    GameObjectExtraData data = _gameObjectExtraStore[go->GetSpawnId()];    
+    data.modifierBnetAccId = modifier->GetSession()->GetBattlenetAccountId();
+    data.modifierPlayerId = modifier->GetGUID().GetCounter();    
+    data.modified = time(NULL);
+    _gameObjectExtraStore[go->GetSpawnId()] = data;
 }
 
 GameObject* FreedomMgr::GameObjectCreate(Player* creator, GameObjectTemplate const* gobTemplate, uint32 spawnTimeSecs)
@@ -320,7 +448,45 @@ GameObject* FreedomMgr::GameObjectCreate(Player* creator, GameObjectTemplate con
     /// @todo is it really necessary to add both the real and DB table guid here ?
     sObjectMgr->AddGameobjectToGrid(spawnId, ASSERT_NOTNULL(sObjectMgr->GetGOData(spawnId)));
 
+    // Creation history and straight update
+    GameObjectExtraData data;
+    data.scale = object->GetGOInfo()->size;
+    data.creatorBnetAccId = creator->GetSession()->GetBattlenetAccountId();
+    data.creatorPlayerId = creator->GetGUID().GetCounter();
+    data.modifierBnetAccId = creator->GetSession()->GetBattlenetAccountId();
+    data.modifierPlayerId = creator->GetGUID().GetCounter();
+    data.created = time(NULL);
+    data.modified = time(NULL);
+    _gameObjectExtraStore[spawnId] = data;
+
+    int index = 0;
+    PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_REP_GAMEOBJECTEXTRA);
+    stmt->setUInt64(index++, spawnId);
+    stmt->setFloat(index++, data.scale);
+    stmt->setUInt32(index++, data.creatorBnetAccId);
+    stmt->setUInt64(index++, data.creatorPlayerId);
+    stmt->setUInt32(index++, data.modifierBnetAccId);
+    stmt->setUInt64(index++, data.modifierPlayerId);
+    stmt->setUInt64(index++, data.created);
+    stmt->setUInt64(index++, data.modified);
+
+    FreedomDatabase.Execute(stmt);
+
     return object;
+}
+
+GameObjectExtraData const* FreedomMgr::GetGameObjectExtraData(uint64 guid)
+{
+    auto it = _gameObjectExtraStore.find(guid);
+
+    if (it != _gameObjectExtraStore.end())
+    {
+        return &it->second;
+    }
+    else
+    {
+        return nullptr;
+    }
 }
 #pragma endregion
 
@@ -471,6 +637,36 @@ std::string FreedomMgr::GetChatLinkKey(std::string const &src, std::string type)
     }
 
     return "";
+}
+
+std::string FreedomMgr::ToDateTimeString(time_t t)
+{
+    tm aTm;
+    localtime_r(&t, &aTm);
+    //       YYYY   year
+    //       MM     month (2 digits 01-12)
+    //       DD     day (2 digits 01-31)
+    //       HH     hour (2 digits 00-23)
+    //       MM     minutes (2 digits 00-59)
+    //       SS     seconds (2 digits 00-59)
+    char buf[20];
+    snprintf(buf, 20, "%04d-%02d-%02d %02d:%02d:%02d", aTm.tm_year + 1900, aTm.tm_mon + 1, aTm.tm_mday, aTm.tm_hour, aTm.tm_min, aTm.tm_sec);
+    return std::string(buf);
+}
+
+std::string FreedomMgr::ToDateString(time_t t)
+{
+    tm aTm;
+    localtime_r(&t, &aTm);
+    //       YYYY   year
+    //       MM     month (2 digits 01-12)
+    //       DD     day (2 digits 01-31)
+    //       HH     hour (2 digits 00-23)
+    //       MM     minutes (2 digits 00-59)
+    //       SS     seconds (2 digits 00-59)
+    char buf[14];
+    snprintf(buf, 14, "%04d-%02d-%02d", aTm.tm_year + 1900, aTm.tm_mon + 1, aTm.tm_mday);
+    return std::string(buf);
 }
 
 #pragma endregion

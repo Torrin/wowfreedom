@@ -234,7 +234,17 @@ bool GameObject::Create(uint32 name_id, Map* map, uint32 /*phaseMask*/, float x,
 
     UpdateRotationFields(rotation2, rotation3);              // GAMEOBJECT_FACING, GAMEOBJECT_ROTATION, GAMEOBJECT_PARENTROTATION+2/3
 
-    SetObjectScale(goinfo->size);
+    GameObjectExtraData const* extraData = sFreedomMgr->GetGameObjectExtraData(GetSpawnId());
+
+    if (extraData)
+    {        
+        float scale = extraData->scale;
+        SetObjectScale(scale < 0 ? goinfo->size : scale);
+    }
+    else
+    {
+        SetObjectScale(goinfo->size);
+    }    
 
     SetUInt32Value(GAMEOBJECT_FACTION, goinfo->faction);
     SetUInt32Value(GAMEOBJECT_FLAGS, goinfo->flags);
@@ -951,16 +961,19 @@ void GameObject::DeleteFromDB()
     sObjectMgr->DeleteGOData(m_spawnId);
 
     PreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_DEL_GAMEOBJECT);
-
     stmt->setUInt64(0, m_spawnId);
 
     WorldDatabase.Execute(stmt);
 
     stmt = WorldDatabase.GetPreparedStatement(WORLD_DEL_EVENT_GAMEOBJECT);
-
     stmt->setUInt64(0, m_spawnId);
 
     WorldDatabase.Execute(stmt);
+
+    stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_DEL_GAMEOBJECTEXTRA);
+    stmt->setUInt64(0, m_spawnId);
+
+    FreedomDatabase.Execute(stmt);
 }
 
 /*********************************************************/

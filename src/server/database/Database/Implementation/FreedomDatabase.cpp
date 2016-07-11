@@ -28,6 +28,7 @@ void FreedomDatabaseConnection::DoPrepareStatements()
     PrepareStatement(FREEDOM_SEL_PUBLIC_SPELL, "SELECT spell_id, allow_targeting, name, id_bnet_gm FROM public_spell", CONNECTION_SYNCH);
     PrepareStatement(FREEDOM_SEL_MORPHS, "SELECT guid, name, id_display, id_bnet_gm FROM morphs ORDER BY guid, name", CONNECTION_SYNCH);
     PrepareStatement(FREEDOM_SEL_ITEMTEMPLATEEXTRA, "SELECT entry_id, hidden FROM item_template_extra", CONNECTION_SYNCH);
+    PrepareStatement(FREEDOM_SEL_GAMEOBJECTEXTRA, "SELECT guid, scale, id_creator_bnet, id_creator_player, id_modifier_bnet, id_modifier_player, UNIX_TIMESTAMP(created), UNIX_TIMESTAMP(modified) FROM gameobject_extra", CONNECTION_SYNCH);
 
     // INSERTS
     PrepareStatement(FREEDOM_INS_PUBLIC_TELE, "INSERT INTO public_tele (name, position_x, position_y, position_z, orientation, map, id_bnet_gm) VALUES (?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
@@ -40,7 +41,11 @@ void FreedomDatabaseConnection::DoPrepareStatements()
     PrepareStatement(FREEDOM_DEL_PRIVATE_TELE_NAME, "DELETE FROM private_tele WHERE name = ? AND id_bnet_account = ?", CONNECTION_ASYNC);
     PrepareStatement(FREEDOM_DEL_PUBLIC_SPELL_ID, "DELETE FROM public_spell WHERE spell_id = ?", CONNECTION_ASYNC);
     PrepareStatement(FREEDOM_DEL_MORPHS_NAME, "DELETE FROM morphs WHERE name = ? AND guid = ?", CONNECTION_ASYNC);
+    PrepareStatement(FREEDOM_DEL_GAMEOBJECTEXTRA, "DELETE FROM gameobject_extra WHERE guid = ?", CONNECTION_ASYNC);
 
     // UPDATES
     PrepareStatement(FREEDOM_UPD_ITEMTEMPLATEEXTRA, "UPDATE item_template_extra SET hidden = ? WHERE entry_id = ?", CONNECTION_ASYNC);
+
+    // REPLACES
+    PrepareStatement(FREEDOM_REP_GAMEOBJECTEXTRA, "REPLACE INTO gameobject_extra VALUES (?, ?, ?, ?, ?, ?, from_unixtime(?), from_unixtime(?))", CONNECTION_ASYNC);
 }

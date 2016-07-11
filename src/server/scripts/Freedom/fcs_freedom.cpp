@@ -60,6 +60,7 @@ public:
 
         static std::vector<ChatCommand> freedomReloadCommandTable = 
         {
+            { "gameobject",     rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleFreedomReloadGameobjectCommand,   "" },
             { "public_tele",    rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleFreedomReloadPublicTeleCommand,   "" },
             { "private_tele",   rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleFreedomReloadPrivateTeleCommand,  "" },
             { "public_spell",   rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleFreedomReloadPublicSpellCommand,  "" },
@@ -777,6 +778,13 @@ public:
         return true;
     }
 
+    static bool HandleFreedomReloadGameobjectCommand(ChatHandler* handler, char const* args)
+    {
+        sFreedomMgr->LoadGameObjectExtras();
+        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD, "gameobject_extra").c_str());
+        return true;
+    }
+
     static bool HandleFreedomReloadPublicTeleCommand(ChatHandler* handler, char const* args)
     {
         sFreedomMgr->LoadPublicTeleports();        
@@ -808,7 +816,7 @@ public:
     static bool HandleFreedomReloadItemCommand(ChatHandler* handler, char const* args)
     {
         sFreedomMgr->LoadItemTemplateExtras();
-        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD, "morphs").c_str());
+        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD, "item_template_extra").c_str());
         return true;
     }
 #pragma endregion
