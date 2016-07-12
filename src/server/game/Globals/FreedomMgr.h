@@ -21,10 +21,41 @@ public:
     AdvancedArgumentTokenizer(const std::string &src, bool preserveQuotes = false);
     ~AdvancedArgumentTokenizer();
 
-    void LoadModifier(std::string modifier, uint32 paramCount);
-    std::string GetModifierValue(std::string modifier, uint32 index);
+    void LoadModifier(std::string modifier, uint32 paramCount);    
     bool ModifierExists(std::string modifier) { return m_modifiers.find(modifier) != m_modifiers.end(); }
-    std::string TryGetParam(uint32 index) { return (m_storage.size() > index) ? m_storage[index] : ""; }
+
+    template<typename T = std::string>
+    T GetModifierValue(std::string modifier, uint32 index) { }
+
+    template<>
+    std::string GetModifierValue<std::string>(std::string modifier, uint32 index);
+
+    template<typename T = std::string>
+    T TryGetParam(uint32 index) { }
+
+    template<>
+    std::string TryGetParam<std::string>(uint32 index) { return (m_storage.size() > index) ? m_storage[index] : ""; }
+
+    template<>
+    float TryGetParam<float>(uint32 index) { return atof(TryGetParam<std::string>(index).c_str()); }
+
+    template<>
+    uint32 TryGetParam<uint32>(uint32 index) { return strtoul(TryGetParam<std::string>(index).c_str(), nullptr, 10); }
+
+    template<>
+    uint64 TryGetParam<uint64>(uint32 index) { return strtoull(TryGetParam<std::string>(index).c_str(), nullptr, 10); }
+
+    template<typename T = std::string>
+    T TryGetParam(uint32 index, std::string keyType) { }
+
+    template<>
+    std::string TryGetParam<std::string>(uint32 index, std::string keyType);
+
+    template<>
+    uint32 TryGetParam<uint32>(uint32 index, std::string keyType);
+
+    template<>
+    uint64 TryGetParam<uint64>(uint32 index, std::string keyType);
 
     ModifierStorageType const* modifiers() { return &m_modifiers; }
     const_iterator begin() const { return m_storage.begin(); }

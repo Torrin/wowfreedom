@@ -102,6 +102,29 @@ AdvancedArgumentTokenizer::~AdvancedArgumentTokenizer()
 {
 }
 
+template<>
+std::string AdvancedArgumentTokenizer::TryGetParam<std::string>(uint32 index, std::string keyType)
+{
+    std::string token = TryGetParam<std::string>(index);
+    return sFreedomMgr->GetChatLinkKey(token, keyType);
+}
+
+template<>
+uint32 AdvancedArgumentTokenizer::TryGetParam<uint32>(uint32 index, std::string keyType)
+{
+    std::string token = TryGetParam<std::string>(index);
+    std::string keyToken = sFreedomMgr->GetChatLinkKey(token, keyType);
+    return strtoul(keyToken.c_str(), nullptr, 10);
+}
+
+template<>
+uint64 AdvancedArgumentTokenizer::TryGetParam<uint64>(uint32 index, std::string keyType)
+{
+    std::string token = TryGetParam<std::string>(index);
+    std::string keyToken = sFreedomMgr->GetChatLinkKey(token, keyType);
+    return strtoull(keyToken.c_str(), nullptr, 10);
+}
+
 void AdvancedArgumentTokenizer::LoadModifier(std::string modifier, uint32 paramCount)
 {
     // Do not override previously defined modifier due to potential missing parameters from normal token storage
@@ -163,7 +186,8 @@ void AdvancedArgumentTokenizer::LoadModifier(std::string modifier, uint32 paramC
     }
 }
 
-std::string AdvancedArgumentTokenizer::GetModifierValue(std::string modifier, uint32 index)
+template<>
+std::string AdvancedArgumentTokenizer::GetModifierValue<std::string>(std::string modifier, uint32 index)
 {
     auto it = m_modifiers.find(modifier);
     if (it != m_modifiers.end())
