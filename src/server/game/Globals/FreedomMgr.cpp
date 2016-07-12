@@ -6,7 +6,9 @@
 #include "MoveSpline.h"
 #include "MapManager.h"
 #include "GameObject.h"
+#include "Creature.h"
 #include "Config.h"
+#include "Transport.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/tokenizer.hpp>
@@ -212,6 +214,8 @@ void FreedomMgr::LoadAllTables()
     LoadItemTemplateExtras();
     LoadGameObjectTemplateExtras();
     LoadGameObjectExtras();
+    LoadCreatureExtras();
+    LoadCreatureTemplateExtras();
 
     TC_LOG_INFO("server.loading", ">> Loaded FreedomMgr tables in %u ms", GetMSTimeDiffToNow(oldMSTime));
 }
@@ -273,6 +277,23 @@ bool FreedomMgr::IsValidPhaseMask(uint32 phaseMask)
     return false;
 }
 
+void FreedomMgr::CreaturePhase(Creature* creature, uint32 phaseMask)
+{
+    creature->ClearPhases();
+
+    for (int i = 1; i < 512; i = i << 1)
+    {
+        uint32 phase = phaseMask & i;
+
+        if (phase)
+            creature->SetInPhase(GetPhaseId(phase), false, true);
+    }
+
+    creature->SetPhaseMask(phaseMask, false);
+
+    _creatureExtraStore[creature->GetSpawnId()].phaseMask = phaseMask;
+}
+
 void FreedomMgr::GameObjectPhase(GameObject* go, uint32 phaseMask)
 {
     go->ClearPhases();
@@ -316,11 +337,317 @@ uint32 FreedomMgr::GetPlayerPhase(Player* player)
 #pragma endregion
 
 #pragma region CREATURE
+void FreedomMgr::LoadCreatureExtras()
+{
+    // clear current storage
+    _creatureExtraStore.clear();
+
+    // guid, scale, id_creator_bnet, id_creator_player, id_modifier_bnet, id_modifier_player, UNIX_TIMESTAMP(created), UNIX_TIMESTAMP(modified), phaseMask
+    PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_SEL_CREATUREEXTRA);
+    PreparedQueryResult result = FreedomDatabase.Query(stmt);
+
+    if (!result)
+        return;
+
+    do
+    {
+        Field * fields = result->Fetch();
+        CreatureExtraData data;
+        uint64 guid = fields[0].GetUInt64();
+        data.scale = fields[1].GetFloat();
+        data.creatorBnetAccId = fields[2].GetUInt32();
+        data.creatorPlayerId = fields[3].GetUInt64();
+        data.modifierBnetAccId = fields[4].GetUInt32();
+        data.modifierPlayerId = fields[5].GetUInt64();
+        data.created = fields[6].GetUInt64();
+        data.modified = fields[7].GetUInt64();
+        data.phaseMask = fields[8].GetUInt32();
+
+        _creatureExtraStore[guid] = data;
+    } while (result->NextRow());
+}
+
+void FreedomMgr::LoadCreatureTemplateExtras()
+{
+    // clear current storage
+    _creatureTemplateExtraStore.clear();
+
+    // id_entry, disabled
+    PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_SEL_CREATUREEXTRA_TEMPLATE);
+    PreparedQueryResult result = FreedomDatabase.Query(stmt);
+
+    if (!result)
+        return;
+
+    do
+    {
+        Field * fields = result->Fetch();
+        CreatureTemplateExtraData data;
+        uint32 entry = fields[0].GetUInt32();
+        data.disabled = fields[1].GetBool();
+
+        _creatureTemplateExtraStore[entry] = data;
+    } while (result->NextRow());
+}
+
+void FreedomMgr::SetCreatureTemplateExtraDisabledFlag(uint32 entryId, bool disabled)
+{
+    auto it = _creatureTemplateExtraStore.find(entryId);
+    if (it == _creatureTemplateExtraStore.end())
+        return;
+
+    _creatureTemplateExtraStore[entryId].disabled = disabled;
+
+    // DB update
+    PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_UPD_CREATUREEXTRA_TEMPLATE);
+    stmt->setBool(0, disabled);
+    stmt->setUInt32(1, entryId);
+    FreedomDatabase.Execute(stmt);
+}
+
+void FreedomMgr::SaveCreature(Creature* creature)
+{
+    creature->SaveToDB();
+
+    // Save extra attached data if it exists
+    auto it = _creatureExtraStore.find(creature->GetSpawnId());
+
+    if (it != _creatureExtraStore.end())
+    {
+        int index = 0;
+        CreatureExtraData data = it->second;
+        PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_REP_CREATUREEXTRA);
+        stmt->setUInt64(index++, creature->GetSpawnId());
+        stmt->setFloat(index++, data.scale);
+        stmt->setUInt32(index++, data.creatorBnetAccId);
+        stmt->setUInt64(index++, data.creatorPlayerId);
+        stmt->setUInt32(index++, data.modifierBnetAccId);
+        stmt->setUInt64(index++, data.modifierPlayerId);
+        stmt->setUInt64(index++, data.created);
+        stmt->setUInt64(index++, data.modified);
+        stmt->setUInt32(index++, data.phaseMask);
+
+        FreedomDatabase.Execute(stmt);
+    }
+}
+
+void FreedomMgr::CreatureSetModifyHistory(Creature* creature, Player* modifier)
+{
+    if (!creature || !modifier)
+        return;
+
+    CreatureExtraData data = _creatureExtraStore[creature->GetSpawnId()];
+    data.modifierBnetAccId = modifier->GetSession()->GetBattlenetAccountId();
+    data.modifierPlayerId = modifier->GetGUID().GetCounter();
+    data.modified = time(NULL);
+    _creatureExtraStore[creature->GetSpawnId()] = data;
+}
+
+void FreedomMgr::CreatureMove(Creature* creature, float x, float y, float z, float o)
+{
+    if (CreatureData const* data = sObjectMgr->GetCreatureData(creature->GetSpawnId()))
+    {
+        const_cast<CreatureData*>(data)->posX = x;
+        const_cast<CreatureData*>(data)->posY = y;
+        const_cast<CreatureData*>(data)->posZ = z;
+        const_cast<CreatureData*>(data)->orientation = o;
+    }
+
+    creature->SetPosition(x, y, z, o);
+    creature->GetMotionMaster()->Initialize();
+
+    if (creature->IsAlive())                            // dead creature will reset movement generator at respawn
+    {
+        creature->setDeathState(JUST_DIED);
+        creature->Respawn();
+    }
+
+    PreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_UPD_CREATURE_POSITION);
+
+    stmt->setFloat(0, x);
+    stmt->setFloat(1, y);
+    stmt->setFloat(2, z);
+    stmt->setFloat(3, o);
+    stmt->setUInt64(4, creature->GetSpawnId());
+
+    WorldDatabase.Execute(stmt);
+}
+
+void FreedomMgr::CreatureTurn(Creature* creature, float o)
+{
+    CreatureMove(creature, creature->GetPositionX(), creature->GetPositionY(), creature->GetPositionZ(), o);
+}
+
+void FreedomMgr::CreatureScale(Creature* creature, float scale)
+{
+    if (!creature)
+        return;
+
+    float maxScale = sConfigMgr->GetFloatDefault("Freedom.Creature.MaxScale", 15.0f);
+    float minScale = sConfigMgr->GetFloatDefault("Freedom.Creature.MinScale", 0.0f);
+
+    if (scale < minScale)
+        scale = minScale;
+    if (scale > maxScale)
+        scale = maxScale;
+    
+    creature->SetObjectScale(scale);
+    _creatureExtraStore[creature->GetSpawnId()].scale = scale;
+}
+
+void FreedomMgr::CreatureDelete(Creature* creature)
+{    
+    creature->CombatStop();
+    creature->DeleteFromDB();
+    creature->AddObjectToRemoveList();
+}
+
+Creature* FreedomMgr::CreatureCreate(Player* creator, CreatureTemplate const* creatureTemplate)
+{
+    uint32 entryId = creatureTemplate->Entry;
+    float x = creator->GetPositionX();
+    float y = creator->GetPositionY();
+    float z = creator->GetPositionZ();
+    float o = creator->GetOrientation();
+    Map* map = creator->GetMap();
+
+    if (Transport* trans = creator->GetTransport())
+    {
+        ObjectGuid::LowType guid = map->GenerateLowGuid<HighGuid::Creature>();
+        CreatureData& data = sObjectMgr->NewOrExistCreatureData(guid);
+        data.id = entryId;
+        data.phaseMask = creator->GetPhaseMask();
+        data.posX = creator->GetTransOffsetX();
+        data.posY = creator->GetTransOffsetY();
+        data.posZ = creator->GetTransOffsetZ();
+        data.orientation = creator->GetTransOffsetO();
+
+        Creature* creature = trans->CreateNPCPassenger(guid, &data);
+
+        creature->SaveToDB(trans->GetGOInfo()->moTransport.mapID, 1 << map->GetSpawnMode(), creator->GetPhaseMask());
+
+        sObjectMgr->AddCreatureToGrid(guid, &data);
+        return creature;
+    }
+
+    Creature* creature = new Creature();
+    if (!creature->Create(map->GenerateLowGuid<HighGuid::Creature>(), map, creator->GetPhaseMask(), entryId, x, y, z, o))
+    {
+        delete creature;
+        return nullptr;
+    }
+
+    creature->SaveToDB(map->GetId(), (1 << map->GetSpawnMode()), creator->GetPhaseMask());
+
+    ObjectGuid::LowType db_guid = creature->GetSpawnId();
+
+    // To call _LoadGoods(); _LoadQuests(); CreateTrainerSpells()
+    // current "creature" variable is deleted and created fresh new, otherwise old values might trigger asserts or cause undefined behavior
+    creature->CleanupsBeforeDelete();
+    delete creature;
+    creature = new Creature();
+    if (!creature->LoadCreatureFromDB(db_guid, map))
+    {
+        delete creature;
+        return nullptr;
+    }
+
+    // Creation history and straight update
+    CreatureExtraData data;
+    data.scale = creatureTemplate->scale;
+    data.creatorBnetAccId = creator->GetSession()->GetBattlenetAccountId();
+    data.creatorPlayerId = creator->GetGUID().GetCounter();
+    data.modifierBnetAccId = creator->GetSession()->GetBattlenetAccountId();
+    data.modifierPlayerId = creator->GetGUID().GetCounter();
+    data.created = time(NULL);
+    data.modified = time(NULL);
+    _creatureExtraStore[creature->GetSpawnId()] = data;
+
+    for (uint32 phase : creator->GetPhases())
+    {
+        if (!sFreedomMgr->IsValidPhaseId(phase))
+            continue;
+
+        data.phaseMask |= sFreedomMgr->GetPhaseMask(phase);
+    }
+
+    int index = 0;
+    PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_REP_CREATUREEXTRA);
+    stmt->setUInt64(index++, creature->GetSpawnId());
+    stmt->setFloat(index++, data.scale);
+    stmt->setUInt32(index++, data.creatorBnetAccId);
+    stmt->setUInt64(index++, data.creatorPlayerId);
+    stmt->setUInt32(index++, data.modifierBnetAccId);
+    stmt->setUInt64(index++, data.modifierPlayerId);
+    stmt->setUInt64(index++, data.created);
+    stmt->setUInt64(index++, data.modified);
+    stmt->setUInt64(index++, data.phaseMask);
+
+    FreedomDatabase.Execute(stmt);
+
+    sObjectMgr->AddCreatureToGrid(db_guid, sObjectMgr->GetCreatureData(db_guid));
+    return creature;
+}
+
+Creature* FreedomMgr::CreatureRefresh(Creature* creature)
+{
+    ObjectGuid::LowType guidLow = creature->GetSpawnId();
+    Map* map = creature->GetMap();
+    creature->CleanupsBeforeDelete();
+    delete creature;
+    creature = new Creature();
+    if (!creature->LoadCreatureFromDB(guidLow, map))
+    {
+        delete creature;
+        return nullptr;
+    }
+
+    return creature;
+}
+
+CreatureExtraData const* FreedomMgr::GetCreatureExtraData(uint64 guid)
+{
+    auto it = _creatureExtraStore.find(guid);
+
+    if (it != _creatureExtraStore.end())
+    {
+        return &it->second;
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
+CreatureTemplateExtraData const* FreedomMgr::GetCreatureTemplateExtraData(uint32 entry)
+{
+    auto it = _creatureTemplateExtraStore.find(entry);
+
+    if (it != _creatureTemplateExtraStore.end())
+    {
+        return &it->second;
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
 Creature* FreedomMgr::GetAnyCreature(Map* map, ObjectGuid::LowType lowguid, uint32 entry)
 {
     Creature* creature = map->GetCreature(ObjectGuid::Create<HighGuid::Creature>(map->GetId(), entry, lowguid));
 
     return creature;
+}
+
+void FreedomMgr::SetCreatureSelectionForPlayer(ObjectGuid::LowType playerId, ObjectGuid::LowType creatureId)
+{
+    _playerExtraDataStore[playerId].selectedCreatureGuid = creatureId;
+}
+
+ObjectGuid::LowType FreedomMgr::GetSelectedCreatureGuidFromPlayer(ObjectGuid::LowType playerId)
+{
+    return _playerExtraDataStore[playerId].selectedCreatureGuid;
 }
 #pragma endregion
 
@@ -1139,20 +1466,6 @@ void FreedomMgr::LoadMorphs()
 
         _playerExtraDataStore[charGuid].morphDataStore.push_back(data);
     } while (result->NextRow());
-}
-
-#pragma endregion
-
-#pragma region SELECTION
-
-void FreedomMgr::SetCreatureSelectionForPlayer(ObjectGuid::LowType playerId, ObjectGuid::LowType creatureId)
-{
-    _playerExtraDataStore[playerId].selectedCreatureGuid = creatureId;
-}
-
-ObjectGuid::LowType FreedomMgr::GetSelectedCreatureGuidFromPlayer(ObjectGuid::LowType playerId)
-{
-    return _playerExtraDataStore[playerId].selectedCreatureGuid;
 }
 
 #pragma endregion

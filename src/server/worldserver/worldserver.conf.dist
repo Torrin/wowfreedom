@@ -90,6 +90,16 @@ Freedom.Gameobject.MaxScale = 15.0
 Freedom.Gameobject.MinScale = 0.0
 
 #
+#    Freedom.Creature.MaxScale
+#    Freedom.Creature.MinScale
+#        Description: Controls max/min values for .npc set scale command.
+#        Default:     MaxScale = 15.0
+#                     MinScale = 0.0
+
+Freedom.Creature.MaxScale = 15.0
+Freedom.Creature.MinScale = 0.0
+
+#
 ###################################################################################################
 
 ###################################################################################################

@@ -3,6 +3,7 @@
 
 #include "ObjectMgr.h"
 #include "GameObject.h"
+#include "Creature.h"
 
 class AdvancedArgumentTokenizer
 {
@@ -131,6 +132,30 @@ struct PlayerExtraData
 
 typedef std::unordered_map<ObjectGuid::LowType, PlayerExtraData> PlayerExtraDataContainer;
 
+struct CreatureExtraData
+{
+    CreatureExtraData() : scale(-1.0f), creatorBnetAccId(0), creatorPlayerId(0),
+        modifierBnetAccId(0), modifierPlayerId(0), created(0), modified(0), phaseMask(1) { }
+
+    float scale;
+    uint32 creatorBnetAccId;
+    uint64 creatorPlayerId;
+    uint32 modifierBnetAccId;
+    uint64 modifierPlayerId;
+    time_t created;
+    time_t modified;
+    uint32 phaseMask;
+};
+
+typedef std::unordered_map<uint64, CreatureExtraData> CreatureExtraContainer;
+
+struct CreatureTemplateExtraData
+{
+    bool disabled;
+};
+
+typedef std::unordered_map<uint32, CreatureTemplateExtraData> CreatureTemplateExtraContainer;
+
 typedef std::vector<std::pair<uint32, uint32>> PhaseListContainer;
 
 class Map;
@@ -149,6 +174,7 @@ class FreedomMgr
         int GetPhaseId(uint32 phaseMask);
         bool IsValidPhaseId(uint32 phaseId);
         bool IsValidPhaseMask(uint32 phaseMask);
+        void CreaturePhase(Creature* creature, uint32 phaseMask);
         void GameObjectPhase(GameObject* go, uint32 phaseMask);
         void PlayerPhase(Player* player, uint32 phaseMask);
         uint32 GetPlayerPhase(Player* player);
@@ -172,6 +198,19 @@ class FreedomMgr
         GameObject* GameObjectCreate(Player* creator, GameObjectTemplate const* gobTemplate, uint32 spawnTimeSecs = 0);
 
         // Creature
+        void LoadCreatureExtras();
+        void LoadCreatureTemplateExtras();
+        void SetCreatureTemplateExtraDisabledFlag(uint32 entryId, bool disabled);
+        void SaveCreature(Creature* creature);
+        void CreatureSetModifyHistory(Creature* creature, Player* modifier);
+        void CreatureMove(Creature* creature, float x, float y, float z, float o);
+        void CreatureTurn(Creature* creature, float o);
+        void CreatureScale(Creature* creature, float scale);
+        void CreatureDelete(Creature* creature);
+        Creature* CreatureCreate(Player* creator, CreatureTemplate const* creatureTemplate);
+        Creature* CreatureRefresh(Creature* creature);
+        CreatureExtraData const* GetCreatureExtraData(uint64 guid);
+        CreatureTemplateExtraData const* GetCreatureTemplateExtraData(uint32 entry);
         void SetCreatureSelectionForPlayer(ObjectGuid::LowType playerId, ObjectGuid::LowType creatureId);
         ObjectGuid::LowType GetSelectedCreatureGuidFromPlayer(ObjectGuid::LowType playerId);
         Creature* GetAnyCreature(Map* map, ObjectGuid::LowType lowguid, uint32 entry);
@@ -234,6 +273,8 @@ class FreedomMgr
         GameObjectExtraContainer _gameObjectExtraStore;
         GameObjectTemplateExtraContainer _gameObjectTemplateExtraStore;
         PhaseListContainer _phaseListStore;
+        CreatureExtraContainer _creatureExtraStore;
+        CreatureTemplateExtraContainer _creatureTemplateExtraStore;
 };
 
 #define sFreedomMgr FreedomMgr::instance()
