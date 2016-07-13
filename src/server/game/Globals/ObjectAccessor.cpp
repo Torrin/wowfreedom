@@ -226,7 +226,7 @@ Player* ObjectAccessor::FindPlayerByName(std::string const& name)
 {
     boost::shared_lock<boost::shared_mutex> lock(*HashMapHolder<Player>::GetLock());
 
-    std::string nameStr = name.substr(0, name.find('-'));
+    std::string nameStr = name;
     std::transform(nameStr.begin(), nameStr.end(), nameStr.begin(), ::tolower);
     HashMapHolder<Player>::MapType const& m = GetPlayers();
     for (HashMapHolder<Player>::MapType::const_iterator iter = m.begin(); iter != m.end(); ++iter)

@@ -451,6 +451,10 @@ void WorldSession::HandleChatAddonMessage(ChatMsg type, std::string prefix, std:
         }
         case CHAT_MSG_WHISPER:
         {
+            // addon messages need to be sent to player name without the realm suffixed to it, due to lack of cross-realm support
+            ExtendedPlayerName extName = ExtractExtendedPlayerName(target);
+            target = extName.Name;
+
             if (!normalizePlayerName(target))
                 break;
 
