@@ -102,29 +102,6 @@ AdvancedArgumentTokenizer::~AdvancedArgumentTokenizer()
 {
 }
 
-template<>
-std::string AdvancedArgumentTokenizer::TryGetParam<std::string>(uint32 index, std::string keyType)
-{
-    std::string token = TryGetParam<std::string>(index);
-    return sFreedomMgr->GetChatLinkKey(token, keyType);
-}
-
-template<>
-uint32 AdvancedArgumentTokenizer::TryGetParam<uint32>(uint32 index, std::string keyType)
-{
-    std::string token = TryGetParam<std::string>(index);
-    std::string keyToken = sFreedomMgr->GetChatLinkKey(token, keyType);
-    return strtoul(keyToken.c_str(), nullptr, 10);
-}
-
-template<>
-uint64 AdvancedArgumentTokenizer::TryGetParam<uint64>(uint32 index, std::string keyType)
-{
-    std::string token = TryGetParam<std::string>(index);
-    std::string keyToken = sFreedomMgr->GetChatLinkKey(token, keyType);
-    return strtoull(keyToken.c_str(), nullptr, 10);
-}
-
 void AdvancedArgumentTokenizer::LoadModifier(std::string modifier, uint32 paramCount)
 {
     // Do not override previously defined modifier due to potential missing parameters from normal token storage
@@ -186,8 +163,7 @@ void AdvancedArgumentTokenizer::LoadModifier(std::string modifier, uint32 paramC
     }
 }
 
-template<>
-std::string AdvancedArgumentTokenizer::GetModifierValue<std::string>(std::string modifier, uint32 index)
+std::string AdvancedArgumentTokenizer::GetModifierValue(std::string modifier, uint32 index)
 {
     auto it = m_modifiers.find(modifier);
     if (it != m_modifiers.end())
@@ -197,6 +173,11 @@ std::string AdvancedArgumentTokenizer::GetModifierValue<std::string>(std::string
     }
 
     return "";
+}
+
+std::string AdvancedArgumentTokenizer::ExtractChatLinkKey(std::string src, std::string type)
+{
+    return sFreedomMgr->GetChatLinkKey(src, type);
 }
 #pragma endregion
 
@@ -366,7 +347,9 @@ void FreedomMgr::LoadCreatureExtras()
     // clear current storage
     _creatureExtraStore.clear();
 
-    // guid, scale, id_creator_bnet, id_creator_player, id_modifier_bnet, id_modifier_player, UNIX_TIMESTAMP(created), UNIX_TIMESTAMP(modified), phaseMask
+    // guid, scale, id_creator_bnet, id_creator_player, id_modifier_bnet, id_modifier_player, 
+    // UNIX_TIMESTAMP(created), UNIX_TIMESTAMP(modified), phaseMask, displayLock, displayId, 
+    // nativeDisplayId, genderLock, gender
     PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_SEL_CREATUREEXTRA);
     PreparedQueryResult result = FreedomDatabase.Query(stmt);
 
@@ -386,6 +369,11 @@ void FreedomMgr::LoadCreatureExtras()
         data.created = fields[6].GetUInt64();
         data.modified = fields[7].GetUInt64();
         data.phaseMask = fields[8].GetUInt32();
+        data.displayLock = fields[9].GetBool();
+        data.displayId = fields[10].GetUInt32();
+        data.nativeDisplayId = fields[11].GetUInt32();
+        data.genderLock = fields[12].GetBool();
+        data.gender = fields[13].GetUInt8();
 
         _creatureExtraStore[guid] = data;
     } while (result->NextRow());
@@ -412,6 +400,52 @@ void FreedomMgr::LoadCreatureTemplateExtras()
 
         _creatureTemplateExtraStore[entry] = data;
     } while (result->NextRow());
+}
+
+void FreedomMgr::CreatureSetEmote(Creature* creature, uint32 emoteId)
+{
+    uint32 spawnId = creature->GetSpawnId();
+    auto addonData = &(sObjectMgr->_creatureAddonStore[spawnId]);
+    addonData->emote = emoteId;
+    creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, emoteId);
+}
+
+void FreedomMgr::CreatureSetMount(Creature* creature, uint32 mountId)
+{
+    uint32 spawnId = creature->GetSpawnId();
+    auto addonData = &(sObjectMgr->_creatureAddonStore[spawnId]);
+    addonData->mount = mountId;
+    creature->Mount(mountId);
+}
+
+void FreedomMgr::CreatureSetAuraToggle(Creature* creature, uint32 auraId, bool toggle)
+{
+    uint32 spawnId = creature->GetSpawnId();
+    auto addonData = &(sObjectMgr->_creatureAddonStore[spawnId]);
+
+    auto it = addonData->auras.begin();
+    for (; it != addonData->auras.end(); it++)
+    {
+        if (*it == auraId && toggle) // refresh already existing aura
+        {
+            creature->AddAura(auraId, creature);
+            return;
+        }
+
+        if (*it == auraId && !toggle) // we found auraId we want to remove
+            break;
+    }
+
+    if (toggle)
+    {
+        creature->AddAura(auraId, creature);
+        addonData->auras.push_back(auraId);
+    }
+    else if (it != addonData->auras.end())
+    {
+        creature->RemoveAura(auraId);
+        addonData->auras.erase(it);
+    }
 }
 
 void FreedomMgr::SetCreatureTemplateExtraDisabledFlag(uint32 entryId, bool disabled)
@@ -450,6 +484,11 @@ void FreedomMgr::SaveCreature(Creature* creature)
         stmt->setUInt64(index++, data.created);
         stmt->setUInt64(index++, data.modified);
         stmt->setUInt32(index++, data.phaseMask);
+        stmt->setBool(index++, data.displayLock);
+        stmt->setUInt32(index++, data.displayId);
+        stmt->setUInt32(index++, data.nativeDisplayId);
+        stmt->setBool(index++, data.genderLock);
+        stmt->setUInt8(index++, data.gender);
 
         FreedomDatabase.Execute(stmt);
     }
@@ -469,6 +508,9 @@ void FreedomMgr::CreatureSetModifyHistory(Creature* creature, Player* modifier)
 
 void FreedomMgr::CreatureMove(Creature* creature, float x, float y, float z, float o)
 {
+    if (!creature)
+        return;
+
     if (CreatureData const* data = sObjectMgr->GetCreatureData(creature->GetSpawnId()))
     {
         const_cast<CreatureData*>(data)->posX = x;
@@ -477,7 +519,12 @@ void FreedomMgr::CreatureMove(Creature* creature, float x, float y, float z, flo
         const_cast<CreatureData*>(data)->orientation = o;
     }
 
-    creature->SetPosition(x, y, z, o);
+    //! If hovering, always increase our server-side Z position
+    //! Client automatically projects correct position based on Z coord sent in monster move
+    //! and UNIT_FIELD_HOVERHEIGHT sent in object updates
+    if (creature->HasUnitMovementFlag(MOVEMENTFLAG_HOVER))
+        z += creature->GetFloatValue(UNIT_FIELD_HOVERHEIGHT);
+    creature->Relocate(x, y, z, o);
     creature->GetMotionMaster()->Initialize();
 
     if (creature->IsAlive())                            // dead creature will reset movement generator at respawn
@@ -585,7 +632,6 @@ Creature* FreedomMgr::CreatureCreate(Player* creator, CreatureTemplate const* cr
     data.modifierPlayerId = creator->GetGUID().GetCounter();
     data.created = time(NULL);
     data.modified = time(NULL);
-    _creatureExtraStore[creature->GetSpawnId()] = data;
 
     for (uint32 phase : creator->GetPhases())
     {
@@ -594,6 +640,8 @@ Creature* FreedomMgr::CreatureCreate(Player* creator, CreatureTemplate const* cr
 
         data.phaseMask |= sFreedomMgr->GetPhaseMask(phase);
     }
+
+    _creatureExtraStore[creature->GetSpawnId()] = data;
 
     int index = 0;
     PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_REP_CREATUREEXTRA);
@@ -606,6 +654,11 @@ Creature* FreedomMgr::CreatureCreate(Player* creator, CreatureTemplate const* cr
     stmt->setUInt64(index++, data.created);
     stmt->setUInt64(index++, data.modified);
     stmt->setUInt64(index++, data.phaseMask);
+    stmt->setBool(index++, data.displayLock);
+    stmt->setUInt32(index++, data.displayId);
+    stmt->setUInt32(index++, data.nativeDisplayId);
+    stmt->setBool(index++, data.genderLock);
+    stmt->setUInt8(index++, data.gender);
 
     FreedomDatabase.Execute(stmt);
 
@@ -617,14 +670,42 @@ Creature* FreedomMgr::CreatureRefresh(Creature* creature)
 {
     ObjectGuid::LowType guidLow = creature->GetSpawnId();
     Map* map = creature->GetMap();
-    creature->CleanupsBeforeDelete();
-    delete creature;
+
+    auto extraData = &_creatureExtraStore[guidLow];
+
+    // save previous values
+    bool displayLock = extraData->displayLock;
+    uint32 displayId = extraData->displayId;
+    uint32 nativeDisplayId = extraData->nativeDisplayId;
+    bool genderLock = extraData->genderLock;
+    uint8 gender = extraData->gender;
+
+    // temporarily use creature extra data to store current display ids,
+    // so refresh doesn't cause random model-swap
+    extraData->displayLock = true;
+    extraData->displayId = creature->GetDisplayId();
+    extraData->nativeDisplayId = creature->GetNativeDisplayId();
+    extraData->genderLock = true;
+    extraData->gender = creature->getGender();
+
+    creature->CleanupsBeforeDelete(true);
+    creature->SendObjectDeSpawnAnim(creature->GetGUID());
+    creature->AddObjectToRemoveList();
+
     creature = new Creature();
+
     if (!creature->LoadCreatureFromDB(guidLow, map))
     {
         delete creature;
         return nullptr;
     }
+
+    // restore previous values
+    extraData->displayLock = displayLock;
+    extraData->displayId = displayId;
+    extraData->nativeDisplayId = nativeDisplayId;
+    extraData->genderLock = genderLock;
+    extraData->gender = gender;
 
     return creature;
 }
@@ -657,9 +738,48 @@ CreatureTemplateExtraData const* FreedomMgr::GetCreatureTemplateExtraData(uint32
     }
 }
 
+Creature* FreedomMgr::GetAnyCreature(ObjectGuid::LowType lowguid)
+{
+    auto data = sObjectMgr->GetCreatureData(lowguid);
+    if (!data)
+        return nullptr;
+
+    auto objectGuid = ObjectGuid::Create<HighGuid::Creature>(data->mapid, data->id, lowguid);
+    Map* map = sMapMgr->FindMap(data->mapid, 0);
+
+    if (!map)
+        return nullptr;
+
+    Creature* creature = map->GetCreature(objectGuid);
+
+    // guid is DB guid of creature
+    if (!creature)
+    {
+        auto bounds = map->GetCreatureBySpawnIdStore().equal_range(lowguid);
+        if (bounds.first == bounds.second)
+            return nullptr;
+
+        return bounds.first->second;
+    }
+
+    return creature;
+}
+
 Creature* FreedomMgr::GetAnyCreature(Map* map, ObjectGuid::LowType lowguid, uint32 entry)
 {
-    Creature* creature = map->GetCreature(ObjectGuid::Create<HighGuid::Creature>(map->GetId(), entry, lowguid));
+    auto objectGuid = ObjectGuid::Create<HighGuid::Creature>(map->GetId(), entry, lowguid);
+
+    Creature* creature = map->GetCreature(objectGuid);
+
+    // guid is DB guid of creature
+    if (!creature)
+    {
+        auto bounds = map->GetCreatureBySpawnIdStore().equal_range(lowguid);
+        if (bounds.first == bounds.second)
+            return nullptr;
+
+        return bounds.first->second;
+    }
 
     return creature;
 }
@@ -936,7 +1056,6 @@ GameObject* FreedomMgr::GameObjectCreate(Player* creator, GameObjectTemplate con
     data.modifierPlayerId = creator->GetGUID().GetCounter();
     data.created = time(NULL);
     data.modified = time(NULL);
-    _gameObjectExtraStore[spawnId] = data;
 
     for (uint32 phase : creator->GetPhases())
     {
@@ -945,6 +1064,8 @@ GameObject* FreedomMgr::GameObjectCreate(Player* creator, GameObjectTemplate con
 
         data.phaseMask |= sFreedomMgr->GetPhaseMask(phase);
     }
+
+    _gameObjectExtraStore[spawnId] = data;
 
     int index = 0;
     PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_REP_GAMEOBJECTEXTRA);

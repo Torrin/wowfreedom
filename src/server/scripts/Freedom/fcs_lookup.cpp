@@ -372,6 +372,12 @@ public:
 
             ItemTemplateExtraData const* data = sFreedomMgr->GetItemTemplateExtraById(itr->second.GetId());
             
+            if (!data)
+            {
+                handler->PSendSysMessage(FREEDOM_CMDE_ENTRY_X_NOT_EXIST_IN_TABLE_X, itr->first, "item_template_extra");
+                continue;
+            }
+
             if (boost::icontains(name, namePart))
             {
                 if (maxResults && count++ == maxResults)

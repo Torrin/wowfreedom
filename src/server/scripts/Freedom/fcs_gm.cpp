@@ -27,6 +27,7 @@ public:
         {
             { "item",           rbac::RBAC_FPERM_ADMINISTRATION,        false,  &HandleBlacklistItemCommand,            "" },
             { "gobject",        rbac::RBAC_FPERM_ADMINISTRATION,        false,  &HandleBlacklistGameobjectCommand,      "" },
+            { "creature",       rbac::RBAC_FPERM_ADMINISTRATION,        false,  &HandleBlacklistCreatureCommand,      "" },
         };
         static std::vector<ChatCommand> commandTable =
         {
@@ -102,6 +103,41 @@ public:
         {
             sFreedomMgr->SetGameobjectTemplateExtraDisabledFlag(entryId, false);
             handler->PSendSysMessage(FREEDOM_CMDI_BLACKLIST_GAMEOBJECT, "removed from the blacklist");
+        }
+
+        return true;
+    }
+
+    static bool HandleBlacklistCreatureCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_BLACKLIST_CREATURE);
+            return true;
+        }
+
+        char* id = handler->extractKeyFromLink((char*)args, "Hgameobject_entry");
+        char* flagStr = strtok(NULL, " ");
+
+        uint32 entryId = atoul(id);
+        uint32 flag = flagStr ? atoul(flagStr) : 1;
+
+        CreatureTemplate const* creatureTemplate = sObjectMgr->GetCreatureTemplate(entryId);
+        if (!creatureTemplate)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_X_WITH_ID_NOT_FOUND, "Creature", entryId);
+            return true;
+        }
+
+        if (flag)
+        {
+            sFreedomMgr->SetCreatureTemplateExtraDisabledFlag(entryId, true);
+            handler->PSendSysMessage(FREEDOM_CMDI_BLACKLIST_CREATURE, "added to the blacklist");
+        }
+        else
+        {
+            sFreedomMgr->SetCreatureTemplateExtraDisabledFlag(entryId, false);
+            handler->PSendSysMessage(FREEDOM_CMDI_BLACKLIST_CREATURE, "removed from the blacklist");
         }
 
         return true;

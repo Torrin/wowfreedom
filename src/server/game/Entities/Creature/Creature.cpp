@@ -853,12 +853,20 @@ bool Creature::Create(ObjectGuid::LowType guidlow, Map* map, uint32 /*phaseMask*
     ASSERT(map);
     SetMap(map);
 
+    auto extraData = sFreedomMgr->GetCreatureExtraData(GetSpawnId());
+
     if (data && data->phaseid)
         SetInPhase(data->phaseid, false, true);
 
     if (data && data->phaseGroup)
+    {
         for (auto ph : sDB2Manager.GetPhasesForGroup(data->phaseGroup))
             SetInPhase(ph, false, true);
+    }
+    else if (extraData)
+    {
+        sFreedomMgr->CreaturePhase(this, extraData->phaseMask);
+    }
 
     CreatureTemplate const* cinfo = sObjectMgr->GetCreatureTemplate(entry);
     if (!cinfo)
@@ -911,12 +919,24 @@ bool Creature::Create(ObjectGuid::LowType guidlow, Map* map, uint32 /*phaseMask*
     }
 
     uint32 displayID = GetNativeDisplayId();
+
     CreatureModelInfo const* minfo = sObjectMgr->GetCreatureModelRandomGender(&displayID);
     if (minfo && !IsTotem())                               // Cancel load if no model defined or if totem
     {
         SetDisplayId(displayID);
         SetNativeDisplayId(displayID);
         SetByteValue(UNIT_FIELD_BYTES_0, UNIT_BYTES_0_OFFSET_GENDER, minfo->gender);
+    }
+
+    if (extraData && extraData->displayLock)
+    {
+        SetDisplayId(extraData->displayId);
+        SetNativeDisplayId(extraData->nativeDisplayId);        
+    }
+    
+    if (extraData && extraData->genderLock)
+    {
+        SetByteValue(UNIT_FIELD_BYTES_0, UNIT_BYTES_0_OFFSET_GENDER, extraData->gender);
     }
 
     LastUsedScriptID = GetCreatureTemplate()->ScriptID;
@@ -935,6 +955,11 @@ bool Creature::Create(ObjectGuid::LowType guidlow, Map* map, uint32 /*phaseMask*
     {
         ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);
         ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK_DEST, true);
+    }
+
+    if (extraData && extraData->scale >= 0)
+    {
+        SetObjectScale(extraData->scale);
     }
 
     return true;
@@ -1132,6 +1157,8 @@ void Creature::SaveToDB(uint32 mapid, uint32 spawnMask, uint32 phaseMask)
     data.phaseid = GetDBPhase() > 0 ? GetDBPhase() : 0;
     data.phaseGroup = GetDBPhase() < 0 ? abs(GetDBPhase()) : 0;
 
+    CreatureAddon const* addonData = GetCreatureAddon();
+
     // update in DB
     SQLTransaction trans = WorldDatabase.BeginTransaction();
 
@@ -1164,6 +1191,38 @@ void Creature::SaveToDB(uint32 mapid, uint32 spawnMask, uint32 phaseMask)
     stmt->setUInt32(index++, unit_flags);
     stmt->setUInt32(index++, dynamicflags);
     trans->Append(stmt);
+
+    if (addonData)
+    {
+        index = 0;
+        stmt = WorldDatabase.GetPreparedStatement(WORLD_REP_CREATURE_ADDON_FULL);
+        stmt->setUInt64(index++, m_spawnId);
+        stmt->setUInt32(index++, addonData->path_id);
+        stmt->setUInt32(index++, addonData->mount);
+        stmt->setUInt32(index++, addonData->bytes1);
+        stmt->setUInt32(index++, addonData->bytes2);
+        stmt->setUInt32(index++, addonData->emote);
+        
+        if (!addonData->auras.empty())
+        {
+            std::string auraList = "";
+            for (auto aura : addonData->auras)
+            {
+                if (auraList.empty())
+                    auraList = std::to_string(aura);
+                else
+                    auraList += " " + std::to_string(aura);
+            }
+
+            stmt->setString(index, auraList);
+        }
+        else
+        {
+            stmt->setNull(index);
+        }
+
+        trans->Append(stmt);
+    }    
 
     WorldDatabase.CommitTransaction(trans);
 }
@@ -1518,6 +1577,11 @@ void Creature::DeleteFromDB()
     trans->Append(stmt);
 
     WorldDatabase.CommitTransaction(trans);
+
+    stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_DEL_CREATUREEXTRA);
+    stmt->setUInt64(0, m_spawnId);
+
+    FreedomDatabase.Execute(stmt);
 }
 
 bool Creature::IsInvisibleDueToDespawn() const
@@ -1657,6 +1721,7 @@ void Creature::setDeathState(DeathState s)
         SetUInt64Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
 
         SetUInt32Value(UNIT_FIELD_MOUNTDISPLAYID, 0); // if creature is mounted on a virtual mount, remove it at death
+        SetUInt32Value(UNIT_NPC_EMOTESTATE, 0); // fix client crash
 
         setActive(false);
 

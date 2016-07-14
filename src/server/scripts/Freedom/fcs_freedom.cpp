@@ -10,6 +10,7 @@
 #include "Opcodes.h"
 #include "MovementPackets.h"
 #include "MoveSpline.h"
+#include "Pet.h"
 #include <boost/algorithm/string/predicate.hpp>
 
 enum FreedomCmdAuraSpells
@@ -97,6 +98,8 @@ public:
             { "spell",          rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,             false, NULL,                                    "", freedomSpellCommandTable },
             { "speed",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomSpeedCommand,              "" },
             { "reload",         rbac::RBAC_FPERM_ADMINISTRATION,                    false, NULL,                                    "", freedomReloadCommandTable },
+            { "tabard",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomTabardCommand,               "" },
+            { "tame",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomTameCommand,               "" },
         };
 
         static std::vector<ChatCommand> commandTable =
@@ -824,6 +827,84 @@ public:
 #pragma endregion
 
 #pragma region COMMAND TABLE : .freedom -> *
+    static bool HandleFreedomTabardCommand(ChatHandler* handler, char const* args)
+    {
+        Player* source = handler->GetSession()->GetPlayer();
+        handler->GetSession()->SendTabardVendorActivate(source->GetGUID());
+        return true;
+    }
+
+    static bool HandleFreedomTameCommand(ChatHandler* handler, char const* args)
+    {
+        Creature* target = handler->getSelectedCreature();
+
+        if (!target)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_MANUAL_SELECT_CREATURE);
+            return true;
+        }
+
+        if (target->IsPet())
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_FREEDOM_TAME_ALREADY_A_PET);
+            return true;
+        }
+
+        Player* source = handler->GetSession()->GetPlayer();
+
+        if (!source->GetPetGUID().IsEmpty())
+        {
+            handler->SendSysMessage(FREEDOM_CMDE_FREEDOM_TAME_ALREADY_HAVE_PET);
+            return true;
+        }
+
+        CreatureTemplate const* cInfo = target->GetCreatureTemplate();
+
+        if (!cInfo->IsTameable(source->CanTameExoticPets()))
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_FREEDOM_TAME_NOT_TAMEABLE);
+            return true;
+        }
+
+        // Everything looks OK, create new pet
+        Pet* pet = source->CreateTamedPetFrom(target);
+        if (!pet)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_FREEDOM_TAME_NOT_TAMEABLE);
+            return true;
+        }
+
+        // place pet before player
+        float x, y, z;
+        source->GetClosePoint(x, y, z, target->GetObjectSize(), CONTACT_DISTANCE);
+        pet->Relocate(x, y, z, float(M_PI) - source->GetOrientation());
+
+        // set pet to defensive mode by default (some classes can't control controlled pets in fact).
+        pet->SetReactState(REACT_DEFENSIVE);
+
+        // calculate proper level
+        uint8 level = (target->getLevel() < (source->getLevel() - 5)) ? (source->getLevel() - 5) : target->getLevel();
+
+        // prepare visual effect for levelup
+        pet->SetUInt32Value(UNIT_FIELD_LEVEL, level - 1);
+
+        // add to world
+        pet->GetMap()->AddToMap(pet->ToCreature());
+
+        // visual effect for levelup
+        pet->SetUInt32Value(UNIT_FIELD_LEVEL, level);
+
+        // caster have pet now
+        source->SetMinion(pet, true);
+
+        pet->SavePetToDB(PET_SAVE_AS_CURRENT);
+        source->PetSpellInitialize();
+
+        handler->PSendSysMessage(FREEDOM_CMDI_FREEDOM_TAME,
+            sFreedomMgr->ToChatLink("Hcreature_entry", target->GetEntry(), target->GetName()));
+        return true;
+    }
+
     static bool HandleFreedomHoverCommand(ChatHandler* handler, char const* args)
     {
         if (!*args)

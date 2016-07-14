@@ -816,7 +816,7 @@ public:
         }
         else
         {
-            float add_x = (float)atof(tokenizer[0].c_str());;
+            float add_x = (float)atof(tokenizer[0].c_str());
             float add_y = (float)atof(tokenizer.TryGetParam(1).c_str());
             float add_z = (float)atof(tokenizer.TryGetParam(2).c_str());
             // rotation matrix

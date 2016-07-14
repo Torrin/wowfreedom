@@ -30,7 +30,7 @@ void FreedomDatabaseConnection::DoPrepareStatements()
     PrepareStatement(FREEDOM_SEL_ITEMTEMPLATEEXTRA, "SELECT entry_id, hidden FROM item_template_extra", CONNECTION_SYNCH);
     PrepareStatement(FREEDOM_SEL_GAMEOBJECTEXTRA, "SELECT guid, scale, id_creator_bnet, id_creator_player, id_modifier_bnet, id_modifier_player, UNIX_TIMESTAMP(created), UNIX_TIMESTAMP(modified), phaseMask FROM gameobject_extra", CONNECTION_SYNCH);
     PrepareStatement(FREEDOM_SEL_GAMEOBJECTEXTRA_TEMPLATE, "SELECT id_entry, disabled, model_name, model_type, is_default FROM gameobject_template_extra", CONNECTION_SYNCH);
-    PrepareStatement(FREEDOM_SEL_CREATUREEXTRA, "SELECT guid, scale, id_creator_bnet, id_creator_player, id_modifier_bnet, id_modifier_player, UNIX_TIMESTAMP(created), UNIX_TIMESTAMP(modified), phaseMask FROM creature_extra", CONNECTION_SYNCH);
+    PrepareStatement(FREEDOM_SEL_CREATUREEXTRA, "SELECT guid, scale, id_creator_bnet, id_creator_player, id_modifier_bnet, id_modifier_player, UNIX_TIMESTAMP(created), UNIX_TIMESTAMP(modified), phaseMask, displayLock, displayId, nativeDisplayId, genderLock, gender FROM creature_extra", CONNECTION_SYNCH);
     PrepareStatement(FREEDOM_SEL_CREATUREEXTRA_TEMPLATE, "SELECT id_entry, disabled FROM gameobject_template_extra", CONNECTION_SYNCH);
 
 
@@ -55,5 +55,5 @@ void FreedomDatabaseConnection::DoPrepareStatements()
 
     // REPLACES
     PrepareStatement(FREEDOM_REP_GAMEOBJECTEXTRA, "REPLACE INTO gameobject_extra VALUES (?, ?, ?, ?, ?, ?, from_unixtime(?), from_unixtime(?), ?)", CONNECTION_ASYNC);
-    PrepareStatement(FREEDOM_REP_CREATUREEXTRA, "REPLACE INTO creature_extra VALUES (?, ?, ?, ?, ?, ?, from_unixtime(?), from_unixtime(?), ?)", CONNECTION_ASYNC);
+    PrepareStatement(FREEDOM_REP_CREATUREEXTRA, "REPLACE INTO creature_extra (guid, scale, id_creator_bnet, id_creator_player, id_modifier_bnet, id_modifier_player, created, modified, phaseMask, displayLock, displayId, nativeDisplayId, genderLock, gender) VALUES (?, ?, ?, ?, ?, ?, from_unixtime(?), from_unixtime(?), ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
 }

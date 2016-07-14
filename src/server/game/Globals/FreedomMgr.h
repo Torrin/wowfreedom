@@ -24,11 +24,7 @@ public:
     void LoadModifier(std::string modifier, uint32 paramCount);    
     bool ModifierExists(std::string modifier) { return m_modifiers.find(modifier) != m_modifiers.end(); }
 
-    template<typename T = std::string>
-    T GetModifierValue(std::string modifier, uint32 index) { }
-
-    template<>
-    std::string GetModifierValue<std::string>(std::string modifier, uint32 index);
+    std::string GetModifierValue(std::string modifier, uint32 index);
 
     template<typename T = std::string>
     T TryGetParam(uint32 index) { }
@@ -49,13 +45,13 @@ public:
     T TryGetParam(uint32 index, std::string keyType) { }
 
     template<>
-    std::string TryGetParam<std::string>(uint32 index, std::string keyType);
+    std::string TryGetParam<std::string>(uint32 index, std::string keyType) { return ExtractChatLinkKey(TryGetParam<std::string>(index), keyType); }
 
     template<>
-    uint32 TryGetParam<uint32>(uint32 index, std::string keyType);
+    uint32 TryGetParam<uint32>(uint32 index, std::string keyType) { return strtoul(ExtractChatLinkKey(TryGetParam<std::string>(index), keyType).c_str(), nullptr, 10); }
 
     template<>
-    uint64 TryGetParam<uint64>(uint32 index, std::string keyType);
+    uint64 TryGetParam<uint64>(uint32 index, std::string keyType) { return strtoull(ExtractChatLinkKey(TryGetParam<std::string>(index), keyType).c_str(), nullptr, 10); }
 
     ModifierStorageType const* modifiers() { return &m_modifiers; }
     const_iterator begin() const { return m_storage.begin(); }
@@ -68,6 +64,7 @@ public:
     const_reference operator [] (size_type i) const { return m_storage[i]; }
 protected:
     bool IsModifier(std::string str) { return (str.length() > 1 && str[0] == '-' && std::isalpha(str[1])); }
+    std::string ExtractChatLinkKey(std::string src, std::string type);
 protected:
     TokenStorage m_storage;
     ModifierStorageType m_modifiers;
@@ -166,7 +163,8 @@ typedef std::unordered_map<ObjectGuid::LowType, PlayerExtraData> PlayerExtraData
 struct CreatureExtraData
 {
     CreatureExtraData() : scale(-1.0f), creatorBnetAccId(0), creatorPlayerId(0),
-        modifierBnetAccId(0), modifierPlayerId(0), created(0), modified(0), phaseMask(1) { }
+        modifierBnetAccId(0), modifierPlayerId(0), created(0), modified(0), phaseMask(1),
+        displayLock(false), displayId(0), nativeDisplayId(0), genderLock(false), gender(0) { }
 
     float scale;
     uint32 creatorBnetAccId;
@@ -176,6 +174,11 @@ struct CreatureExtraData
     time_t created;
     time_t modified;
     uint32 phaseMask;
+    bool displayLock;
+    uint32 displayId;
+    uint32 nativeDisplayId;
+    bool genderLock;
+    uint8 gender;
 };
 
 typedef std::unordered_map<uint64, CreatureExtraData> CreatureExtraContainer;
@@ -238,12 +241,16 @@ class FreedomMgr
         void CreatureTurn(Creature* creature, float o);
         void CreatureScale(Creature* creature, float scale);
         void CreatureDelete(Creature* creature);
+        void CreatureSetEmote(Creature* creature, uint32 emoteId);
+        void CreatureSetMount(Creature* creature, uint32 mountId);
+        void CreatureSetAuraToggle(Creature* creature, uint32 auraId, bool toggle);
         Creature* CreatureCreate(Player* creator, CreatureTemplate const* creatureTemplate);
         Creature* CreatureRefresh(Creature* creature);
         CreatureExtraData const* GetCreatureExtraData(uint64 guid);
         CreatureTemplateExtraData const* GetCreatureTemplateExtraData(uint32 entry);
         void SetCreatureSelectionForPlayer(ObjectGuid::LowType playerId, ObjectGuid::LowType creatureId);
         ObjectGuid::LowType GetSelectedCreatureGuidFromPlayer(ObjectGuid::LowType playerId);
+        Creature* GetAnyCreature(ObjectGuid::LowType lowguid);
         Creature* GetAnyCreature(Map* map, ObjectGuid::LowType lowguid, uint32 entry);
 
         // Public teleports
