@@ -17,9 +17,11 @@ public:
         static std::vector<ChatCommand> gotoCommandTable =
         {
             { "creature",           rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoCreatureCommand,                    "" },
+            { "npc",                rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoCreatureCommand,                    "" },
             { "graveyard",          rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoGraveyardCommand,                   "" },
             { "grid",               rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoGridCommand,                        "" },
             { "object",             rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoObjectCommand,                      "" },
+            { "gobject",            rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoObjectCommand,                      "" },
             { "quest",              rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoQuestCommand,                       "" },
             { "taxinode",           rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoTaxinodeCommand,                    "" },
             { "trigger",            rbac::RBAC_FPERM_COMMAND_GOTO,          false, &HandleGotoTriggerCommand,                     "" },
@@ -98,99 +100,48 @@ public:
 #pragma endregion
 
 #pragma region DEFAULT_COMMANDS
-    /** \brief Teleport the GM to the specified creature
-    *
-    * .gocreature <GUID>      --> TP using creature.guid
-    * .gocreature azuregos    --> TP player to the mob with this name
-    *                             Warning: If there is more than one mob with this name
-    *                                      you will be teleported to the first one that is found.
-    * .gocreature id 6109     --> TP player to the mob, that has this creature_template.entry
-    *                             Warning: If there is more than one mob with this "id"
-    *                                      you will be teleported to the first one that is found.
-    */
     //teleport to creature
     static bool HandleGotoCreatureCommand(ChatHandler* handler, char const* args)
     {
-        if (!*args)
-            return false;
-
-        Player* player = handler->GetSession()->GetPlayer();
-
-        // "id" or number or [name] Shift-click form |color|Hcreature_entry:creature_id|h[name]|h|r
-        char* param1 = handler->extractKeyFromLink((char*)args, "Hcreature");
-        if (!param1)
-            return false;
-
-        std::ostringstream whereClause;
-
-        // User wants to teleport to the NPC's template entry
-        if (strcmp(param1, "id") == 0)
+        Player* source = handler->GetSession()->GetPlayer();
+        Creature* target = handler->getSelectedCreature();
+        uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
+        
+        if (*args)
         {
-            // Get the "creature_template.entry"
-            // number or [name] Shift-click form |color|Hcreature_entry:creature_id|h[name]|h|r
-            char* tail = strtok(NULL, "");
-            if (!tail)
-                return false;
-            char* id = handler->extractKeyFromLink(tail, "Hcreature_entry");
-            if (!id)
-                return false;
-
-            int32 entry = atoi(id);
-            if (!entry)
-                return false;
-
-            whereClause << "WHERE id = '" << entry << '\'';
-        }
-        else
-        {
-            int32 guid = atoi(param1);
-
-            // Number is invalid - maybe the user specified the mob's name
-            if (!guid)
-            {
-                std::string name = param1;
-                WorldDatabase.EscapeString(name);
-                whereClause << ", creature_template WHERE creature.id = creature_template.entry AND creature_template.name " _LIKE_" '" << name << '\'';
-            }
-            else
-                whereClause << "WHERE guid = '" << guid << '\'';
+            AdvancedArgumentTokenizer tokenizer(args);
+            guidLow = tokenizer.TryGetParam<uint64>(0, "Hcreature");
         }
 
-        QueryResult result = WorldDatabase.PQuery("SELECT position_x, position_y, position_z, orientation, map FROM creature %s", whereClause.str().c_str());
-        if (!result)
-        {
-            handler->SendSysMessage(LANG_COMMAND_GOCREATNOTFOUND);
-            handler->SetSentErrorMessage(true);
-            return false;
-        }
-        if (result->GetRowCount() > 1)
-            handler->SendSysMessage(LANG_COMMAND_GOCREATMULTIPLE);
+        target = sFreedomMgr->GetAnyCreature(guidLow);
 
-        Field* fields = result->Fetch();
-        float x = fields[0].GetFloat();
-        float y = fields[1].GetFloat();
-        float z = fields[2].GetFloat();
-        float o = fields[3].GetFloat();
-        uint32 mapId = fields[4].GetUInt16();
+        if (!target)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_CREATURE_NOT_FOUND);
+            return true;
+        }
+
+        float x, y, z, o;
+        target->GetPosition(x, y, z, o);
+        uint32 mapId = target->GetMapId();
 
         if (!MapManager::IsValidMapCoord(mapId, x, y, z, o) || sObjectMgr->IsTransportMap(mapId))
         {
-            handler->PSendSysMessage(LANG_INVALID_TARGET_COORD, x, y, mapId);
-            handler->SetSentErrorMessage(true);
-            return false;
+            handler->PSendSysMessage(FREEDOM_CMDE_INVALID_TARGET_COORDS, x, y, z, mapId);
+            return true;
         }
 
         // stop flight if need
-        if (player->IsInFlight())
+        if (source->IsInFlight())
         {
-            player->GetMotionMaster()->MovementExpired();
-            player->CleanupAfterTaxiFlight();
+            source->GetMotionMaster()->MovementExpired();
+            source->CleanupAfterTaxiFlight();
         }
         // save only in non-flight case
         else
-            player->SaveRecallPosition();
+            source->SaveRecallPosition();
 
-        player->TeleportTo(mapId, x, y, z, o);
+        source->TeleportTo(mapId, x, y, z, o);
 
         return true;
     }
@@ -288,57 +239,54 @@ public:
     //teleport to gameobject
     static bool HandleGotoObjectCommand(ChatHandler* handler, char const* args)
     {
-        if (!*args)
-            return false;
+        Player* source = handler->GetSession()->GetPlayer();
+        ObjectGuid::LowType guidLow = sFreedomMgr->GetSelectedGameobjectGuidFromPlayer(source->GetGUID().GetCounter());
+        
+        if (*args)
+        {
+            AdvancedArgumentTokenizer tokenizer(args);
+            guidLow = tokenizer.TryGetParam<uint64>(0, "Hgameobject");
+        }
 
-        Player* player = handler->GetSession()->GetPlayer();
+        if (!guidLow)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_GAMEOBJECT_NOT_FOUND);
+            return true;
+        }
 
-        // number or [name] Shift-click form |color|Hgameobject:go_guid|h[name]|h|r
-        char* id = handler->extractKeyFromLink((char*)args, "Hgameobject");
-        if (!id)
-            return false;
-
-        ObjectGuid::LowType guid = strtoull(id, nullptr, 10);
-        if (!guid)
-            return false;
-
-        float x, y, z, o;
-        uint32 mapId;
+        GameObject* object = NULL;
 
         // by DB guid
-        if (GameObjectData const* goData = sObjectMgr->GetGOData(guid))
+        if (GameObjectData const* gameObjectData = sObjectMgr->GetGOData(guidLow))
+            object = sFreedomMgr->GetAnyGameObject(source->GetMap(), guidLow, gameObjectData->id);
+
+        if (!object)
         {
-            x = goData->posX;
-            y = goData->posY;
-            z = goData->posZ;
-            o = goData->orientation;
-            mapId = goData->mapid;
+            handler->PSendSysMessage(FREEDOM_CMDE_GAMEOBJECT_GUID_NOT_EXISTS, guidLow);
+            return true;
         }
-        else
-        {
-            handler->SendSysMessage(LANG_COMMAND_GOOBJNOTFOUND);
-            handler->SetSentErrorMessage(true);
-            return false;
-        }
+
+        float x, y, z, o;
+        object->GetPosition(x, y, z, o);
+        uint32 mapId = object->GetMapId();
 
         if (!MapManager::IsValidMapCoord(mapId, x, y, z, o) || sObjectMgr->IsTransportMap(mapId))
         {
-            handler->PSendSysMessage(LANG_INVALID_TARGET_COORD, x, y, mapId);
-            handler->SetSentErrorMessage(true);
-            return false;
+            handler->PSendSysMessage(FREEDOM_CMDE_INVALID_TARGET_COORDS, x, y, z, mapId);
+            return true;
         }
 
         // stop flight if need
-        if (player->IsInFlight())
+        if (source->IsInFlight())
         {
-            player->GetMotionMaster()->MovementExpired();
-            player->CleanupAfterTaxiFlight();
+            source->GetMotionMaster()->MovementExpired();
+            source->CleanupAfterTaxiFlight();
         }
         // save only in non-flight case
         else
-            player->SaveRecallPosition();
+            source->SaveRecallPosition();
 
-        player->TeleportTo(mapId, x, y, z, o);
+        source->TeleportTo(mapId, x, y, z, o);
         return true;
     }
 
