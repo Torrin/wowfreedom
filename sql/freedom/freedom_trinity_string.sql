@@ -280,6 +280,12 @@ INSERT INTO wod_world.trinity_string (entry, content_default) VALUES
 /* FREEDOM_CMDI_FREEDOM_TAME								*/ (100262, CONCAT(@T_CMD_INFO, @C_TEXT, 'Pet %s successfully tamed.', @C_CLOSE)),
 /* FREEDOM_CMDE_FREEDOM_TAME_ALREADY_A_PET			*/ (100263, CONCAT(@T_CMD_ERROR, @C_TEXT, 'Target is already a pet creature (you have to select creature, which is not a pet of someone else).', @C_CLOSE)),
 /* FREEDOM_CMDE_ENTRY_X_NOT_EXIST_IN_TABLE_X			*/ (100264, CONCAT(@T_CMD_ERROR, 'Entry %u does not exist in %s table. Contact developers about this!')),
+/* FREEDOM_CMDH_LOOKUP_ITEM								*/ (100265, CONCAT(@T_CMD_SYNTAX, '.lookup item [modifiers] $itemNamePart')),
+/* FREEDOM_CMDE_INVALID_MODIFIER_ARG_FOR_MOD_X     */ (100266, CONCAT(@T_CMD_ERROR, 'Invalid modifier argument for: %s')),
+/* FREEDOM_CMDE_MODIFIERS_CANNOT_BE_USED_TGTHR	   */ (100267, CONCAT(@T_CMD_ERROR, 'Following modifiers cannot be used together: %s')),
+/* FREEDOM_CMDI_LOOKUP_ITEM_NONE_FOUND	   			*/ (100268, CONCAT(@T_CMD_INFO, 'No items were found')),
+/* FREEDOM_CMDI_LOOKUP_ITEM	   						*/ (100269, CONCAT(@T_CMD_INFO, 'Found %llu items (%u is max result count a lookup can return)')),
+
 
 (200000, 'Dummy');
 -- Select new changes

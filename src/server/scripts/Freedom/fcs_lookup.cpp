@@ -355,51 +355,74 @@ public:
     static bool HandleLookupItemCommand(ChatHandler* handler, char const* args)
     {
         if (!*args)
-            return false;
-
-        std::string namePart = args;
-        bool found = false;
-        uint32 count = 0;
-        uint32 maxResults = sWorld->getIntConfig(CONFIG_MAX_RESULTS_LOOKUP_COMMANDS);
-
-        // Search in `item_template`
-        ItemTemplateContainer const* its = sObjectMgr->GetItemTemplateStore();
-        for (ItemTemplateContainer::const_iterator itr = its->begin(); itr != its->end(); ++itr)
         {
-            std::string name = itr->second.GetName(handler->GetSessionDbcLocale());
-            if (name.empty())
-                continue;
-
-            ItemTemplateExtraData const* data = sFreedomMgr->GetItemTemplateExtraById(itr->second.GetId());
-            
-            if (!data)
-            {
-                handler->PSendSysMessage(FREEDOM_CMDE_ENTRY_X_NOT_EXIST_IN_TABLE_X, itr->first, "item_template_extra");
-                continue;
-            }
-
-            if (boost::icontains(name, namePart))
-            {
-                if (maxResults && count++ == maxResults)
-                {
-                    handler->PSendSysMessage(LANG_COMMAND_LOOKUP_MAX_RESULTS, maxResults);
-                    return true;
-                }
-
-                if (handler->GetSession())
-                    handler->PSendSysMessage(data->hidden ? FREEDOM_CMDI_ID_AND_NAME_LIST_ITEM_BLACKLISTED : FREEDOM_CMDNOSTYLE_ID_AND_NAME_LIST_ITEM,
-                        itr->second.GetId(), 
-                        sFreedomMgr->ToChatLink("Hitem", itr->second.GetId(), name));
-                else
-                    handler->PSendSysMessage(LANG_ITEM_LIST_CONSOLE, itr->second.GetId(), name.c_str());                    
-
-                if (!found)
-                    found = true;
-            }
+            handler->PSendSysMessage(FREEDOM_CMDH_LOOKUP_ITEM);
+            return true;
         }
 
-        if (!found)
-            handler->SendSysMessage(LANG_COMMAND_NOITEMFOUND);
+        bool customItemFilter = false;
+        bool armorFilter = false;
+        bool weaponFilter = false;
+
+        AdvancedArgumentTokenizer tokenizer(args);
+        tokenizer.LoadModifier("-a", 0);
+        tokenizer.LoadModifier("-w", 0);
+        tokenizer.LoadModifier("-c", 0);
+
+        std::string namePart = tokenizer.TryGetParam(0);
+
+        if (namePart.empty())
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_LOOKUP_ITEM);
+            return true;
+        }
+
+        if (tokenizer.ModifierExists("-a") && tokenizer.ModifierExists("-w"))
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_MODIFIERS_CANNOT_BE_USED_TGTHR, "-a, -w");
+            return true;
+        }
+
+        if (tokenizer.ModifierExists("-c"))
+            customItemFilter = true;
+        if (tokenizer.ModifierExists("-a"))
+            armorFilter = true;
+        if (tokenizer.ModifierExists("-w"))
+            weaponFilter = true;
+
+        uint32 maxResults = sWorld->getIntConfig(CONFIG_MAX_RESULTS_LOOKUP_COMMANDS);
+
+        PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_SEL_ITEMTEMPLATEEXTRA_LOOKUP);
+        stmt->setString(0, namePart);
+        stmt->setBool(1, customItemFilter);
+        stmt->setBool(2, armorFilter);
+        stmt->setBool(3, weaponFilter);
+        stmt->setUInt32(4, maxResults);
+        PreparedQueryResult result = FreedomDatabase.Query(stmt);
+
+        if (!result)
+        {
+            handler->SendSysMessage(FREEDOM_CMDI_LOOKUP_ITEM_NONE_FOUND);
+        }
+        else
+        {
+            uint64 count = result->GetRowCount();
+
+            do
+            {
+                Field * fields = result->Fetch();
+                uint32 itemId = fields[0].GetUInt32();
+                std::string name = fields[1].GetString();
+                bool hidden = fields[2].GetBool();
+
+                handler->PSendSysMessage(hidden ? FREEDOM_CMDI_ID_AND_NAME_LIST_ITEM_BLACKLISTED : FREEDOM_CMDNOSTYLE_ID_AND_NAME_LIST_ITEM,
+                    itemId,
+                    sFreedomMgr->ToChatLink("Hitem", itemId, name));
+
+            } while (result->NextRow());
+
+            handler->PSendSysMessage(FREEDOM_CMDI_LOOKUP_ITEM, count, maxResults);
+        }  
 
         return true;
     }

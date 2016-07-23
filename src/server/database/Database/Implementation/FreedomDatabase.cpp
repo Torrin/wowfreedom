@@ -32,7 +32,7 @@ void FreedomDatabaseConnection::DoPrepareStatements()
     PrepareStatement(FREEDOM_SEL_GAMEOBJECTEXTRA_TEMPLATE, "SELECT id_entry, disabled, model_name, model_type, is_default FROM gameobject_template_extra", CONNECTION_SYNCH);
     PrepareStatement(FREEDOM_SEL_CREATUREEXTRA, "SELECT guid, scale, id_creator_bnet, id_creator_player, id_modifier_bnet, id_modifier_player, UNIX_TIMESTAMP(created), UNIX_TIMESTAMP(modified), phaseMask, displayLock, displayId, nativeDisplayId, genderLock, gender FROM creature_extra", CONNECTION_SYNCH);
     PrepareStatement(FREEDOM_SEL_CREATUREEXTRA_TEMPLATE, "SELECT id_entry, disabled FROM gameobject_template_extra", CONNECTION_SYNCH);
-
+    PrepareStatement(FREEDOM_SEL_ITEMTEMPLATEEXTRA_LOOKUP, "SELECT entry_id, name, hidden FROM item_template_extra WHERE INSTR(name, ?) > 0 AND IF (?, entry_id >= 200000 AND entry_id < 900000, entry_id < 200000 OR entry_id >= 900000) AND IF (?, class = 4, true) AND IF (?, class = 2, true) LIMIT ?", CONNECTION_SYNCH);
 
     // INSERTS
     PrepareStatement(FREEDOM_INS_PUBLIC_TELE, "INSERT INTO public_tele (name, position_x, position_y, position_z, orientation, map, id_bnet_gm) VALUES (?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);

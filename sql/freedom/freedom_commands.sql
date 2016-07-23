@@ -183,7 +183,6 @@ INSERT INTO freedom.commands (`command`, `syntax`, `description`, `gmlevel`) VAL
 ('lookup creature', 'Syntax: .lookup creature $namepart', 'Looks up a creature by $namepart, and returns all matches with their creature ID\'s.', @GMLEVEL_MODERATOR),
 ('lookup event', 'Syntax: .lookup event $name', 'Attempts to find the ID of the event with the provided $name.', @GMLEVEL_MODERATOR),
 ('lookup faction', 'Syntax: .lookup faction $name', 'Attempts to find the ID of the faction with the provided $name.', @GMLEVEL_MODERATOR),
-('lookup item', 'Syntax: .lookup item $itemname', 'Looks up an item by $itemname, and returns all matches with their Item ID\'s.', @GMLEVEL_PLAYER),
 ('lookup itemset', 'Syntax: .lookup itemset $itemname', 'Looks up an item set by $itemname, and returns all matches with their Item set ID\'s.', @GMLEVEL_GM),
 ('lookup map', 'Syntax: .lookup map $namepart', 'Looks up a map by $namepart, and returns all matches with their map ID\'s.', @GMLEVEL_MODERATOR),
 ('lookup object', 'Syntax: .lookup object $objname', 'Looks up an gameobject by $objname, and returns all matches with their Gameobject ID\'s.', @GMLEVEL_MODERATOR),
@@ -517,7 +516,9 @@ REPLACE INTO freedom.commands (command, syntax, description, gmlevel) VALUES
 ('npc set aura', 'Syntax: .npc set aura $auraId on/off [$guid]', 'Toggle database persistent aura of $auraId (can also be a spell id) for the creature.', @GMLEVEL_MODERATOR),
 ('npc set deathstate', 'Syntax: .npc set deathstate on/off [$guid]', 'Toggle database persistent death animation for the creature (this is basically shorthand for .npc set aura, which is supplied with death animation spell).', @GMLEVEL_MODERATOR),
 ('npc set sleepstate', 'Syntax: .npc set sleepstate on/off [$guid]', 'Toggle database persistent sleep animation for the creature (this is basically shorthand for .npc set aura, which is supplied with sleep animation spell).', @GMLEVEL_MODERATOR),
-('npc set hoverstate', 'Syntax: .npc set hoverstate on/off [$guid]', 'Toggle database persistent hover animation for the creature (this is basically shorthand for .npc set aura, which is supplied with hover animation spell).', @GMLEVEL_MODERATOR)
+('npc set hoverstate', 'Syntax: .npc set hoverstate on/off [$guid]', 'Toggle database persistent hover animation for the creature (this is basically shorthand for .npc set aura, which is supplied with hover animation spell).', @GMLEVEL_MODERATOR),
+
+('lookup item', 'Syntax: .lookup item [modifiers] $itemNamePart', 'Looks up an item by $itemNamePart, and returns all matches with their Item IDs (does not include unrefined custom items unless \'-c\' modifier is specified). Command has following modifiers:\n-c : Search through unrefined custom items instead of default ones\n-a : Search only armor items (item class == 4)\n-w : Search only weapon items (item class == 2)', @GMLEVEL_PLAYER)
 ;
 
 SELECT * FROM freedom.commands ORDER BY command;
