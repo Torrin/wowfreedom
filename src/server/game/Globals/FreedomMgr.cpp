@@ -1525,7 +1525,7 @@ void FreedomMgr::LoadPublicSpells()
         PublicSpellData data;
         uint32 spellId = fields[0].GetUInt32();
         data.targetOthers = fields[1].GetUInt8();
-        data.name = fields[2].GetUInt32();
+        data.name = fields[2].GetString();
         data.gmBnetAccId = fields[3].GetUInt32();
 
         _publicSpellStore[spellId] = data;
