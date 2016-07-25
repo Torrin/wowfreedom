@@ -285,7 +285,11 @@ INSERT INTO wod_world.trinity_string (entry, content_default) VALUES
 /* FREEDOM_CMDE_MODIFIERS_CANNOT_BE_USED_TGTHR	   */ (100267, CONCAT(@T_CMD_ERROR, 'Following modifiers cannot be used together: %s')),
 /* FREEDOM_CMDI_LOOKUP_ITEM_NONE_FOUND	   			*/ (100268, CONCAT(@T_CMD_INFO, 'No items were found')),
 /* FREEDOM_CMDI_LOOKUP_ITEM	   						*/ (100269, CONCAT(@T_CMD_INFO, 'Found %llu items (%u is max result count a lookup can return)')),
-
+/* FREEDOM_CMDI_FREEDOM_PANDAHORDE	   				*/ (100270, CONCAT(@T_CMD_INFO, 'You have set your faction as a Horde Pandaren successfully! Please, logout and log back in.')),
+/* FREEDOM_CMDI_FREEDOM_PANDAALLIANCE	   			*/ (100271, CONCAT(@T_CMD_INFO, 'You have set your faction as an Alliance Pandaren successfully! Please, logout and log back in.')),
+/* FREEDOM_CMDE_FREEDOM_PANDA_NOT_NEUTRAL   			*/ (100272, CONCAT(@T_CMD_ERROR, 'This command can only be used by neutral pandaren')),
+/* FREEDOM_CMDE_SERVICE_RESTRICTED_FOR_PANDAS		*/ (100273, CONCAT(@T_CMD_ERROR, 'This command cannot be used by pandaren race')),
+/* FREEDOM_CMDE_SERVICE_RESTRICTED_FOR_NPANDAS		*/ (100274, CONCAT(@T_CMD_ERROR, 'This command cannot be used by neutral pandaren race')),
 
 (200000, 'Dummy');
 -- Select new changes

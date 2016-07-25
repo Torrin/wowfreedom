@@ -1778,7 +1778,7 @@ void WorldSession::HandleCharRaceOrFactionChangeCallback(PreparedQueryResult res
     }
 
     TeamId newTeamId = Player::TeamIdForRace(factionChangeInfo->RaceID);
-    if (newTeamId == TEAM_NEUTRAL)
+    if (newTeamId == TEAM_NEUTRAL || factionChangeInfo->RaceID == RACE_PANDAREN_HORDE || factionChangeInfo->RaceID == RACE_PANDAREN_ALLIANCE)
     {
         SendCharFactionChange(CHAR_CREATE_RESTRICTED_RACECLASS, factionChangeInfo);
         return;

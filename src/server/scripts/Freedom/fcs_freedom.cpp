@@ -70,6 +70,12 @@ public:
             { "all",            rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleFreedomReloadAllCommand,          "" },
         };
 
+        static std::vector<ChatCommand> freedomPandaCommandTable =
+        {
+            { "horde",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomPandarenHordeCommand,      "" },
+            { "alliance",       rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomPandarenAllianceCommand,   "" },
+        };
+
         static std::vector<ChatCommand> freedomCommandTable =
         {
             { "hover",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomHoverCommand,              "" },
@@ -98,13 +104,14 @@ public:
             { "spell",          rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,             false, NULL,                                    "", freedomSpellCommandTable },
             { "speed",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomSpeedCommand,              "" },
             { "reload",         rbac::RBAC_FPERM_ADMINISTRATION,                    false, NULL,                                    "", freedomReloadCommandTable },
-            { "tabard",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomTabardCommand,               "" },
+            //{ "tabard",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomTabardCommand,               "" },
+            { "panda",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, NULL,                                    "",  freedomPandaCommandTable },            
             { "tame",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomTameCommand,               "" },
         };
 
         static std::vector<ChatCommand> commandTable =
         {
-            { "freedom",            rbac::RBAC_FPERM_COMMAND_FREEDOM,                    false, NULL,                                "", freedomCommandTable },
+            { "freedom",            rbac::RBAC_FPERM_COMMAND_FREEDOM,               false, NULL,                                    "", freedomCommandTable },
         };
         return commandTable;
     }
@@ -126,24 +133,24 @@ public:
         case UnitMoveType::MOVE_FLIGHT:
         case UnitMoveType::MOVE_FLIGHT_BACK:
             speedName = "fly";
-            handler->GetSession()->GetPlayer()->SetSpeed(MOVE_FLIGHT, value);
-            handler->GetSession()->GetPlayer()->SetSpeed(MOVE_FLIGHT_BACK, value);
+            handler->GetSession()->GetPlayer()->SetSpeedRate(MOVE_FLIGHT, value);
+            handler->GetSession()->GetPlayer()->SetSpeedRate(MOVE_FLIGHT_BACK, value);
             break;
         case UnitMoveType::MOVE_RUN:
             speedName = "run";
-            handler->GetSession()->GetPlayer()->SetSpeed(MOVE_RUN, value);
+            handler->GetSession()->GetPlayer()->SetSpeedRate(MOVE_RUN, value);
             break;
         case UnitMoveType::MOVE_SWIM:
         case UnitMoveType::MOVE_SWIM_BACK:
             speedName = "swim";
-            handler->GetSession()->GetPlayer()->SetSpeed(MOVE_SWIM, value);
-            handler->GetSession()->GetPlayer()->SetSpeed(MOVE_SWIM_BACK, value);
+            handler->GetSession()->GetPlayer()->SetSpeedRate(MOVE_SWIM, value);
+            handler->GetSession()->GetPlayer()->SetSpeedRate(MOVE_SWIM_BACK, value);
             break;
         case UnitMoveType::MOVE_WALK:
         case UnitMoveType::MOVE_RUN_BACK:
             speedName = "walk";
-            handler->GetSession()->GetPlayer()->SetSpeed(MOVE_WALK, value);
-            handler->GetSession()->GetPlayer()->SetSpeed(MOVE_RUN_BACK, value);
+            handler->GetSession()->GetPlayer()->SetSpeedRate(MOVE_WALK, value);
+            handler->GetSession()->GetPlayer()->SetSpeedRate(MOVE_RUN_BACK, value);
             break;
         default:
             return;
@@ -827,6 +834,44 @@ public:
 #pragma endregion
 
 #pragma region COMMAND TABLE : .freedom -> *
+    static bool HandleFreedomPandarenHordeCommand(ChatHandler* handler, char const* args)
+    {
+        Player* player = handler->GetSession()->GetPlayer();
+
+        if (player->getRace() != RACE_PANDAREN_NEUTRAL)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_FREEDOM_PANDA_NOT_NEUTRAL);
+            return true;
+        }
+
+        player->SetByteValue(UNIT_FIELD_BYTES_0, UNIT_BYTES_0_OFFSET_RACE, RACE_PANDAREN_HORDE);
+        player->setFactionForRace(RACE_PANDAREN_HORDE);
+        player->SaveToDB();
+        player->LearnSpell(108131, false); // Language Pandaren Horde
+        handler->PSendSysMessage(FREEDOM_CMDI_FREEDOM_PANDAHORDE);
+
+        return true;
+    }
+
+    static bool HandleFreedomPandarenAllianceCommand(ChatHandler* handler, char const* args)
+    {
+        Player* player = handler->GetSession()->GetPlayer();
+
+        if (player->getRace() != RACE_PANDAREN_NEUTRAL)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_FREEDOM_PANDA_NOT_NEUTRAL);
+            return true;
+        }
+
+        player->SetByteValue(UNIT_FIELD_BYTES_0, UNIT_BYTES_0_OFFSET_RACE, RACE_PANDAREN_ALLIANCE);
+        player->setFactionForRace(RACE_PANDAREN_ALLIANCE);
+        player->SaveToDB();
+        player->LearnSpell(108130, false); // Language Pandaren Alliance
+        handler->PSendSysMessage(FREEDOM_CMDI_FREEDOM_PANDAALLIANCE);
+
+        return true;
+    }
+
     static bool HandleFreedomTabardCommand(ChatHandler* handler, char const* args)
     {
         Player* source = handler->GetSession()->GetPlayer();
@@ -1069,13 +1114,13 @@ public:
             return true;
         }
 
-        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_FLIGHT, speed);
-        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_FLIGHT_BACK, speed);
-        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_RUN, speed);
-        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_SWIM, speed);
-        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_SWIM_BACK, speed);
-        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_WALK, speed);
-        handler->GetSession()->GetPlayer()->SetSpeed(MOVE_RUN_BACK, speed);
+        handler->GetSession()->GetPlayer()->SetSpeedRate(MOVE_FLIGHT, speed);
+        handler->GetSession()->GetPlayer()->SetSpeedRate(MOVE_FLIGHT_BACK, speed);
+        handler->GetSession()->GetPlayer()->SetSpeedRate(MOVE_RUN, speed);
+        handler->GetSession()->GetPlayer()->SetSpeedRate(MOVE_SWIM, speed);
+        handler->GetSession()->GetPlayer()->SetSpeedRate(MOVE_SWIM_BACK, speed);
+        handler->GetSession()->GetPlayer()->SetSpeedRate(MOVE_WALK, speed);
+        handler->GetSession()->GetPlayer()->SetSpeedRate(MOVE_RUN_BACK, speed);
         handler->PSendSysMessage(FREEDOM_CMDI_MOD_SPEED, speedName.c_str(), speed);
         return true;
     }
@@ -1240,6 +1285,12 @@ public:
     {
         Player* source = handler->GetSession()->GetPlayer();
 
+        if (source->getRace() == RACE_PANDAREN_ALLIANCE || source->getRace() == RACE_PANDAREN_HORDE || source->getRace() == RACE_PANDAREN_NEUTRAL)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_SERVICE_RESTRICTED_FOR_PANDAS);
+            return true;
+        }
+
         PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ADD_AT_LOGIN_FLAG);
         stmt->setUInt16(0, uint16(AT_LOGIN_CHANGE_RACE));
         stmt->setUInt32(1, source->GetGUID().GetCounter());
@@ -1253,6 +1304,12 @@ public:
     static bool HandleFreedomFactionChangeCommand(ChatHandler* handler, char const* args)
     {
         Player* source = handler->GetSession()->GetPlayer();
+
+        if (source->getRace() == RACE_PANDAREN_NEUTRAL)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_SERVICE_RESTRICTED_FOR_NPANDAS);
+            return true;
+        }
 
         PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ADD_AT_LOGIN_FLAG);
         stmt->setUInt16(0, uint16(AT_LOGIN_CHANGE_FACTION));

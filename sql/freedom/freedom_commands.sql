@@ -444,7 +444,8 @@ REPLACE INTO freedom.commands (command, syntax, description, gmlevel) VALUES
 ('freedom morph list', 'Syntax: .freedom morph list [$namePart]', 'List all your morphs, optionally filtering them via their custom names or parts of their custom names ($namePart).', @GMLEVEL_PLAYER),
 ('freedom hover', 'Syntax: .freedom hover on/off', 'Toggle your character\'s hover state on/off.', @GMLEVEL_PLAYER),
 ('freedom tame', 'Syntax: .freedom tame', 'Make a pet out of the targeted creature. Only works on tameable creatures.', @GMLEVEL_PLAYER),
-('freedom tabard', 'Syntax: .freedom tabard', 'Show guild tabard designer.', @GMLEVEL_PLAYER),
+('freedom panda horde', 'Syntax: .freedom panda horde', 'Change your race faction to horde pandaren. Can only be used by neutral pandaren. Must relog after executing the command for full changes to take effect.', @GMLEVEL_PLAYER),
+('freedom panda alliance', 'Syntax: .freedom panda alliance', 'Change your race faction to alliance pandaren. Can only be used by neutral pandaren. Must relog after executing the command for full changes to take effect.', @GMLEVEL_PLAYER),
 
 ('goto', 'Syntax: .goto $local_x [$local_y [$local_z [$local_deg]]]', 'Teleport to coordinates relative of your character.\n$local_x is forward(+)/backward(+)\n$local_y is left(+)/right(-)\n$local_z is up(+)/down(-)\n$local_deg is turn left(+)/turn right(-)', @GMLEVEL_MODERATOR),
 ('goto local', 'Syntax: .goto local $local_x [$local_y [$local_z [$local_deg]]]', 'Teleport to coordinates relative of your character.\n$local_x is forward(+)/backward(+)\n$local_y is left(+)/right(-)\n$local_z is up(+)/down(-)\n$local_deg is turn left(+)/turn right(-)', @GMLEVEL_MODERATOR),
