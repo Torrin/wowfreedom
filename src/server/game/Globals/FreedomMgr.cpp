@@ -415,7 +415,11 @@ void FreedomMgr::CreatureSetMount(Creature* creature, uint32 mountId)
     uint32 spawnId = creature->GetSpawnId();
     auto addonData = &(sObjectMgr->_creatureAddonStore[spawnId]);
     addonData->mount = mountId;
-    creature->Mount(mountId);
+
+    if (mountId)
+        creature->Mount(mountId);
+    else
+        creature->Dismount();
 }
 
 void FreedomMgr::CreatureSetAuraToggle(Creature* creature, uint32 auraId, bool toggle)
