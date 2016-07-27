@@ -12,7 +12,8 @@ SET @C_CLOSE := '|r'; -- stops/closes color tag
 SET @T_CMD_INFO := CONCAT(@C_TITLE, '>> ', @C_CLOSE);
 SET @T_CMD_SYNTAX := CONCAT(@C_TITLE, 'SYNTAX: ', @C_CLOSE);
 SET @T_CMD_ERROR := CONCAT(@C_ERR, 'ERROR: ', @C_CLOSE);
-SET @T_GLOBAL_GM := CONCAT(@C_LINK, '[GM-NOTIFY]', @C_CLOSE);
+SET @T_GLOBAL_GM := CONCAT(@C_LINK, '[GM-NOTIFY] ', @C_CLOSE);
+SET @T_GLOBAL    := CONCAT(@C_LINK, '[GLOBAL NOTIFY] ', @C_CLOSE);
 
 INSERT INTO wod_world.trinity_string (entry, content_default) VALUES
 /* FREEDOM_CMDE_NOT_YET_IMPLEMENTED 					*/ (100000, CONCAT(@T_CMD_ERROR, @C_TEXT, 'This command isn\'t implemented yet.', @C_CLOSE)),
@@ -45,8 +46,8 @@ INSERT INTO wod_world.trinity_string (entry, content_default) VALUES
 /* FREEDOM_CMDE_SUMMON_IGNORE								*/ (100027, CONCAT(@T_CMD_ERROR, @C_TEXT, 'Player ', @C_LINK, '%s ', @C_TEXT, 'is ignoring you.', @C_CLOSE)),
 /* FREEDOM_CMDE_SUMMON_GM_ON								*/ (100028, CONCAT(@T_CMD_ERROR, @C_TEXT, 'Player ', @C_LINK, '%s ', @C_TEXT, 'has GM tag ON.', @C_CLOSE)),
 /* FREEDOM_CMDE_SUMMON_EVIL_TWIN							*/ (100029, CONCAT(@T_CMD_ERROR, @C_TEXT, 'Player ', @C_LINK, '%s ', @C_TEXT, 'has Evil Twin aura. Summoning is not possible.', @C_CLOSE)),
-/* FREEDOM_CMDI_RELOAD										*/ (100030, CONCAT(@T_GLOBAL_GM, @C_TEXT, ' Freedom DB table ', @C_LINK, '%s', @C_TEXT, ' has been reloaded.', @C_CLOSE)),
-/* FREEDOM_CMDI_RELOAD_ALL									*/ (100031, CONCAT(@T_GLOBAL_GM, @C_TEXT, ' All freedom DB tables have been reloaded.', @C_CLOSE)),
+/* FREEDOM_CMDI_RELOAD										*/ (100030, CONCAT(@T_GLOBAL_GM, @C_TEXT, 'FreedomDatabase table ', @C_LINK, '%s', @C_TEXT, ' has been reloaded.', @C_CLOSE)),
+/* FREEDOM_CMDI_RELOAD_ALL									*/ (100031, CONCAT(@T_GLOBAL_GM, @C_TEXT, 'FreedomDatabase tables have been reloaded.', @C_CLOSE)),
 /* FREEDOM_CMDI_SEARCH_QUERY_RESULT						*/ (100032, CONCAT(@T_CMD_INFO, @C_TEXT, 'Found total of ', @C_LINK, '%llu', @C_TEXT, ' result(s).', @C_CLOSE)),
 /* FREEDOM_CMDE_X_WITH_NAME_NOT_FOUND					*/ (100033, CONCAT(@T_CMD_ERROR, @C_TEXT, '%s with name ', @C_LINK, '%s', @C_TEXT, ' was not found.', @C_CLOSE)),
 /* FREEDOM_CMDE_X_WITH_ID_NOT_FOUND						*/ (100034, CONCAT(@T_CMD_ERROR, @C_TEXT, '%s with id ', @C_LINK, '%llu', @C_TEXT, ' was not found.', @C_CLOSE)),
@@ -290,6 +291,10 @@ INSERT INTO wod_world.trinity_string (entry, content_default) VALUES
 /* FREEDOM_CMDE_FREEDOM_PANDA_NOT_NEUTRAL   			*/ (100272, CONCAT(@T_CMD_ERROR, 'This command can only be used by neutral pandaren')),
 /* FREEDOM_CMDE_SERVICE_RESTRICTED_FOR_PANDAS		*/ (100273, CONCAT(@T_CMD_ERROR, 'This command cannot be used by pandaren race')),
 /* FREEDOM_CMDE_SERVICE_RESTRICTED_FOR_NPANDAS		*/ (100274, CONCAT(@T_CMD_ERROR, 'This command cannot be used by neutral pandaren race')),
+/* FREEDOM_CMDI_RELOAD_WORLD_DB							*/ (100275, CONCAT(@T_GLOBAL_GM, @C_TEXT, 'WorldDatabase table ', @C_LINK, '%s', @C_TEXT, ' has been reloaded.', @C_CLOSE)),
+/* FREEDOM_CMDI_RELOAD_EXECUTOR							*/ (100276, CONCAT(@T_GLOBAL, @C_LINK, '.freedom reload %s', @C_TEXT, ' command has been triggered by %s', @C_TEXT, '.', @C_ERR, ' Server may pause/lag for a few moments.', @C_CLOSE)),
+/* FREEDOM_CMDI_RELOAD_FINISH								*/ (100277, CONCAT(@T_GLOBAL, @C_TEXT, 'Reload finished in ', @C_LINK, '%u ms', @C_CLOSE)),
+
 
 (200000, 'Dummy');
 -- Select new changes

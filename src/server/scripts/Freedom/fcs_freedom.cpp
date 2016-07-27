@@ -59,15 +59,29 @@ public:
             { "",               rbac::RBAC_FPERM_COMMAND_FREEDOM_SPELL,             false, &HandleFreedomSpellCommand,              "" },
         };
 
+        static std::vector<ChatCommand> freedomReloadCreatureCommandTable =
+        {
+            { "extra",          rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleFreedomReloadCreatureExtraCommand,   "" },
+            { "addon",          rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleFreedomReloadCreatureAddonCommand,   "" },
+            { "base",           rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleFreedomReloadCreatureBaseCommand,    "" },
+        };
+
+        static std::vector<ChatCommand> freedomReloadGameobjectCommandTable =
+        {
+            { "extra",          rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleFreedomReloadGameobjectExtraCommand,   "" },
+            { "base",           rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleFreedomReloadGameobjectBaseCommand,   "" },
+        };
+
         static std::vector<ChatCommand> freedomReloadCommandTable = 
         {
-            { "gameobject",     rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleFreedomReloadGameobjectCommand,   "" },
+            { "creature",       rbac::RBAC_FPERM_ADMINISTRATION,                    false, NULL,   "", freedomReloadCreatureCommandTable },
+            { "gameobject",     rbac::RBAC_FPERM_ADMINISTRATION,                    false, NULL,   "", freedomReloadGameobjectCommandTable },
             { "public_tele",    rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleFreedomReloadPublicTeleCommand,   "" },
             { "private_tele",   rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleFreedomReloadPrivateTeleCommand,  "" },
             { "public_spell",   rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleFreedomReloadPublicSpellCommand,  "" },
             { "morphs",         rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleFreedomReloadMorphsCommand,       "" },
             { "item",           rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleFreedomReloadItemCommand,         "" },
-            { "all",            rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleFreedomReloadAllCommand,          "" },
+            { "freedomtables",  rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleFreedomReloadAllCommand,          "" },
         };
 
         static std::vector<ChatCommand> freedomPandaCommandTable =
@@ -783,52 +797,125 @@ public:
 #pragma region COMMAND TABLE : .freedom -> reload -> *
     static bool HandleFreedomReloadAllCommand(ChatHandler* handler, char const* args)
     {
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_EXECUTOR, "freedomtables", handler->GetNameLink()).c_str());
+        uint32 oldMSTime = getMSTime();
         sFreedomMgr->LoadAllTables();
         handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_ALL).c_str());
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_FINISH, GetMSTimeDiffToNow(oldMSTime)).c_str());
         return true;
     }
 
-    static bool HandleFreedomReloadGameobjectCommand(ChatHandler* handler, char const* args)
+    static bool HandleFreedomReloadCreatureExtraCommand(ChatHandler* handler, char const* args)
     {
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_EXECUTOR, "creature extra", handler->GetNameLink()).c_str());
+        uint32 oldMSTime = getMSTime();
+        sFreedomMgr->LoadCreatureTemplateExtras();
+        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD, "creature_template_extra").c_str());
+        sFreedomMgr->LoadCreatureExtras();
+        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD, "creature_extra").c_str());
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_FINISH, GetMSTimeDiffToNow(oldMSTime)).c_str());
+        return true;
+    }
+
+    static bool HandleFreedomReloadCreatureAddonCommand(ChatHandler* handler, char const* args)
+    {
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_EXECUTOR, "creature addon", handler->GetNameLink()).c_str());
+        uint32 oldMSTime = getMSTime();
+        sObjectMgr->LoadCreatureTemplateAddons();
+        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_WORLD_DB, "creature_template_addon").c_str());
+        sObjectMgr->LoadCreatureAddons();
+        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_WORLD_DB, "creature_addon").c_str());
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_FINISH, GetMSTimeDiffToNow(oldMSTime)).c_str());
+        return true;
+    }
+
+    static bool HandleFreedomReloadCreatureBaseCommand(ChatHandler* handler, char const* args)
+    {
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_EXECUTOR, "creature base", handler->GetNameLink()).c_str());
+        uint32 oldMSTime = getMSTime();
+        sObjectMgr->LoadCreatureModelInfo();
+        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_WORLD_DB, "creature_model_info").c_str());
+        sObjectMgr->LoadCreatureTemplates();
+        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_WORLD_DB, "creature_template").c_str());
+        sObjectMgr->LoadEquipmentTemplates();
+        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_WORLD_DB, "creature_equip_template").c_str());
+        sObjectMgr->LoadCreatures();
+        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_WORLD_DB, "creature").c_str());
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_FINISH, GetMSTimeDiffToNow(oldMSTime)).c_str());
+        return true;
+    }
+
+    static bool HandleFreedomReloadGameobjectExtraCommand(ChatHandler* handler, char const* args)
+    {
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_EXECUTOR, "gameobject extra", handler->GetNameLink()).c_str());
+        uint32 oldMSTime = getMSTime();
         sFreedomMgr->LoadGameObjectTemplateExtras();
         handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD, "gameobject_template_extra").c_str());
         sFreedomMgr->LoadGameObjectExtras();
         handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD, "gameobject_extra").c_str());
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_FINISH, GetMSTimeDiffToNow(oldMSTime)).c_str());
+        return true;
+    }
+
+    static bool HandleFreedomReloadGameobjectBaseCommand(ChatHandler* handler, char const* args)
+    {        
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_EXECUTOR, "gameobject base", handler->GetNameLink()).c_str());
+        uint32 oldMSTime = getMSTime();
+        sObjectMgr->LoadGameObjectTemplate();
+        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_WORLD_DB, "gameobject_template").c_str());
+        sObjectMgr->LoadGameobjects();
+        handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_WORLD_DB, "gameobject").c_str());
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_FINISH, GetMSTimeDiffToNow(oldMSTime)).c_str());
         return true;
     }
 
     static bool HandleFreedomReloadPublicTeleCommand(ChatHandler* handler, char const* args)
     {
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_EXECUTOR, "public_tele", handler->GetNameLink()).c_str());
+        uint32 oldMSTime = getMSTime();
         sFreedomMgr->LoadPublicTeleports();        
         handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD, "public_tele").c_str());
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_FINISH, GetMSTimeDiffToNow(oldMSTime)).c_str());
         return true;
     }
 
     static bool HandleFreedomReloadPrivateTeleCommand(ChatHandler* handler, char const* args)
     {
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_EXECUTOR, "private_tele", handler->GetNameLink()).c_str());
+        uint32 oldMSTime = getMSTime();
         sFreedomMgr->LoadPrivateTeleports();
         handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD, "private_tele").c_str());
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_FINISH, GetMSTimeDiffToNow(oldMSTime)).c_str());
         return true;
     }
 
     static bool HandleFreedomReloadPublicSpellCommand(ChatHandler* handler, char const* args)
     {
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_EXECUTOR, "public_spell", handler->GetNameLink()).c_str());
+        uint32 oldMSTime = getMSTime();
         sFreedomMgr->LoadPublicSpells();
         handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD, "public_spell").c_str());
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_FINISH, GetMSTimeDiffToNow(oldMSTime)).c_str());
         return true;
     }
 
     static bool HandleFreedomReloadMorphsCommand(ChatHandler* handler, char const* args)
     {
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_EXECUTOR, "morphs", handler->GetNameLink()).c_str());
+        uint32 oldMSTime = getMSTime();
         sFreedomMgr->LoadMorphs();
         handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD, "morphs").c_str());
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_FINISH, GetMSTimeDiffToNow(oldMSTime)).c_str());
         return true;
     }
 
     static bool HandleFreedomReloadItemCommand(ChatHandler* handler, char const* args)
     {
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_EXECUTOR, "item", handler->GetNameLink()).c_str());
+        uint32 oldMSTime = getMSTime();
         sFreedomMgr->LoadItemTemplateExtras();
         handler->SendGlobalGMSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD, "item_template_extra").c_str());
+        handler->SendGlobalSysMessage(handler->PGetParseString(FREEDOM_CMDI_RELOAD_FINISH, GetMSTimeDiffToNow(oldMSTime)).c_str());
         return true;
     }
 #pragma endregion
