@@ -1144,7 +1144,7 @@ public:
 
         if (advancedInfo)
         {
-            handler->PSendSysMessage(FREEDOM_CMDI_CREATURE_INFO_LI_PHASEMASK, extraData->phaseMask);
+            handler->PSendSysMessage(FREEDOM_CMDI_CREATURE_INFO_LI_PHASEMASK, extraData ? extraData->phaseMask : target->GetPhaseMask());
             handler->PSendSysMessage(FREEDOM_CMDI_CREATURE_INFO_LI_FACTION_ID, faction);
             handler->PSendSysMessage(FREEDOM_CMDI_CREATURE_INFO_LI_NAME, name);
             handler->PSendSysMessage(FREEDOM_CMDI_CREATURE_INFO_LI_AI_INFO, target->GetAIName());
