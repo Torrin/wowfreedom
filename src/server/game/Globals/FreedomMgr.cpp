@@ -21,6 +21,8 @@ AdvancedArgumentTokenizer::AdvancedArgumentTokenizer(const std::string &src, boo
     bool chatLinkMode = false;
     char cPrev = '\0';
     std::string token = "";
+    normalParamString = src;
+    boost::trim(normalParamString);
 
     for (auto it = src.begin(); it != src.end(); it++)
     {
@@ -132,6 +134,9 @@ void AdvancedArgumentTokenizer::LoadModifier(std::string modifier, uint32 paramC
             extract = true;
             removeIndexes.push_back(paramIndex);
 
+            // remove from normalParamString
+            boost::replace_first(normalParamString, param + (m_storage.size() > (paramIndex + 1) ? " " : ""), "");
+
             if (extractCount == 0)
                 break;
         } 
@@ -139,12 +144,18 @@ void AdvancedArgumentTokenizer::LoadModifier(std::string modifier, uint32 paramC
         {
             valueStorage.second[modifierParamIndex] = param;
             removeIndexes.push_back(paramIndex);
+
+            // remove from normalParamString
+            boost::replace_first(normalParamString, param + (m_storage.size() > (paramIndex + 1) ? " " : ""), "");
+
             modifierParamIndex++;
             extractCount--;
         }
 
         paramIndex++;
     }
+
+    boost::trim(normalParamString);
 
     // If extract is still false, then given modifier doesn't exist, remove it from modifier storage
     if (!extract)

@@ -25,6 +25,8 @@ public:
     bool ModifierExists(std::string modifier) { return m_modifiers.find(modifier) != m_modifiers.end(); }
 
     std::string GetModifierValue(std::string modifier, uint32 index);
+    
+    std::string GetUntokenizedString() { return normalParamString; }
 
     template<typename T = std::string>
     T TryGetParam(uint32 index) { }
@@ -68,6 +70,7 @@ protected:
 protected:
     TokenStorage m_storage;
     ModifierStorageType m_modifiers;
+    std::string normalParamString;
 };
 
 struct GameObjectTemplateExtraData

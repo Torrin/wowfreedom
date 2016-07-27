@@ -369,7 +369,7 @@ public:
         tokenizer.LoadModifier("-w", 0);
         tokenizer.LoadModifier("-c", 0);
 
-        std::string namePart = tokenizer.TryGetParam(0);
+        std::string namePart = tokenizer.GetUntokenizedString();
 
         if (namePart.empty())
         {
