@@ -463,6 +463,73 @@ void FreedomMgr::CreatureSetAuraToggle(Creature* creature, uint32 auraId, bool t
     }
 }
 
+void FreedomMgr::CreatureSetBytes1(Creature* creature, uint32 bytes1)
+{
+    uint32 spawnId = creature->GetSpawnId();
+    auto addonData = &(sObjectMgr->_creatureAddonStore[spawnId]);
+    addonData->bytes1 = bytes1;
+    
+    if (bytes1)
+    {
+        // 0 StandState
+        // 1 FreeTalentPoints   Pet only, so always 0 for default creature
+        // 2 StandFlags
+        // 3 StandMiscFlags
+
+        creature->SetByteValue(UNIT_FIELD_BYTES_1, 0, uint8(bytes1 & 0xFF));
+        //SetByteValue(UNIT_FIELD_BYTES_1, 1, uint8((cainfo->bytes1 >> 8) & 0xFF));
+        creature->SetByteValue(UNIT_FIELD_BYTES_1, 1, 0);
+        creature->SetByteValue(UNIT_FIELD_BYTES_1, 2, uint8((bytes1 >> 16) & 0xFF));
+        creature->SetByteValue(UNIT_FIELD_BYTES_1, 3, uint8((bytes1 >> 24) & 0xFF));
+
+        if (uint8(bytes1 & 0xFF) == UNIT_STAND_STATE_DEAD)
+            creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, 0);
+
+        //! Suspected correlation between UNIT_FIELD_BYTES_1, offset 3, value 0x2:
+        //! If no inhabittype_fly (if no MovementFlag_DisableGravity or MovementFlag_CanFly flag found in sniffs)
+        //! Check using InhabitType as movement flags are assigned dynamically
+        //! basing on whether the creature is in air or not
+        //! Set MovementFlag_Hover. Otherwise do nothing.
+        if (creature->GetByteValue(UNIT_FIELD_BYTES_1, 3) & UNIT_BYTE1_FLAG_HOVER && !(creature->GetCreatureTemplate()->InhabitType & INHABIT_AIR))
+            creature->AddUnitMovementFlag(MOVEMENTFLAG_HOVER);
+    }
+    else
+    {
+        creature->SetByteValue(UNIT_FIELD_BYTES_1, 0, 0);
+        creature->SetByteValue(UNIT_FIELD_BYTES_1, 1, 0);
+        creature->SetByteValue(UNIT_FIELD_BYTES_1, 2, 0);
+        creature->SetByteValue(UNIT_FIELD_BYTES_1, 3, 0);
+    }
+}
+
+void FreedomMgr::CreatureSetBytes2(Creature* creature, uint32 bytes2)
+{
+    uint32 spawnId = creature->GetSpawnId();
+    auto addonData = &(sObjectMgr->_creatureAddonStore[spawnId]);
+    addonData->bytes2 = bytes2;
+
+    if (bytes2)
+    {
+        // 0 SheathState
+        // 1 Bytes2Flags
+        // 2 UnitRename         Pet only, so always 0 for default creature
+        // 3 ShapeshiftForm     Must be determined/set by shapeshift spell/aura
+
+        creature->SetByteValue(UNIT_FIELD_BYTES_2, 0, uint8(bytes2 & 0xFF));
+        //SetByteValue(UNIT_FIELD_BYTES_2, 1, uint8((cainfo->bytes2 >> 8) & 0xFF));
+        //SetByteValue(UNIT_FIELD_BYTES_2, 2, uint8((cainfo->bytes2 >> 16) & 0xFF));
+        creature->SetByteValue(UNIT_FIELD_BYTES_2, 2, 0);
+        //SetByteValue(UNIT_FIELD_BYTES_2, 3, uint8((cainfo->bytes2 >> 24) & 0xFF));
+        creature->SetByteValue(UNIT_FIELD_BYTES_2, 3, 0);
+    }
+    else
+    {
+        creature->SetByteValue(UNIT_FIELD_BYTES_2, 0, 0);
+        creature->SetByteValue(UNIT_FIELD_BYTES_2, 2, 0);
+        creature->SetByteValue(UNIT_FIELD_BYTES_2, 3, 0);
+    }
+}
+
 void FreedomMgr::SetCreatureTemplateExtraDisabledFlag(uint32 entryId, bool disabled)
 {
     auto it = _creatureTemplateExtraStore.find(entryId);

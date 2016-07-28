@@ -523,9 +523,18 @@ REPLACE INTO freedom.commands (command, syntax, description, gmlevel) VALUES
 ('npc set emote', 'Syntax: .npc set emote $emoteId [$guid]', 'Set database persistent play-emote of $emoteId for the creature.', @GMLEVEL_MODERATOR),
 ('npc set mount', 'Syntax: .npc set mount $mountId [$guid]', 'Set database persistent mount of $mountId for the creature.', @GMLEVEL_MODERATOR),
 ('npc set aura', 'Syntax: .npc set aura $auraId on/off [$guid]', 'Toggle database persistent aura of $auraId (can also be a spell id) for the creature.', @GMLEVEL_MODERATOR),
-('npc set deathstate', 'Syntax: .npc set deathstate on/off [$guid]', 'Toggle database persistent death animation for the creature (this is basically shorthand for .npc set aura, which is supplied with death animation spell).', @GMLEVEL_MODERATOR),
-('npc set sleepstate', 'Syntax: .npc set sleepstate on/off [$guid]', 'Toggle database persistent sleep animation for the creature (this is basically shorthand for .npc set aura, which is supplied with sleep animation spell).', @GMLEVEL_MODERATOR),
-('npc set hoverstate', 'Syntax: .npc set hoverstate on/off [$guid]', 'Toggle database persistent hover animation for the creature (this is basically shorthand for .npc set aura, which is supplied with hover animation spell).', @GMLEVEL_MODERATOR),
+
+('npc set deathstate',     'Syntax: .npc set deathstate on/off [$guid]',     'Toggle database persistent death animation for the creature. Cancels other set animation states.', @GMLEVEL_MODERATOR),
+('npc set sleepstate',     'Syntax: .npc set sleepstate on/off [$guid]',     'Toggle database persistent sleep animation for the creature. Cancels other set animation states.', @GMLEVEL_MODERATOR),
+('npc set hoverstate',     'Syntax: .npc set hoverstate on/off [$guid]',     'Toggle database persistent hover animation for the creature. Cancels other set animation states.', @GMLEVEL_MODERATOR),
+('npc set sitgroundstate', 'Syntax: .npc set sitgroundstate on/off [$guid]', 'Toggle database persistent sit-on-ground (normal sit) animation for the creature. Cancels other set animation states.', @GMLEVEL_MODERATOR),
+('npc set sitlowstate',    'Syntax: .npc set sitlowstate on/off [$guid]',    'Toggle database persistent sit-on-low-height (like sitting on low chair) animation for the creature. Cancels other set animation states.', @GMLEVEL_MODERATOR),
+('npc set sitmediumstate', 'Syntax: .npc set sitmediumstate on/off [$guid]', 'Toggle database persistent sit-on-medium-height (like sitting on medium chair) animation for the creature. Cancels other set animation states.', @GMLEVEL_MODERATOR),
+('npc set sithighstate',   'Syntax: .npc set sithighstate on/off [$guid]',   'Toggle database persistent sit-on-high-height (like sitting on high chair, where legs do not even touch the ground) animation for the creature. Cancels other set animation states.', @GMLEVEL_MODERATOR),
+('npc set kneelstate',     'Syntax: .npc set kneelstate on/off [$guid]',     'Toggle database persistent kneel animation for the creature. Cancels other set animation states.', @GMLEVEL_MODERATOR),
+
+('npc set bytes1',  'Syntax: .npc set bytes1 $bytes1 [$guid]', 'Set value for unit field UNIT_FIELD_BYTES_1. Do not use unless you know what this is.', @GMLEVEL_MODERATOR),
+('npc set bytes2',  'Syntax: .npc set bytes2 $bytes2 [$guid]', 'Set value for unit field UNIT_FIELD_BYTES_2. Do not use unless you know what this is.', @GMLEVEL_MODERATOR),
 
 ('lookup item', 'Syntax: .lookup item [modifiers] $itemNamePart', 'Looks up an item by $itemNamePart, and returns all matches with their Item IDs (does not include unrefined custom items unless \'-c\' modifier is specified). Command has following modifiers:\n-c : Search through unrefined custom items instead of default ones\n-a : Search only armor items (item class == 4)\n-w : Search only weapon items (item class == 2)', @GMLEVEL_PLAYER)
 ;

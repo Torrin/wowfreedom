@@ -176,25 +176,32 @@ public:
         };
         static std::vector<ChatCommand> npcSetCommandTable =
         {
-            { "emote",      rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetEmoteCommand,           "" },
-            { "mount",      rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetMountCommand,           "" },
-            { "aura",       rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetAuraCommand,            "" },
-            { "deathstate", rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetDeathStateCommand,      "" },
-            { "sleepstate", rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetSleepStateCommand,      "" },
-            { "hoverstate", rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetHoverStateCommand,      "" },
-            { "allowmove",  rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleNpcSetAllowMovementCommand,   "" },
-            { "entry",      rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleNpcSetEntryCommand,           "" },
-            { "factionid",  rbac::RBAC_PERM_COMMAND_NPC_SET_FACTIONID,          false, &HandleNpcSetFactionIdCommand,       "" },
-            { "flag",       rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleNpcSetFlagCommand,            "" },
-            { "level",      rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleNpcSetLevelCommand,           "" },
-            { "link",       rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleNpcSetLinkCommand,            "" },
-            { "model",      rbac::RBAC_PERM_COMMAND_NPC_SET_MODEL,              false, &HandleNpcSetModelCommand,           "" },
-            { "movetype",   rbac::RBAC_PERM_COMMAND_NPC_SET_MOVETYPE,           false, &HandleNpcSetMoveTypeCommand,        "" },
-            { "phase",      rbac::RBAC_PERM_COMMAND_NPC_SET_PHASE,              false, &HandleNpcSetPhaseCommand,           "" },
-            { "scale",      rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetScaleCommand,           "" },
-            { "spawndist",  rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleNpcSetSpawnDistCommand,       "" },
-            { "spawntime",  rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleNpcSetSpawnTimeCommand,       "" },
-            { "data",       rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleNpcSetDataCommand,            "" },
+            { "emote",          rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetEmoteCommand,           "" },
+            { "mount",          rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetMountCommand,           "" },
+            { "aura",           rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetAuraCommand,            "" },
+            { "deathstate",     rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetDeathStateCommand,      "" },
+            { "sleepstate",     rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetSleepStateCommand,      "" },
+            { "hoverstate",     rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetHoverStateCommand,      "" },
+            { "allowmove",      rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleNpcSetAllowMovementCommand,   "" },
+            { "entry",          rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleNpcSetEntryCommand,           "" },
+            { "factionid",      rbac::RBAC_PERM_COMMAND_NPC_SET_FACTIONID,          false, &HandleNpcSetFactionIdCommand,       "" },
+            { "flag",           rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleNpcSetFlagCommand,            "" },
+            { "level",          rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleNpcSetLevelCommand,           "" },
+            { "link",           rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleNpcSetLinkCommand,            "" },
+            { "model",          rbac::RBAC_PERM_COMMAND_NPC_SET_MODEL,              false, &HandleNpcSetModelCommand,           "" },
+            { "movetype",       rbac::RBAC_PERM_COMMAND_NPC_SET_MOVETYPE,           false, &HandleNpcSetMoveTypeCommand,        "" },
+            { "phase",          rbac::RBAC_PERM_COMMAND_NPC_SET_PHASE,              false, &HandleNpcSetPhaseCommand,           "" },
+            { "scale",          rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetScaleCommand,           "" },
+            { "spawndist",      rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleNpcSetSpawnDistCommand,       "" },
+            { "spawntime",      rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleNpcSetSpawnTimeCommand,       "" },
+            { "data",           rbac::RBAC_FPERM_ADMINISTRATION,                    false, &HandleNpcSetDataCommand,            "" },
+            { "bytes1",         rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetBytes1Command,          "" },
+            { "bytes2",         rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetBytes2Command,          "" },
+            { "sitgroundstate", rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetSitGroundStateCommand,  "" },
+            { "sitlowstate",    rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetSitLowStateCommand,     "" },
+            { "sitmediumstate", rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetSitMediumStateCommand,  "" },
+            { "sithighstate",   rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetSitHighStateCommand,    "" },
+            { "kneelstate",     rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetKneelStateCommand,      "" },
         };
         static std::vector<ChatCommand> npcCommandTable =
         {
@@ -219,6 +226,310 @@ public:
             { "npc", rbac::RBAC_PERM_COMMAND_NPC, false, NULL, "", npcCommandTable },
         };
         return commandTable;
+    }
+
+    static bool HandleNpcSetKneelStateCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_KNEELSTATE);
+            return true;
+        }
+
+        std::string toggleToken = "";
+        Player* source = handler->GetSession()->GetPlayer();
+        Creature* target = handler->getSelectedCreature();
+        uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
+
+        AdvancedArgumentTokenizer tokenizer(args);
+        toggleToken = tokenizer.TryGetParam(0);
+
+        if (tokenizer.size() > 1)
+        {
+            guidLow = tokenizer.TryGetParam<uint64>(1, "Hcreature");
+        }
+
+        if (toggleToken != "on" && toggleToken != "off")
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_KNEELSTATE);
+            return true;
+        }
+
+        target = sFreedomMgr->GetAnyCreature(guidLow);
+
+        if (!target)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_CREATURE_NOT_FOUND);
+            return true;
+        }
+
+        bool toggle = (toggleToken == "on");
+
+        sFreedomMgr->CreatureSetAuraToggle(target, uint32(SPELL_PERMANENT_HOVER), false);
+        sFreedomMgr->CreatureSetBytes1(target, toggle ? UNIT_STAND_STATE_KNEEL : 0);
+        sFreedomMgr->CreatureSetModifyHistory(target, source);
+        sFreedomMgr->SaveCreature(target);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_NPC_SET_KNEELSTATE);
+        return true;
+    }
+
+    static bool HandleNpcSetSitHighStateCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_SITHIGHSTATE);
+            return true;
+        }
+
+        std::string toggleToken = "";
+        Player* source = handler->GetSession()->GetPlayer();
+        Creature* target = handler->getSelectedCreature();
+        uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
+
+        AdvancedArgumentTokenizer tokenizer(args);
+        toggleToken = tokenizer.TryGetParam(0);
+
+        if (tokenizer.size() > 1)
+        {
+            guidLow = tokenizer.TryGetParam<uint64>(1, "Hcreature");
+        }
+
+        if (toggleToken != "on" && toggleToken != "off")
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_SITHIGHSTATE);
+            return true;
+        }
+
+        target = sFreedomMgr->GetAnyCreature(guidLow);
+
+        if (!target)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_CREATURE_NOT_FOUND);
+            return true;
+        }
+
+        bool toggle = (toggleToken == "on");
+
+        sFreedomMgr->CreatureSetAuraToggle(target, uint32(SPELL_PERMANENT_HOVER), false);
+        sFreedomMgr->CreatureSetBytes1(target, toggle ? UNIT_STAND_STATE_SIT_HIGH_CHAIR : 0);
+        sFreedomMgr->CreatureSetModifyHistory(target, source);
+        sFreedomMgr->SaveCreature(target);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_NPC_SET_SITHIGHSTATE);
+        return true;
+    }
+
+    static bool HandleNpcSetSitMediumStateCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_SITMEDIUMSTATE);
+            return true;
+        }
+
+        std::string toggleToken = "";
+        Player* source = handler->GetSession()->GetPlayer();
+        Creature* target = handler->getSelectedCreature();
+        uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
+
+        AdvancedArgumentTokenizer tokenizer(args);
+        toggleToken = tokenizer.TryGetParam(0);
+
+        if (tokenizer.size() > 1)
+        {
+            guidLow = tokenizer.TryGetParam<uint64>(1, "Hcreature");
+        }
+
+        if (toggleToken != "on" && toggleToken != "off")
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_SITMEDIUMSTATE);
+            return true;
+        }
+
+        target = sFreedomMgr->GetAnyCreature(guidLow);
+
+        if (!target)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_CREATURE_NOT_FOUND);
+            return true;
+        }
+
+        bool toggle = (toggleToken == "on");
+
+        sFreedomMgr->CreatureSetAuraToggle(target, uint32(SPELL_PERMANENT_HOVER), false);
+        sFreedomMgr->CreatureSetBytes1(target, toggle ? UNIT_STAND_STATE_SIT_MEDIUM_CHAIR : 0);
+        sFreedomMgr->CreatureSetModifyHistory(target, source);
+        sFreedomMgr->SaveCreature(target);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_NPC_SET_SITMEDIUMSTATE);
+        return true;
+    }
+
+    static bool HandleNpcSetSitLowStateCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_SITLOWSTATE);
+            return true;
+        }
+
+        std::string toggleToken = "";
+        Player* source = handler->GetSession()->GetPlayer();
+        Creature* target = handler->getSelectedCreature();
+        uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
+
+        AdvancedArgumentTokenizer tokenizer(args);
+        toggleToken = tokenizer.TryGetParam(0);
+
+        if (tokenizer.size() > 1)
+        {
+            guidLow = tokenizer.TryGetParam<uint64>(1, "Hcreature");
+        }
+
+        if (toggleToken != "on" && toggleToken != "off")
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_SITLOWSTATE);
+            return true;
+        }
+
+        target = sFreedomMgr->GetAnyCreature(guidLow);
+
+        if (!target)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_CREATURE_NOT_FOUND);
+            return true;
+        }
+
+        bool toggle = (toggleToken == "on");
+
+        sFreedomMgr->CreatureSetAuraToggle(target, uint32(SPELL_PERMANENT_HOVER), false);
+        sFreedomMgr->CreatureSetBytes1(target, toggle ? UNIT_STAND_STATE_SIT_LOW_CHAIR : 0);
+        sFreedomMgr->CreatureSetModifyHistory(target, source);
+        sFreedomMgr->SaveCreature(target);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_NPC_SET_SITLOWSTATE);
+        return true;
+    }
+
+    static bool HandleNpcSetSitGroundStateCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_SITGROUNDSTATE);
+            return true;
+        }
+
+        std::string toggleToken = "";
+        Player* source = handler->GetSession()->GetPlayer();
+        Creature* target = handler->getSelectedCreature();
+        uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
+
+        AdvancedArgumentTokenizer tokenizer(args);
+        toggleToken = tokenizer.TryGetParam(0);
+
+        if (tokenizer.size() > 1)
+        {
+            guidLow = tokenizer.TryGetParam<uint64>(1, "Hcreature");
+        }
+
+        if (toggleToken != "on" && toggleToken != "off")
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_SITGROUNDSTATE);
+            return true;
+        }
+
+        target = sFreedomMgr->GetAnyCreature(guidLow);
+
+        if (!target)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_CREATURE_NOT_FOUND);
+            return true;
+        }
+
+        bool toggle = (toggleToken == "on");
+
+        sFreedomMgr->CreatureSetAuraToggle(target, uint32(SPELL_PERMANENT_HOVER), false);
+        sFreedomMgr->CreatureSetBytes1(target, toggle ? UNIT_STAND_STATE_SIT : 0);
+        sFreedomMgr->CreatureSetModifyHistory(target, source);
+        sFreedomMgr->SaveCreature(target);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_NPC_SET_SITGROUNDSTATE);
+        return true;
+    }
+
+    static bool HandleNpcSetBytes1Command(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_BYTES1);
+            return true;
+        }
+
+        uint32 bytes1 = 0;
+        Player* source = handler->GetSession()->GetPlayer();
+        Creature* target = handler->getSelectedCreature();
+        uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
+
+        AdvancedArgumentTokenizer tokenizer(args);
+        bytes1 = tokenizer.TryGetParam<uint32>(0);
+
+        if (tokenizer.size() > 1)
+        {
+            guidLow = tokenizer.TryGetParam<uint64>(1, "Hcreature");
+        }
+
+        target = sFreedomMgr->GetAnyCreature(guidLow);
+
+        if (!target)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_CREATURE_NOT_FOUND);
+            return true;
+        }
+
+        sFreedomMgr->CreatureSetBytes1(target, bytes1);
+        sFreedomMgr->CreatureSetModifyHistory(target, source);
+        sFreedomMgr->SaveCreature(target);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_NPC_SET_BYTES1);
+        return true;
+    }
+
+    static bool HandleNpcSetBytes2Command(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_BYTES2);
+            return true;
+        }
+
+        uint32 bytes2 = 0;
+        Player* source = handler->GetSession()->GetPlayer();
+        Creature* target = handler->getSelectedCreature();
+        uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
+
+        AdvancedArgumentTokenizer tokenizer(args);
+        bytes2 = tokenizer.TryGetParam<uint32>(0);
+
+        if (tokenizer.size() > 1)
+        {
+            guidLow = tokenizer.TryGetParam<uint64>(1, "Hcreature");
+        }
+
+        target = sFreedomMgr->GetAnyCreature(guidLow);
+
+        if (!target)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_CREATURE_NOT_FOUND);
+            return true;
+        }
+
+        sFreedomMgr->CreatureSetBytes2(target, bytes2);
+        sFreedomMgr->CreatureSetModifyHistory(target, source);
+        sFreedomMgr->SaveCreature(target);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_NPC_SET_BYTES2);
+        return true;
     }
 
     static bool HandleNpcSetHoverStateCommand(ChatHandler* handler, char const* args)
@@ -256,7 +567,10 @@ public:
             return true;
         }
 
-        sFreedomMgr->CreatureSetAuraToggle(target, uint32(SPELL_PERMANENT_HOVER), toggleToken == "on");
+        bool toggle = (toggleToken == "on");
+        
+        sFreedomMgr->CreatureSetBytes1(target, 0);
+        sFreedomMgr->CreatureSetAuraToggle(target, uint32(SPELL_PERMANENT_HOVER), toggle);
         sFreedomMgr->CreatureSetModifyHistory(target, source);
         sFreedomMgr->SaveCreature(target);
 
@@ -299,7 +613,10 @@ public:
             return true;
         }
 
-        sFreedomMgr->CreatureSetAuraToggle(target, uint32(SPELL_PERMANENT_SLEEP_VISUAL), toggleToken == "on");
+        bool toggle = (toggleToken == "on");
+
+        sFreedomMgr->CreatureSetAuraToggle(target, uint32(SPELL_PERMANENT_HOVER), false);
+        sFreedomMgr->CreatureSetBytes1(target, toggle ? UNIT_STAND_STATE_SLEEP : 0);
         sFreedomMgr->CreatureSetModifyHistory(target, source);
         sFreedomMgr->SaveCreature(target);
 
@@ -342,7 +659,10 @@ public:
             return true;
         }
 
-        sFreedomMgr->CreatureSetAuraToggle(target, uint32(SPELL_PERMANENT_FEIGN_DEATH), toggleToken == "on");
+        bool toggle = (toggleToken == "on");
+
+        sFreedomMgr->CreatureSetAuraToggle(target, uint32(SPELL_PERMANENT_HOVER), false);
+        sFreedomMgr->CreatureSetBytes1(target, toggle ? UNIT_STAND_STATE_DEAD : 0);
         sFreedomMgr->CreatureSetModifyHistory(target, source);
         sFreedomMgr->SaveCreature(target);
 
@@ -826,9 +1146,11 @@ public:
         {
             AdvancedArgumentTokenizer tokenizer(args);
             guidLow = tokenizer.TryGetParam<uint64>(0, "Hcreature");
+            target = nullptr; // remove selected target
         }
-
-        target = sFreedomMgr->GetAnyCreature(guidLow);
+        
+        if (!target && guidLow)
+            target = sFreedomMgr->GetAnyCreature(guidLow);
 
         if (!target)
         {
@@ -909,9 +1231,12 @@ public:
         if (tokenizer.size() > 1)
         {
             guidLow = tokenizer.TryGetParam<uint64>(1, "Hcreature");
+            target = nullptr; // remove selected target
         }
 
-        target = sFreedomMgr->GetAnyCreature(guidLow);
+        // Only fetch new target if selected target does not exist but we still managed to get guid
+        if (!target && guidLow)
+            target = sFreedomMgr->GetAnyCreature(guidLow);
 
         if (!target)
         {

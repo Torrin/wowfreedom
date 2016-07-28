@@ -247,6 +247,8 @@ class FreedomMgr
         void CreatureSetEmote(Creature* creature, uint32 emoteId);
         void CreatureSetMount(Creature* creature, uint32 mountId);
         void CreatureSetAuraToggle(Creature* creature, uint32 auraId, bool toggle);
+        void CreatureSetBytes1(Creature* creature, uint32 bytes1);
+        void CreatureSetBytes2(Creature* creature, uint32 bytes2);
         Creature* CreatureCreate(Player* creator, CreatureTemplate const* creatureTemplate);
         Creature* CreatureRefresh(Creature* creature);
         CreatureExtraData const* GetCreatureExtraData(uint64 guid);

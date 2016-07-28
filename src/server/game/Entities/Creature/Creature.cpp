@@ -2339,7 +2339,7 @@ bool Creature::LoadCreaturesAddon()
         SetByteValue(UNIT_FIELD_BYTES_2, 3, 0);
     }
 
-    if (cainfo->emote != 0)
+    if (cainfo->emote != 0 && (cainfo->bytes1 & 0xFF) != UNIT_STAND_STATE_DEAD)
         SetUInt32Value(UNIT_NPC_EMOTESTATE, cainfo->emote);
 
     //Load Path
