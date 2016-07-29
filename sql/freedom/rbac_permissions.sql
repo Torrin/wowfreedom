@@ -51,6 +51,7 @@ INSERT INTO rbac_permissions (`id`, `name`) VALUES
 (1007, 'Command: freedom spell add/del'),
 (1008, 'Freedom player utility commands'),
 (1009, 'Freedom administration commands'),
+(1010, 'Freedom moderator/storyteller commands'),
 (1100, 'Command: .goto ...'),
 (9000, 'Command: reload playercreateinfo_spell_custom'),
 (9001, 'Command: reload playercreateinfo_skill_custom')
@@ -227,6 +228,7 @@ INSERT INTO rbac_linked_permissions (`id`, `linkedId`) VALUES
 
 -- [CUSTOM COMMANDS]
 (@MODERATOR, 1100),-- goto ...
+(@MODERATOR, 1010), -- freedom storyteller/moderator commands
 
 -- [191 - Role: [GM2] Gamemaster]
 (@GM, @MODERATOR), -- Inherit moderator permissions

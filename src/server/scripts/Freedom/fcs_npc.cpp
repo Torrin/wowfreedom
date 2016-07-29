@@ -1639,7 +1639,7 @@ public:
     {
         Player* source = handler->GetSession()->GetPlayer();
         Creature* target = handler->getSelectedCreature();
-        uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
+        uint64 spawnId = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
         AdvancedArgumentTokenizer tokenizer(*args ? args : "");
         tokenizer.LoadModifier("-guid", 1);
@@ -1651,12 +1651,12 @@ public:
         {
             std::string guidValue = tokenizer.GetModifierValue("-guid", 0);
             std::string guidKey = sFreedomMgr->GetChatLinkKey(guidValue, "Hcreature");
-            guidLow = atoul(guidKey.c_str());
+            spawnId = atoul(guidKey.c_str());
         }
 
-        target = sFreedomMgr->GetAnyCreature(guidLow);
+        target = sFreedomMgr->GetAnyCreature(spawnId);
 
-        if (!target)
+        if (!target || target->GetMapId() != source->GetMapId())
         {
             handler->PSendSysMessage(FREEDOM_CMDE_CREATURE_NOT_FOUND);
             return true;
@@ -1702,11 +1702,10 @@ public:
         sFreedomMgr->CreatureMove(target, x, y, z, o);
         sFreedomMgr->CreatureSetModifyHistory(target, source);
         sFreedomMgr->SaveCreature(target);
-        target = sFreedomMgr->CreatureRefresh(target);
 
         handler->PSendSysMessage(FREEDOM_CMDI_CREATURE_MOVE,
-            sFreedomMgr->ToChatLink("Hcreature", guidLow, target->GetName()),
-            guidLow);
+            sFreedomMgr->ToChatLink("Hcreature", spawnId, target->GetName()),
+            spawnId);
         return true;
     }
 
@@ -1731,7 +1730,7 @@ public:
 
         target = sFreedomMgr->GetAnyCreature(guidLow);
 
-        if (!target)
+        if (!target || target->GetMapId() != source->GetMapId())
         {
             handler->PSendSysMessage(FREEDOM_CMDE_CREATURE_NOT_FOUND);
             return true;
@@ -1749,12 +1748,14 @@ public:
         {
             std::string setDeg = tokenizer.GetModifierValue("-sdeg", 0);
             o = ((float)atof(setDeg.c_str())) * M_PI / 180.0f;
-        }
+        }       
+
+        float x, y, z;
+        target->GetPosition(x, y, z);      
 
         sFreedomMgr->CreatureTurn(target, o);
         sFreedomMgr->CreatureSetModifyHistory(target, source);
-        sFreedomMgr->SaveCreature(target);
-        target = sFreedomMgr->CreatureRefresh(target);
+        sFreedomMgr->SaveCreature(target);        
 
         handler->PSendSysMessage(FREEDOM_CMDI_CREATURE_TURNED,
             sFreedomMgr->ToChatLink("Hcreature", guidLow, target->GetName()),
@@ -1869,17 +1870,7 @@ public:
             parseAsPhaseMasks = false;
         }
 
-        if (!guidLow)
-        {
-            handler->PSendSysMessage(FREEDOM_CMDE_CREATURE_ENTRY_NOT_EXISTS);
-            return true;
-        }
-
-        CreatureData const* creatureData = NULL;
-
-        // by DB guid
-        if (creatureData = sObjectMgr->GetCreatureData(guidLow))
-            creature = sFreedomMgr->GetAnyCreature(source->GetMap(), guidLow, creatureData->id);
+        creature = sFreedomMgr->GetAnyCreature(guidLow);
 
         if (!creature)
         {
@@ -1926,7 +1917,6 @@ public:
             sFreedomMgr->CreaturePhase(creature, phaseMask);
             sFreedomMgr->CreatureSetModifyHistory(creature, source);
             sFreedomMgr->SaveCreature(creature);
-            creature = sFreedomMgr->CreatureRefresh(creature);
         }
 
         if (phases.empty())

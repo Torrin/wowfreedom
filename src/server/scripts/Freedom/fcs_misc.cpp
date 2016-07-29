@@ -56,7 +56,8 @@ public:
             { "bank",             rbac::RBAC_PERM_COMMAND_BANK,             false, &HandleBankCommand,             "" },
             { "bindsight",        rbac::RBAC_PERM_COMMAND_BINDSIGHT,        false, &HandleBindSightCommand,        "" },
             { "combatstop",       rbac::RBAC_PERM_COMMAND_COMBATSTOP,        true, &HandleCombatStopCommand,       "" },
-            { "cometome",         rbac::RBAC_PERM_COMMAND_COMETOME,         false, &HandleComeToMeCommand,         "" },
+            { "cometome",         rbac::RBAC_FPERM_MODERATOR,               false, &HandleComeToMeCommand,         "" },
+            { "jumptome",         rbac::RBAC_FPERM_MODERATOR,               false, &HandleJumpToMeCommand,         "" },
             { "commands",         rbac::RBAC_PERM_COMMAND_COMMANDS,          true, &HandleCommandsCommand,         "" },
             { "cooldown",         rbac::RBAC_PERM_COMMAND_COOLDOWN,         false, &HandleCooldownCommand,         "" },
             { "damage",           rbac::RBAC_PERM_COMMAND_DAMAGE,           false, &HandleDamageCommand,           "" },
@@ -2158,28 +2159,69 @@ public:
         }
         return true;
     }
-    /*
-    ComeToMe command REQUIRED for 3rd party scripting library to have access to PointMovementGenerator
-    Without this function 3rd party scripting library will get linking errors (unresolved external)
-    when attempting to use the PointMovementGenerator
-    */
+
     static bool HandleComeToMeCommand(ChatHandler* handler, char const* args)
     {
-        char const* newFlagStr = strtok((char*)args, " ");
-        if (!newFlagStr)
-            return false;
-
-        Creature* caster = handler->getSelectedCreature();
-        if (!caster)
+        Creature* target = handler->getSelectedCreature();
+        if (!target)
         {
-            handler->SendSysMessage(LANG_SELECT_CREATURE);
-            handler->SetSentErrorMessage(true);
-            return false;
+            handler->PSendSysMessage(FREEDOM_CMDE_CREATURE_NOT_FOUND);
+            return true;
+        }
+
+        // interrupt previous motion
+        target->GetMotionMaster()->Clear();
+
+        float speed = 0.0f;
+
+        if (*args)
+        {
+            AdvancedArgumentTokenizer tokenizer(args);
+            speed = tokenizer.TryGetParam<float>(0);
+
+            if (speed < 1.0f)
+                speed = 1.0f;
         }
 
         Player* player = handler->GetSession()->GetPlayer();
 
-        caster->GetMotionMaster()->MovePoint(0, player->GetPositionX(), player->GetPositionY(), player->GetPositionZ());
+        if (speed)
+            target->GetMotionMaster()->MoveCharge(player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), speed, EVENT_CHARGE, true);
+        else
+            target->GetMotionMaster()->MovePoint(0, player->GetPositionX(), player->GetPositionY(), player->GetPositionZ());
+        return true;
+    }
+
+    static bool HandleJumpToMeCommand(ChatHandler* handler, char const* args)
+    {
+        Creature* target = handler->getSelectedCreature();
+        if (!target)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_CREATURE_NOT_FOUND);
+            return true;
+        }
+
+        // interrupt previous motion
+        target->GetMotionMaster()->Clear();
+
+        float speedXY = 10.0f;
+        float speedZ = 0.0f;
+
+        if (*args)
+        {
+            AdvancedArgumentTokenizer tokenizer(args);
+            speedXY = tokenizer.TryGetParam<float>(0);
+            speedZ = tokenizer.TryGetParam<float>(1);
+
+            if (speedXY < 2.0f)
+                speedXY = 2.0f;
+            if (speedZ < 0)
+                speedZ = 0;            
+        }
+
+        Player* player = handler->GetSession()->GetPlayer();
+
+        target->GetMotionMaster()->MoveJump(player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), player->GetOrientation(), speedXY, speedZ, EVENT_JUMP, true);
 
         return true;
     }

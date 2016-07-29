@@ -295,6 +295,9 @@ bool FreedomMgr::IsValidPhaseMask(uint32 phaseMask)
 
 void FreedomMgr::CreaturePhase(Creature* creature, uint32 phaseMask)
 {
+    if (!phaseMask)
+        phaseMask = 1;
+
     creature->ClearPhases();
 
     for (int i = 1; i < 512; i = i << 1)
@@ -305,13 +308,16 @@ void FreedomMgr::CreaturePhase(Creature* creature, uint32 phaseMask)
             creature->SetInPhase(GetPhaseId(phase), false, true);
     }
 
-    creature->SetPhaseMask(phaseMask, false);
+    creature->SetPhaseMask(phaseMask, true);
 
-    _creatureExtraStore[creature->GetSpawnId()].phaseMask = phaseMask;
+    _creatureExtraStore[creature->GetSpawnId()].phaseMask = phaseMask;    
 }
 
 void FreedomMgr::GameObjectPhase(GameObject* go, uint32 phaseMask)
 {
+    if (!phaseMask)
+        phaseMask = 1;
+
     go->ClearPhases();
 
     for (int i = 1; i < 512; i = i << 1)
@@ -322,13 +328,16 @@ void FreedomMgr::GameObjectPhase(GameObject* go, uint32 phaseMask)
             go->SetInPhase(GetPhaseId(phase), false, true);
     }
 
-    go->SetPhaseMask(phaseMask, false);
+    go->SetPhaseMask(phaseMask, true);
 
     _gameObjectExtraStore[go->GetSpawnId()].phaseMask = phaseMask;
 }
 
 void FreedomMgr::PlayerPhase(Player* player, uint32 phaseMask)
 {
+    if (!phaseMask)
+        phaseMask = 1;
+
     player->ClearPhases();
 
     for (int i = 1; i < 512; i = i << 1)
@@ -339,10 +348,9 @@ void FreedomMgr::PlayerPhase(Player* player, uint32 phaseMask)
             player->SetInPhase(GetPhaseId(phase), false, true);
     }
 
-    player->SetPhaseMask(phaseMask, false);
+    player->SetPhaseMask(phaseMask, true);
 
     _playerExtraDataStore[player->GetGUID().GetCounter()].phaseMask = phaseMask;
-    player->UpdateObjectVisibility();
 }
 
 uint32 FreedomMgr::GetPlayerPhase(Player* player)
@@ -624,6 +632,8 @@ void FreedomMgr::CreatureMove(Creature* creature, float x, float y, float z, flo
     stmt->setUInt64(4, creature->GetSpawnId());
 
     WorldDatabase.Execute(stmt);
+
+    creature->SendTeleportPacket(creature->GetPosition());
 }
 
 void FreedomMgr::CreatureTurn(Creature* creature, float o)
@@ -691,8 +701,10 @@ Creature* FreedomMgr::CreatureCreate(Player* creator, CreatureTemplate const* cr
     }
 
     creature->SaveToDB(map->GetId(), (1 << map->GetSpawnMode()), creator->GetPhaseMask());
-
+    
     ObjectGuid::LowType db_guid = creature->GetSpawnId();
+    sFreedomMgr->CreaturePhase(creature, creator->GetPhaseMask());
+    sFreedomMgr->CreatureScale(creature, creature->GetObjectScale());
 
     // To call _LoadGoods(); _LoadQuests(); CreateTrainerSpells()
     // current "creature" variable is deleted and created fresh new, otherwise old values might trigger asserts or cause undefined behavior
@@ -714,15 +726,7 @@ Creature* FreedomMgr::CreatureCreate(Player* creator, CreatureTemplate const* cr
     data.modifierPlayerId = creator->GetGUID().GetCounter();
     data.created = time(NULL);
     data.modified = time(NULL);
-
-    for (uint32 phase : creator->GetPhases())
-    {
-        if (!sFreedomMgr->IsValidPhaseId(phase))
-            continue;
-
-        data.phaseMask |= sFreedomMgr->GetPhaseMask(phase);
-    }
-
+    data.phaseMask = creator->GetPhaseMask();
     _creatureExtraStore[creature->GetSpawnId()] = data;
 
     int index = 0;
@@ -744,52 +748,23 @@ Creature* FreedomMgr::CreatureCreate(Player* creator, CreatureTemplate const* cr
 
     FreedomDatabase.Execute(stmt);
 
-    sObjectMgr->AddCreatureToGrid(db_guid, sObjectMgr->GetCreatureData(db_guid));
+    sObjectMgr->AddCreatureToGrid(db_guid, sObjectMgr->GetCreatureData(db_guid));    
     return creature;
 }
 
-Creature* FreedomMgr::CreatureRefresh(Creature* creature)
+void FreedomMgr::CreatureRefresh(Creature* creature)
 {
     ObjectGuid::LowType guidLow = creature->GetSpawnId();
     Map* map = creature->GetMap();
+    map->GetObjectsStore().Remove<Creature>(creature->GetGUID());
+    creature->DestroyForNearbyPlayers();
 
-    auto extraData = &_creatureExtraStore[guidLow];
+    auto newGuidLow = map->GenerateLowGuid<HighGuid::Creature>();
+    auto newObjectGuid = ObjectGuid::Create<HighGuid::Creature>(map->GetId(), creature->GetEntry(), newGuidLow);
 
-    // save previous values
-    bool displayLock = extraData->displayLock;
-    uint32 displayId = extraData->displayId;
-    uint32 nativeDisplayId = extraData->nativeDisplayId;
-    bool genderLock = extraData->genderLock;
-    uint8 gender = extraData->gender;
-
-    // temporarily use creature extra data to store current display ids,
-    // so refresh doesn't cause random model-swap
-    extraData->displayLock = true;
-    extraData->displayId = creature->GetDisplayId();
-    extraData->nativeDisplayId = creature->GetNativeDisplayId();
-    extraData->genderLock = true;
-    extraData->gender = creature->getGender();
-
-    creature->CleanupsBeforeDelete(true);
-    creature->SendObjectDeSpawnAnim(creature->GetGUID());
-    creature->AddObjectToRemoveList();
-
-    creature = new Creature();
-
-    if (!creature->LoadCreatureFromDB(guidLow, map))
-    {
-        delete creature;
-        return nullptr;
-    }
-
-    // restore previous values
-    extraData->displayLock = displayLock;
-    extraData->displayId = displayId;
-    extraData->nativeDisplayId = nativeDisplayId;
-    extraData->genderLock = genderLock;
-    extraData->gender = gender;
-
-    return creature;
+    creature->SetGuidValue(OBJECT_FIELD_GUID, newObjectGuid);
+    creature->SetPackGUID(newObjectGuid);
+    map->GetObjectsStore().Insert(newObjectGuid, creature);
 }
 
 CreatureExtraData const* FreedomMgr::GetCreatureExtraData(uint64 guid)
@@ -1103,8 +1078,6 @@ GameObject* FreedomMgr::GameObjectCreate(Player* creator, GameObjectTemplate con
         return nullptr;
     }
 
-    object->CopyPhaseFrom(creator);
-
     if (spawnTimeSecs)
     {
         object->SetRespawnTime(spawnTimeSecs);
@@ -1112,7 +1085,10 @@ GameObject* FreedomMgr::GameObjectCreate(Player* creator, GameObjectTemplate con
 
     // fill the gameobject data and save to the db
     object->SaveToDB(map->GetId(), (1 << map->GetSpawnMode()), creator->GetPhaseMask());
+    
     ObjectGuid::LowType spawnId = object->GetSpawnId();
+    sFreedomMgr->GameObjectPhase(object, creator->GetPhaseMask());
+    sFreedomMgr->GameObjectScale(object, object->GetObjectScale());
 
     // delete the old object and do a clean load from DB with a fresh new GameObject instance.
     // this is required to avoid weird behavior and memory leaks
@@ -1138,14 +1114,7 @@ GameObject* FreedomMgr::GameObjectCreate(Player* creator, GameObjectTemplate con
     data.modifierPlayerId = creator->GetGUID().GetCounter();
     data.created = time(NULL);
     data.modified = time(NULL);
-
-    for (uint32 phase : creator->GetPhases())
-    {
-        if (!sFreedomMgr->IsValidPhaseId(phase))
-            continue;
-
-        data.phaseMask |= sFreedomMgr->GetPhaseMask(phase);
-    }
+    data.phaseMask = creator->GetPhaseMask();
 
     _gameObjectExtraStore[spawnId] = data;
 

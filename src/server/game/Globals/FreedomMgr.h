@@ -250,7 +250,7 @@ class FreedomMgr
         void CreatureSetBytes1(Creature* creature, uint32 bytes1);
         void CreatureSetBytes2(Creature* creature, uint32 bytes2);
         Creature* CreatureCreate(Player* creator, CreatureTemplate const* creatureTemplate);
-        Creature* CreatureRefresh(Creature* creature);
+        void CreatureRefresh(Creature* creature);
         CreatureExtraData const* GetCreatureExtraData(uint64 guid);
         CreatureTemplateExtraData const* GetCreatureTemplateExtraData(uint32 entry);
         void SetCreatureSelectionForPlayer(ObjectGuid::LowType playerId, ObjectGuid::LowType creatureId);

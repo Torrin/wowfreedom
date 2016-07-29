@@ -1115,10 +1115,9 @@ public:
                 sFreedomMgr->PlayerPhase(target->ToPlayer(), phaseMask);
                 target->ToPlayer()->SendUpdatePhasing();
             }
-            else
+            else if (target->ToCreature())
             {
-                handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
-                return true;
+                sFreedomMgr->CreaturePhase(target->ToCreature(), phaseMask);
             }
         }
 

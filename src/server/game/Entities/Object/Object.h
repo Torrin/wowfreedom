@@ -134,6 +134,7 @@ class TC_GAME_API Object
 
         ObjectGuid const& GetGUID() const { return GetGuidValue(OBJECT_FIELD_GUID); }
         PackedGuid const& GetPackGUID() const { return m_PackGUID; }
+        void SetPackGUID(ObjectGuid const& guid) { m_PackGUID.Set(guid); }
         uint32 GetEntry() const { return GetUInt32Value(OBJECT_FIELD_ENTRY); }
         void SetEntry(uint32 entry) { SetUInt32Value(OBJECT_FIELD_ENTRY, entry); }
 

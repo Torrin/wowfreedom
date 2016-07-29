@@ -87,7 +87,6 @@ INSERT INTO freedom.commands (`command`, `syntax`, `description`, `gmlevel`) VAL
 ('cheat cooldown', 'Syntax: .cheat cooldown [on/off]', 'Enables or disables your character\'s spell cooldowns.', @GMLEVEL_GM),
 ('cheat explore', 'Syntax: .cheat explore $flag', 'Reveal or hide all maps for the selected player. If no player is selected, hide or reveal maps to you.\nUse a $flag of value 1 to reveal, use a $flag value of 0 to hide all maps.', @GMLEVEL_GM),
 ('combatstop', 'Syntax: .combatstop [$playername]', 'Stop combat for selected character. If selected non-player then command applied to self. If $playername provided then attempt applied to online player $playername.', @GMLEVEL_MODERATOR),
-('cometome', 'SYntax: .cometome $parameter', 'Make selected creature come to your current location (new position not saved to DB).', @GMLEVEL_MODERATOR),
 ('commands', 'Syntax: .commands', 'Display a list of available commands for your account level.', @GMLEVEL_PLAYER),
 ('cooldown', 'Syntax: .cooldown [$spell_id]', 'Remove all (if spell_id not provided) or $spel_id spell cooldown from selected character or you (if no selection).', @GMLEVEL_MODERATOR),
 ('debug', 'Syntax: .debug $subcommand', 'Type .debug to see the list of possible subcommands or .help debug $subcommand to see info on subcommands', @GMLEVEL_ADMIN),
@@ -536,7 +535,10 @@ REPLACE INTO freedom.commands (command, syntax, description, gmlevel) VALUES
 ('npc set bytes1',  'Syntax: .npc set bytes1 $bytes1 [$guid]', 'Set value for unit field UNIT_FIELD_BYTES_1. Do not use unless you know what this is.', @GMLEVEL_MODERATOR),
 ('npc set bytes2',  'Syntax: .npc set bytes2 $bytes2 [$guid]', 'Set value for unit field UNIT_FIELD_BYTES_2. Do not use unless you know what this is.', @GMLEVEL_MODERATOR),
 
-('lookup item', 'Syntax: .lookup item [modifiers] $itemNamePart', 'Looks up an item by $itemNamePart, and returns all matches with their Item IDs (does not include unrefined custom items unless \'-c\' modifier is specified). Command has following modifiers:\n-c : Search through unrefined custom items instead of default ones\n-a : Search only armor items (item class == 4)\n-w : Search only weapon items (item class == 2)', @GMLEVEL_PLAYER)
+('lookup item', 'Syntax: .lookup item [modifiers] $itemNamePart', 'Looks up an item by $itemNamePart, and returns all matches with their Item IDs (does not include unrefined custom items unless \'-c\' modifier is specified). Command has following modifiers:\n-c : Search through unrefined custom items instead of default ones\n-a : Search only armor items (item class == 4)\n-w : Search only weapon items (item class == 2)', @GMLEVEL_PLAYER),
+
+('cometome', 'Syntax: .cometome [$speed]', 'Make selected creature walk/run to your current location (new position not saved to DB, however moving/turning commands will take the new position into account). You can specify optional $speed parameter to set custom movement speed, otherwise creature\'s speed is used.', @GMLEVEL_MODERATOR),
+('jumptome', 'Syntax: .jumptome [$speedXY [$speedZ]]', 'Make selected creature jump to your current location (new position not saved to DB, however moving/turning commands will take the new position into account). You can specify optional $speedXY parameter to set custom jump velocity and an optional $speedZ to set height of the parabolic curve between jump points ($speedZ is 0 by default, which means that the jump will be straight, while greater $speedZ values make higher and higher curve).', @GMLEVEL_MODERATOR)
 ;
 
 SELECT * FROM freedom.commands ORDER BY command;
