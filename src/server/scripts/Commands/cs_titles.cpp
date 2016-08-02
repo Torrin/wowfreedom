@@ -202,40 +202,43 @@ public:
         if (!*args)
             return false;
 
-        uint64 titles = 0;
-
-        sscanf((char*)args, UI64FMTD, &titles);
-
-        Player* target = handler->getSelectedPlayer();
-        if (!target)
-        {
-            handler->SendSysMessage(LANG_NO_CHAR_SELECTED);
-            handler->SetSentErrorMessage(true);
-            return false;
-        }
-
-        // check online security
-        if (handler->HasLowerSecurity(target, ObjectGuid::Empty))
-            return false;
-
-        uint64 titles2 = titles;
-
-        for (uint32 i = 1; i < sCharTitlesStore.GetNumRows(); ++i)
-            if (CharTitlesEntry const* tEntry = sCharTitlesStore.LookupEntry(i))
-                titles2 &= ~(uint64(1) << tEntry->MaskID);
-
-        titles &= ~titles2;                                     // remove non-existing titles
-
-        target->SetUInt64Value(PLAYER__FIELD_KNOWN_TITLES, titles);
-        handler->SendSysMessage(LANG_DONE);
-
-        if (!target->HasTitle(target->GetInt32Value(PLAYER_CHOSEN_TITLE)))
-        {
-            target->SetUInt32Value(PLAYER_CHOSEN_TITLE, 0);
-            handler->PSendSysMessage(LANG_CURRENT_TITLE_RESET, handler->GetNameLink(target).c_str());
-        }
-
+        handler->PSendSysMessage(FREEDOM_CMDE_NOT_YET_IMPLEMENTED);
         return true;
+
+        //uint64 titles = 0;
+
+        //sscanf((char*)args, UI64FMTD, &titles);
+
+        //Player* target = handler->getSelectedPlayer();
+        //if (!target)
+        //{
+        //    handler->SendSysMessage(LANG_NO_CHAR_SELECTED);
+        //    handler->SetSentErrorMessage(true);
+        //    return false;
+        //}
+
+        //// check online security
+        //if (handler->HasLowerSecurity(target, ObjectGuid::Empty))
+        //    return false;
+
+        //uint64 titles2 = titles;
+
+        //for (uint32 i = 1; i < sCharTitlesStore.GetNumRows(); ++i)
+        //    if (CharTitlesEntry const* tEntry = sCharTitlesStore.LookupEntry(i))
+        //        titles2 &= ~(uint64(1) << tEntry->MaskID);
+
+        //titles &= ~titles2;                                     // remove non-existing titles
+
+        //target->SetUInt64Value(PLAYER__FIELD_KNOWN_TITLES, titles);
+        //handler->SendSysMessage(LANG_DONE);
+
+        //if (!target->HasTitle(target->GetInt32Value(PLAYER_CHOSEN_TITLE)))
+        //{
+        //    target->SetUInt32Value(PLAYER_CHOSEN_TITLE, 0);
+        //    handler->PSendSysMessage(LANG_CURRENT_TITLE_RESET, handler->GetNameLink(target).c_str());
+        //}
+
+        //return true;
     }
 };
 

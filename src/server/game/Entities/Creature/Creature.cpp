@@ -2729,7 +2729,32 @@ void Creature::UpdateMovementFlags()
     if (!isInAir)
         SetFall(false);
 
-    SetSwim(GetCreatureTemplate()->InhabitType & INHABIT_WATER && IsInWater());
+    // override
+    auto extraData = sFreedomMgr->GetCreatureExtraData(this->GetSpawnId());
+    if (extraData)
+    {
+        SetDisableGravity(!extraData->gravity);
+
+        if (extraData->swim)
+        {           
+            if (!HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_15))
+                SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_15);
+        }
+        else
+        {
+            if (HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_15))
+                RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_15);
+        }
+
+        if (extraData->gravity)
+            SetSwim(IsInWater() && extraData->swim);
+        else if (extraData->fly)
+            SetSwim(true);
+    }
+    else
+    {
+        SetSwim(GetCreatureTemplate()->InhabitType & INHABIT_WATER && IsInWater());
+    }
 }
 
 void Creature::SetObjectScale(float scale)
@@ -2901,3 +2926,7 @@ void Creature::ClearTextRepeatGroup(uint8 textGroup)
     if (groupItr != m_textRepeat.end())
         groupItr->second.clear();
 }
+
+bool Creature::CanWalk() const { return sFreedomMgr->CreatureCanWalk(this); }
+bool Creature::CanSwim() const { return sFreedomMgr->CreatureCanSwim(this) || IsPet(); }
+bool Creature::CanFly() const  { return sFreedomMgr->CreatureCanFly(this); }

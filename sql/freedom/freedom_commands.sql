@@ -439,6 +439,8 @@ REPLACE INTO freedom.commands (command, syntax, description, gmlevel) VALUES
 ('freedom tame', 'Syntax: .freedom tame', 'Make a pet out of the targeted creature. Only works on tameable creatures.', @GMLEVEL_PLAYER),
 ('freedom panda horde', 'Syntax: .freedom panda horde', 'Change your race faction to horde pandaren. Can only be used by neutral pandaren. Must relog after executing the command for full changes to take effect.', @GMLEVEL_PLAYER),
 ('freedom panda alliance', 'Syntax: .freedom panda alliance', 'Change your race faction to alliance pandaren. Can only be used by neutral pandaren. Must relog after executing the command for full changes to take effect.', @GMLEVEL_PLAYER),
+('freedom title list', 'Syntax: .freedom title list [$titleNamePart]', 'List all available titles (or if $titleNamePart is provided, list only those what contain $titleNamePart).', @GMLEVEL_PLAYER),
+('freedom title set', 'Syntax: .freedom title set $titleId', 'Set your title via $titleId, including custom titles.', @GMLEVEL_PLAYER),
 
 ('freedom reload', 'Syntax: .freedom reload $subcommand', 'Type .freedom reload to see the list of possible subcommands.', @GMLEVEL_GM),
 ('freedom reload creature', 'Syntax: .freedom reload creature $subcommand', 'Type .freedom reload creature to see the list of possible subcommands.', @GMLEVEL_GM),
@@ -531,6 +533,11 @@ REPLACE INTO freedom.commands (command, syntax, description, gmlevel) VALUES
 ('npc set sitmediumstate', 'Syntax: .npc set sitmediumstate on/off [$guid]', 'Toggle database persistent sit-on-medium-height (like sitting on medium chair) animation for the creature. Cancels other set animation states.', @GMLEVEL_MODERATOR),
 ('npc set sithighstate',   'Syntax: .npc set sithighstate on/off [$guid]',   'Toggle database persistent sit-on-high-height (like sitting on high chair, where legs do not even touch the ground) animation for the creature. Cancels other set animation states.', @GMLEVEL_MODERATOR),
 ('npc set kneelstate',     'Syntax: .npc set kneelstate on/off [$guid]',     'Toggle database persistent kneel animation for the creature. Cancels other set animation states.', @GMLEVEL_MODERATOR),
+('npc set sheathstate',    'Syntax: .npc set sheathstate 0/1/2 [$guid]',     'Toggle database persistent sheath state for the creature:\n0 - sheath all weapons,\n1 - prepare melee weapons,\n2 - prepare ranged weapons', @GMLEVEL_MODERATOR),
+('npc set flystate',       'Syntax: .npc set flystate on/off [$guid]',       'Toggle database persistent flying/swimming-in-air animation for the creature. Combine with .npc set gravity on/off to setup flying NPCs.', @GMLEVEL_MODERATOR),
+
+('npc set gravity',        'Syntax: .npc set gravity on/off [$guid]',        'Toggle database persistent gravity state for the creature. Useful to stop creatures falling through spawned gameobjects if turned off.', @GMLEVEL_MODERATOR),
+('npc set swim',           'Syntax: .npc set swim on/off [$guid]',           'Toggle database persistent swim ability for the creature (mainly sets whether creature will swim on top of water if fallen into it or keep falling to the bottom below water-line).', @GMLEVEL_MODERATOR),
 
 ('npc set bytes1',  'Syntax: .npc set bytes1 $bytes1 [$guid]', 'Set value for unit field UNIT_FIELD_BYTES_1. Do not use unless you know what this is.', @GMLEVEL_MODERATOR),
 ('npc set bytes2',  'Syntax: .npc set bytes2 $bytes2 [$guid]', 'Set value for unit field UNIT_FIELD_BYTES_2. Do not use unless you know what this is.', @GMLEVEL_MODERATOR),

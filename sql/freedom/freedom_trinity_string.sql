@@ -308,6 +308,21 @@ INSERT INTO wod_world.trinity_string (entry, content_default) VALUES
 /* FREEDOM_CMDI_NPC_SET_SITHIGHSTATE					*/ (100289, CONCAT(@T_CMD_INFO, 'Creature animation state set/unset (sit on high height) and saved')),
 /* FREEDOM_CMDH_NPC_SET_KNEELSTATE						*/ (100290, CONCAT(@T_CMD_SYNTAX, '.npc set kneelstate on/off [$guid]')),
 /* FREEDOM_CMDI_NPC_SET_KNEELSTATE						*/ (100291, CONCAT(@T_CMD_INFO, 'Creature animation state set/unset (kneel) and saved')),
+/* FREEDOM_CMDH_NPC_SET_SHEATHSTATE						*/ (100292, CONCAT(@T_CMD_SYNTAX, '.npc set sheathstate 0/1/2 [$guid]')),
+/* FREEDOM_CMDI_NPC_SET_SHEATHSTATE						*/ (100293, CONCAT(@T_CMD_INFO, 'Creature sheath state set/unset and saved')),
+/* FREEDOM_CMDH_NPC_SET_GRAVITY							*/ (100294, CONCAT(@T_CMD_SYNTAX, '.npc set gravity on/off [$guid]')),
+/* FREEDOM_CMDI_NPC_SET_GRAVITY							*/ (100295, CONCAT(@T_CMD_INFO, 'Creature gravity toggle set/unset and saved')),
+/* FREEDOM_CMDH_NPC_SET_SWIM								*/ (100296, CONCAT(@T_CMD_SYNTAX, '.npc set swim on/off [$guid]')),
+/* FREEDOM_CMDI_NPC_SET_SWIM								*/ (100297, CONCAT(@T_CMD_INFO, 'Creature swim toggle set/unset and saved')),
+/* FREEDOM_CMDH_FREEDOM_TITLE_SET						*/ (100298, CONCAT(@T_CMD_SYNTAX, '.freedom title set $titleId')),
+/* FREEDOM_CMDE_FREEDOM_TITLE_SET_INVALID_TITLEID	*/ (100299, CONCAT(@T_CMD_ERROR, 'Specified title with ID %u does not exist')),
+/* FREEDOM_CMDI_FREEDOM_TITLE_LIST_ITEM				*/ (100300, '%u - %s'),
+/* FREEDOM_CMDI_FREEDOM_TITLE_LIST_NONE_FOUND	   */ (100301, CONCAT(@T_CMD_INFO, 'No titles were found')),
+/* FREEDOM_CMDI_FREEDOM_TITLE_LIST	   				*/ (100302, CONCAT(@T_CMD_INFO, 'Found %u titles')),
+/* FREEDOM_CMDI_FREEDOM_TITLE_SET						*/ (100303, CONCAT(@T_CMD_INFO, 'Title set to ID: %u, MaskID: %u, Title format: %s')),
+/* FREEDOM_CMDI_FREEDOM_TITLE_SET_UNSET				*/ (100304, CONCAT(@T_CMD_INFO, 'Title toggled off')),
+/* FREEDOM_CMDH_NPC_SET_FLYSTATE							*/ (100305, CONCAT(@T_CMD_SYNTAX, '.npc set flystate on/off [$guid]')),
+/* FREEDOM_CMDI_NPC_SET_FLYSTATE							*/ (100306, CONCAT(@T_CMD_INFO, 'Creature animation state set/unset (flying or swimming in air) and saved')),
 
 (200000, 'Dummy');
 -- Select new changes

@@ -15411,7 +15411,7 @@ bool Unit::SetDisableGravity(bool disable, bool packetOnly /*= false*/)
         if (disable)
         {
             AddUnitMovementFlag(MOVEMENTFLAG_DISABLE_GRAVITY);
-            RemoveUnitMovementFlag(MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_SPLINE_ELEVATION);
+            RemoveUnitMovementFlag(MOVEMENTFLAG_SPLINE_ELEVATION);
             SetFall(false);
         }
         else

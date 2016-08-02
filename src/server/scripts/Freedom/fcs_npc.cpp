@@ -202,6 +202,10 @@ public:
             { "sitmediumstate", rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetSitMediumStateCommand,  "" },
             { "sithighstate",   rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetSitHighStateCommand,    "" },
             { "kneelstate",     rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetKneelStateCommand,      "" },
+            { "sheathstate",    rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetSheathStateCommand,     "" },
+            { "gravity",        rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetGravityCommand,         "" },
+            { "swim",           rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetSwimCommand,            "" },
+            { "flystate",       rbac::RBAC_PERM_COMMAND_NPC,                        false, &HandleNpcSetFlyStateCommand,        "" },
         };
         static std::vector<ChatCommand> npcCommandTable =
         {
@@ -226,6 +230,187 @@ public:
             { "npc", rbac::RBAC_PERM_COMMAND_NPC, false, NULL, "", npcCommandTable },
         };
         return commandTable;
+    }
+
+    static bool HandleNpcSetFlyStateCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_FLYSTATE);
+            return true;
+        }
+
+        std::string toggleToken = "";
+        Player* source = handler->GetSession()->GetPlayer();
+        Creature* target = handler->getSelectedCreature();
+        uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
+
+        AdvancedArgumentTokenizer tokenizer(args);
+        toggleToken = tokenizer.TryGetParam(0);
+
+        if (tokenizer.size() > 1)
+        {
+            guidLow = tokenizer.TryGetParam<uint64>(1, "Hcreature");
+        }
+
+        if (toggleToken != "on" && toggleToken != "off")
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_FLYSTATE);
+            return true;
+        }
+
+        target = sFreedomMgr->GetAnyCreature(guidLow);
+
+        if (!target)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_CREATURE_NOT_FOUND);
+            return true;
+        }
+
+        sFreedomMgr->CreatureSetFly(target, toggleToken == "on");
+        sFreedomMgr->CreatureSetModifyHistory(target, source);
+        sFreedomMgr->SaveCreature(target);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_NPC_SET_FLYSTATE);
+        return true;
+    }
+
+    static bool HandleNpcSetSwimCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_SWIM);
+            return true;
+        }
+
+        std::string toggleToken = "";
+        Player* source = handler->GetSession()->GetPlayer();
+        Creature* target = handler->getSelectedCreature();
+        uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
+
+        AdvancedArgumentTokenizer tokenizer(args);
+        toggleToken = tokenizer.TryGetParam(0);
+
+        if (tokenizer.size() > 1)
+        {
+            guidLow = tokenizer.TryGetParam<uint64>(1, "Hcreature");
+        }
+
+        if (toggleToken != "on" && toggleToken != "off")
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_SWIM);
+            return true;
+        }
+
+        target = sFreedomMgr->GetAnyCreature(guidLow);
+
+        if (!target)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_CREATURE_NOT_FOUND);
+            return true;
+        }
+
+        sFreedomMgr->CreatureSetSwim(target, toggleToken == "on");
+        sFreedomMgr->CreatureSetModifyHistory(target, source);
+        sFreedomMgr->SaveCreature(target);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_NPC_SET_SWIM);
+        return true;
+    }
+
+    static bool HandleNpcSetGravityCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_GRAVITY);
+            return true;
+        }
+
+        std::string toggleToken = "";
+        Player* source = handler->GetSession()->GetPlayer();
+        Creature* target = handler->getSelectedCreature();
+        uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
+
+        AdvancedArgumentTokenizer tokenizer(args);
+        toggleToken = tokenizer.TryGetParam(0);
+
+        if (tokenizer.size() > 1)
+        {
+            guidLow = tokenizer.TryGetParam<uint64>(1, "Hcreature");
+        }
+
+        if (toggleToken != "on" && toggleToken != "off")
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_GRAVITY);
+            return true;
+        }
+
+        target = sFreedomMgr->GetAnyCreature(guidLow);
+
+        if (!target)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_CREATURE_NOT_FOUND);
+            return true;
+        }
+        
+        sFreedomMgr->CreatureSetGravity(target, toggleToken == "on");
+        sFreedomMgr->CreatureSetModifyHistory(target, source);
+        sFreedomMgr->SaveCreature(target);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_NPC_SET_GRAVITY);
+        return true;
+    }
+
+    static bool HandleNpcSetSheathStateCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_SHEATHSTATE);
+            return true;
+        }
+
+        std::string sheathToken = "";
+        Player* source = handler->GetSession()->GetPlayer();
+        Creature* target = handler->getSelectedCreature();
+        uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
+
+        AdvancedArgumentTokenizer tokenizer(args);
+        sheathToken = tokenizer.TryGetParam(0);
+
+        if (tokenizer.size() > 1)
+        {
+            guidLow = tokenizer.TryGetParam<uint64>(1, "Hcreature");
+        }
+
+        if (sheathToken != "0" && sheathToken != "1" && sheathToken != "2")
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_NPC_SET_SHEATHSTATE);
+            return true;
+        }
+
+        target = sFreedomMgr->GetAnyCreature(guidLow);
+
+        if (!target)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_CREATURE_NOT_FOUND);
+            return true;
+        }
+
+        SheathState state = SHEATH_STATE_UNARMED;
+
+        if (sheathToken == "0")
+            state = SHEATH_STATE_UNARMED;
+        if (sheathToken == "1")
+            state = SHEATH_STATE_MELEE;
+        if (sheathToken == "2")
+            state = SHEATH_STATE_RANGED;
+
+        sFreedomMgr->CreatureSetBytes2(target, state);
+        sFreedomMgr->CreatureSetModifyHistory(target, source);
+        sFreedomMgr->SaveCreature(target);
+
+        handler->PSendSysMessage(FREEDOM_CMDI_NPC_SET_SHEATHSTATE);
+        return true;
     }
 
     static bool HandleNpcSetKneelStateCommand(ChatHandler* handler, char const* args)
@@ -1163,7 +1348,7 @@ public:
             handler->SendSysMessage(FREEDOM_CMDE_CREATURE_CANNOT_BE_PET_OR_TOTEM);
             return true;
         }
-
+        
         sFreedomMgr->CreatureDelete(target);
 
         handler->SendSysMessage(FREEDOM_CMDI_NPC_DELETE);

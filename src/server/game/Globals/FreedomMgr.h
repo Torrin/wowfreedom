@@ -167,7 +167,8 @@ struct CreatureExtraData
 {
     CreatureExtraData() : scale(-1.0f), creatorBnetAccId(0), creatorPlayerId(0),
         modifierBnetAccId(0), modifierPlayerId(0), created(0), modified(0), phaseMask(1),
-        displayLock(false), displayId(0), nativeDisplayId(0), genderLock(false), gender(0) { }
+        displayLock(false), displayId(0), nativeDisplayId(0), genderLock(false), gender(0),
+        swim(true), gravity(true), fly(false) { }
 
     float scale;
     uint32 creatorBnetAccId;
@@ -182,6 +183,9 @@ struct CreatureExtraData
     uint32 nativeDisplayId;
     bool genderLock;
     uint8 gender;
+    bool swim;
+    bool gravity;
+    bool fly;
 };
 
 typedef std::unordered_map<uint64, CreatureExtraData> CreatureExtraContainer;
@@ -234,7 +238,7 @@ class FreedomMgr
         GameObjectExtraData const* GetGameObjectExtraData(uint64 guid);
         GameObject* GameObjectCreate(Player* creator, GameObjectTemplate const* gobTemplate, uint32 spawnTimeSecs = 0);
 
-        // Creature
+        // Creature        
         void LoadCreatureExtras();
         void LoadCreatureTemplateExtras();
         void SetCreatureTemplateExtraDisabledFlag(uint32 entryId, bool disabled);
@@ -249,6 +253,12 @@ class FreedomMgr
         void CreatureSetAuraToggle(Creature* creature, uint32 auraId, bool toggle);
         void CreatureSetBytes1(Creature* creature, uint32 bytes1);
         void CreatureSetBytes2(Creature* creature, uint32 bytes2);
+        void CreatureSetGravity(Creature* creature, bool toggle);
+        void CreatureSetSwim(Creature* creature, bool toggle);
+        void CreatureSetFly(Creature* creature, bool toggle);
+        bool CreatureCanSwim(Creature const* creature);
+        bool CreatureCanWalk(Creature const* creature);
+        bool CreatureCanFly(Creature const* creature);
         Creature* CreatureCreate(Player* creator, CreatureTemplate const* creatureTemplate);
         void CreatureRefresh(Creature* creature);
         CreatureExtraData const* GetCreatureExtraData(uint64 guid);

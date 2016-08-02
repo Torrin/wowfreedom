@@ -11,6 +11,7 @@
 #include "MovementPackets.h"
 #include "MoveSpline.h"
 #include "Pet.h"
+#include "CharacterPackets.h"
 #include <boost/algorithm/string/predicate.hpp>
 
 enum FreedomCmdAuraSpells
@@ -90,6 +91,12 @@ public:
             { "alliance",       rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomPandarenAllianceCommand,   "" },
         };
 
+        static std::vector<ChatCommand> freedomTitleCommandTable =
+        {
+            { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomTitleListCommand,      "" },
+            { "set",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomTitleSetCommand,              "" },
+        };
+
         static std::vector<ChatCommand> freedomCommandTable =
         {
             { "hover",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomHoverCommand,              "" },
@@ -121,6 +128,7 @@ public:
             //{ "tabard",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomTabardCommand,               "" },
             { "panda",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, NULL,                                    "",  freedomPandaCommandTable },            
             { "tame",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomTameCommand,               "" },
+            { "title",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, NULL,                                    "", freedomTitleCommandTable },
         };
 
         static std::vector<ChatCommand> commandTable =
@@ -963,6 +971,89 @@ public:
     {
         Player* source = handler->GetSession()->GetPlayer();
         handler->GetSession()->SendTabardVendorActivate(source->GetGUID());
+        return true;
+    }
+
+    static bool HandleFreedomTitleListCommand(ChatHandler* handler, char const* args)
+    {
+        Player* source = handler->GetSession()->GetPlayer();
+
+        AdvancedArgumentTokenizer tokenizer(*args ? args : "");
+        std::string namePart = tokenizer.GetUntokenizedString();
+        Gender gender = (Gender)source->getGender();
+        uint32 count = 0;
+
+        for (auto titleEntry : sCharTitlesStore)
+        {            
+            std::string titleName = gender == GENDER_FEMALE ? titleEntry->NameFemale_lang : titleEntry->NameMale_lang;
+
+            if (boost::icontains(titleName, namePart))
+            {
+                count++;
+                handler->PSendSysMessage(FREEDOM_CMDI_FREEDOM_TITLE_LIST_ITEM,
+                    titleEntry->ID,
+                    sFreedomMgr->ToChatLink("Htitle", titleEntry->ID, titleName));
+            }
+        }
+
+        if (count)
+            handler->PSendSysMessage(FREEDOM_CMDI_FREEDOM_TITLE_LIST, count);
+        else
+            handler->PSendSysMessage(FREEDOM_CMDI_FREEDOM_TITLE_LIST_NONE_FOUND);
+
+        return true;
+    }
+
+    static bool HandleFreedomTitleSetCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_FREEDOM_TITLE_SET);
+            return true;
+        }
+
+        Player* source = handler->GetSession()->GetPlayer();
+        AdvancedArgumentTokenizer tokenizer(args);
+        uint32 titleId = tokenizer.TryGetParam<uint32>(0, "Htitle");
+        uint32 prevMaskId = source->GetUInt32Value(PLAYER_CHOSEN_TITLE);
+
+        if (!titleId)
+        {
+            source->SetUInt32Value(PLAYER_CHOSEN_TITLE, 0);
+
+            WorldPackets::Character::TitleEarned packetRemovePrevious(SMSG_TITLE_LOST);
+            packetRemovePrevious.Index = prevMaskId;
+            source->GetSession()->SendPacket(packetRemovePrevious.Write());
+            handler->PSendSysMessage(FREEDOM_CMDI_FREEDOM_TITLE_SET_UNSET);
+            return true;
+        }
+
+        CharTitlesEntry const* titleEntry = sCharTitlesStore.LookupEntry(titleId);
+
+        if (!titleEntry)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_FREEDOM_TITLE_SET_INVALID_TITLEID, titleId);
+            return true;
+        }
+
+        // remove previous one        
+        WorldPackets::Character::TitleEarned packetRemovePrevious(SMSG_TITLE_LOST);
+        packetRemovePrevious.Index = prevMaskId;
+        source->GetSession()->SendPacket(packetRemovePrevious.Write());
+
+        // set chosen title
+        WorldPackets::Character::TitleEarned packet(SMSG_TITLE_EARNED);
+        packet.Index = titleEntry->MaskID;
+        source->GetSession()->SendPacket(packet.Write());
+
+        source->SetUInt32Value(PLAYER_CHOSEN_TITLE, titleEntry->MaskID);
+        Gender gender = (Gender)source->getGender();
+        std::string titleName = gender == GENDER_FEMALE ? titleEntry->NameFemale_lang : titleEntry->NameMale_lang;
+
+        handler->PSendSysMessage(FREEDOM_CMDI_FREEDOM_TITLE_SET, 
+            titleEntry->ID, 
+            titleEntry->MaskID, 
+            sFreedomMgr->ToChatLink("Htitle", titleEntry->ID, titleName));
         return true;
     }
 

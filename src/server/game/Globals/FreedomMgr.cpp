@@ -135,7 +135,7 @@ void AdvancedArgumentTokenizer::LoadModifier(std::string modifier, uint32 paramC
             removeIndexes.push_back(paramIndex);
 
             // remove from normalParamString
-            boost::replace_first(normalParamString, param + (m_storage.size() > (paramIndex + 1) ? " " : ""), "");
+            boost::replace_first(normalParamString, param + ((int)m_storage.size() > (paramIndex + 1) ? " " : ""), "");
 
             if (extractCount == 0)
                 break;
@@ -146,7 +146,7 @@ void AdvancedArgumentTokenizer::LoadModifier(std::string modifier, uint32 paramC
             removeIndexes.push_back(paramIndex);
 
             // remove from normalParamString
-            boost::replace_first(normalParamString, param + (m_storage.size() > (paramIndex + 1) ? " " : ""), "");
+            boost::replace_first(normalParamString, param + ((int)m_storage.size() > (paramIndex + 1) ? " " : ""), "");
 
             modifierParamIndex++;
             extractCount--;
@@ -368,7 +368,7 @@ void FreedomMgr::LoadCreatureExtras()
 
     // guid, scale, id_creator_bnet, id_creator_player, id_modifier_bnet, id_modifier_player, 
     // UNIX_TIMESTAMP(created), UNIX_TIMESTAMP(modified), phaseMask, displayLock, displayId, 
-    // nativeDisplayId, genderLock, gender
+    // nativeDisplayId, genderLock, gender, swim, gravity, fly
     PreparedStatement* stmt = FreedomDatabase.GetPreparedStatement(FREEDOM_SEL_CREATUREEXTRA);
     PreparedQueryResult result = FreedomDatabase.Query(stmt);
 
@@ -393,6 +393,9 @@ void FreedomMgr::LoadCreatureExtras()
         data.nativeDisplayId = fields[11].GetUInt32();
         data.genderLock = fields[12].GetBool();
         data.gender = fields[13].GetUInt8();
+        data.swim = fields[14].GetBool();
+        data.gravity = fields[15].GetBool();
+        data.fly = fields[16].GetBool();
 
         _creatureExtraStore[guid] = data;
     } while (result->NextRow());
@@ -538,6 +541,81 @@ void FreedomMgr::CreatureSetBytes2(Creature* creature, uint32 bytes2)
     }
 }
 
+void FreedomMgr::CreatureSetGravity(Creature* creature, bool toggle)
+{
+    _creatureExtraStore[creature->GetSpawnId()].gravity = toggle;   
+    creature->SetDisableGravity(!toggle);
+
+    if (toggle)
+    {
+        if (!creature->IsInWater() || !creature->CanSwim())
+            creature->GetMotionMaster()->MoveFall();
+    }
+}
+
+void FreedomMgr::CreatureSetSwim(Creature* creature, bool toggle)
+{
+    _creatureExtraStore[creature->GetSpawnId()].swim = toggle;
+    creature->SetSwim(toggle && creature->IsInWater());
+
+    if (toggle)
+    {
+        if (!creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_15))
+            creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_15);
+
+        creature->SetSwim(creature->IsInWater() || CreatureCanFly(creature));
+    }
+    else
+    {
+        if (creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_15))
+            creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_15);
+
+        if (!CreatureCanFly(creature))
+        {
+            creature->SetSwim(false);
+
+            if (creature->IsInWater())
+                creature->GetMotionMaster()->MoveFall();
+        }
+    }
+}
+
+void FreedomMgr::CreatureSetFly(Creature* creature, bool toggle)
+{
+    _creatureExtraStore[creature->GetSpawnId()].fly = toggle;
+
+    if (!creature->IsInWater())
+    {
+        creature->SetSwim(toggle);
+    }
+
+    // Just to be sure, send animation update, because commands such as .npc move will cancel it
+    WorldPackets::Movement::MoveSplineSetFlag packet(toggle ? SMSG_MOVE_SPLINE_START_SWIM : SMSG_MOVE_SPLINE_STOP_SWIM);
+    packet.MoverGUID = creature->GetGUID();
+    creature->SendMessageToSet(packet.Write(), true);
+}
+
+bool FreedomMgr::CreatureCanSwim(Creature const* creature)
+{
+    return _creatureExtraStore[creature->GetSpawnId()].swim;
+}
+
+bool FreedomMgr::CreatureCanWalk(Creature const* creature)
+{
+    return (creature->GetCreatureTemplate()->InhabitType & INHABIT_GROUND) != 0;
+}
+
+bool FreedomMgr::CreatureCanFly(Creature const* creature)
+{
+    auto it = _creatureExtraStore.find(creature->GetSpawnId());
+    if (it == _creatureExtraStore.end())
+    {
+        _creatureExtraStore[creature->GetSpawnId()].fly = ((creature->GetCreatureTemplate()->InhabitType & INHABIT_AIR) != 0);
+    }
+
+    return _creatureExtraStore[creature->GetSpawnId()].fly;
+}
+
 void FreedomMgr::SetCreatureTemplateExtraDisabledFlag(uint32 entryId, bool disabled)
 {
     auto it = _creatureTemplateExtraStore.find(entryId);
@@ -579,6 +657,9 @@ void FreedomMgr::SaveCreature(Creature* creature)
         stmt->setUInt32(index++, data.nativeDisplayId);
         stmt->setBool(index++, data.genderLock);
         stmt->setUInt8(index++, data.gender);
+        stmt->setBool(index++, data.swim);
+        stmt->setBool(index++, data.gravity);
+        stmt->setBool(index++, data.fly);
 
         FreedomDatabase.Execute(stmt);
     }
@@ -615,13 +696,13 @@ void FreedomMgr::CreatureMove(Creature* creature, float x, float y, float z, flo
     if (creature->HasUnitMovementFlag(MOVEMENTFLAG_HOVER))
         z += creature->GetFloatValue(UNIT_FIELD_HOVERHEIGHT);
     creature->Relocate(x, y, z, o);
-    creature->GetMotionMaster()->Initialize();
+    //creature->GetMotionMaster()->Initialize();
 
-    if (creature->IsAlive())                            // dead creature will reset movement generator at respawn
-    {
-        creature->setDeathState(JUST_DIED);
-        creature->Respawn();
-    }
+    //if (creature->IsAlive())                            // dead creature will reset movement generator at respawn
+    //{
+    //    creature->setDeathState(JUST_DIED);
+    //    creature->Respawn();
+    //}
 
     PreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_UPD_CREATURE_POSITION);
 
@@ -705,6 +786,7 @@ Creature* FreedomMgr::CreatureCreate(Player* creator, CreatureTemplate const* cr
     ObjectGuid::LowType db_guid = creature->GetSpawnId();
     sFreedomMgr->CreaturePhase(creature, creator->GetPhaseMask());
     sFreedomMgr->CreatureScale(creature, creature->GetObjectScale());
+    sFreedomMgr->CreatureSetFly(creature, ((creature->GetCreatureTemplate()->InhabitType & INHABIT_AIR) != 0));
 
     // To call _LoadGoods(); _LoadQuests(); CreateTrainerSpells()
     // current "creature" variable is deleted and created fresh new, otherwise old values might trigger asserts or cause undefined behavior
@@ -745,6 +827,9 @@ Creature* FreedomMgr::CreatureCreate(Player* creator, CreatureTemplate const* cr
     stmt->setUInt32(index++, data.nativeDisplayId);
     stmt->setBool(index++, data.genderLock);
     stmt->setUInt8(index++, data.gender);
+    stmt->setBool(index++, data.swim);
+    stmt->setBool(index++, data.gravity);
+    stmt->setBool(index++, data.fly);
 
     FreedomDatabase.Execute(stmt);
 
@@ -754,6 +839,9 @@ Creature* FreedomMgr::CreatureCreate(Player* creator, CreatureTemplate const* cr
 
 void FreedomMgr::CreatureRefresh(Creature* creature)
 {
+    if (!creature)
+        return;
+
     ObjectGuid::LowType guidLow = creature->GetSpawnId();
     Map* map = creature->GetMap();
     map->GetObjectsStore().Remove<Creature>(creature->GetGUID());
