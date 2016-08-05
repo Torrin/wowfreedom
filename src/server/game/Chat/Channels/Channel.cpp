@@ -176,16 +176,16 @@ void Channel::JoinChannel(Player* player, std::string const& pass)
         return;
     }
 
-    if (HasFlag(CHANNEL_FLAG_LFG) &&
-        sWorld->getBoolConfig(CONFIG_RESTRICTED_LFG_CHANNEL) &&
-        AccountMgr::IsPlayerAccount(player->GetSession()->GetSecurity()) && //FIXME: Move to RBAC
-        player->GetGroup())
-    {
-        WorldPackets::Channel::ChannelNotify notify;
-        MakeNotInLfg(notify);
-        player->SendDirectMessage(notify.Write());
-        return;
-    }
+    //if (HasFlag(CHANNEL_FLAG_LFG) &&
+    //    sWorld->getBoolConfig(CONFIG_RESTRICTED_LFG_CHANNEL) &&
+    //    AccountMgr::IsPlayerAccount(player->GetSession()->GetSecurity()) && //FIXME: Move to RBAC
+    //    player->GetGroup())
+    //{
+    //    WorldPackets::Channel::ChannelNotify notify;
+    //    MakeNotInLfg(notify);
+    //    player->SendDirectMessage(notify.Write());
+    //    return;
+    //}
 
     player->JoinedChannel(this);
 

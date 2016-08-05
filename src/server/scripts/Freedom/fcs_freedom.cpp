@@ -1020,6 +1020,7 @@ public:
         if (!titleId)
         {
             source->SetUInt32Value(PLAYER_CHOSEN_TITLE, 0);
+            source->SaveToDB();
 
             WorldPackets::Character::TitleEarned packetRemovePrevious(SMSG_TITLE_LOST);
             packetRemovePrevious.Index = prevMaskId;
@@ -1047,6 +1048,8 @@ public:
         source->GetSession()->SendPacket(packet.Write());
 
         source->SetUInt32Value(PLAYER_CHOSEN_TITLE, titleEntry->MaskID);
+        source->SaveToDB();
+
         Gender gender = (Gender)source->getGender();
         std::string titleName = gender == GENDER_FEMALE ? titleEntry->NameFemale_lang : titleEntry->NameMale_lang;
 

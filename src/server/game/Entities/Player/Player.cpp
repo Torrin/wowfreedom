@@ -4648,7 +4648,7 @@ bool Player::CanJoinConstantChannelInZone(ChatChannelsEntry const* channel, Area
         return false;
 
     if ((channel->Flags & CHANNEL_DBC_FLAG_CITY_ONLY) && (!(zone->Flags[0] & AREA_FLAG_SLAVE_CAPITAL)))
-        return false;
+        return true;
 
     if ((channel->Flags & CHANNEL_DBC_FLAG_GUILD_REQ) && GetGuildId())
         return false;
@@ -16980,8 +16980,8 @@ bool Player::LoadFromDB(ObjectGuid guid, SQLQueryHolder *holder)
     // check PLAYER_CHOSEN_TITLE compatibility with PLAYER__FIELD_KNOWN_TITLES
     // note: PLAYER__FIELD_KNOWN_TITLES updated at quest status loaded
     uint32 curTitle = fields[48].GetUInt32();
-    if (curTitle && !HasTitle(curTitle))
-        curTitle = 0;
+    //if (curTitle && !HasTitle(curTitle))
+    //    curTitle = 0;
 
     SetUInt32Value(PLAYER_CHOSEN_TITLE, curTitle);
 
