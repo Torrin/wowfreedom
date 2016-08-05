@@ -39,6 +39,7 @@
 #include "SpellHistory.h"
 #include "MiscPackets.h"
 #include "Transport.h"
+#include "BattlenetAccountMgr.h"
 
 class fmisc_commandscript : public CommandScript
 {
@@ -1522,7 +1523,9 @@ public:
 
         // Account data print variables
         std::string userName = handler->GetTrinityString(LANG_ERROR);
+        std::string bnetUsername = handler->GetTrinityString(LANG_ERROR);
         uint32 accId = 0;
+        uint32 bnetAccId = 0;
         ObjectGuid::LowType lowguid = targetGuid.GetCounter();
         std::string eMail = handler->GetTrinityString(LANG_ERROR);
         std::string regMail = handler->GetTrinityString(LANG_ERROR);
@@ -1531,7 +1534,6 @@ public:
         uint8 locked = 0;
         std::string lastLogin = handler->GetTrinityString(LANG_ERROR);
         uint32 failedLogins = 0;
-        uint32 latency = 0;
         std::string OS = handler->GetTrinityString(LANG_UNKNOWN);
 
         // Mute data print variables
@@ -1549,13 +1551,8 @@ public:
         uint8 raceid, classid = 0; //RACE_NONE, CLASS_NONE
         std::string raceStr, classStr = handler->GetTrinityString(LANG_UNKNOWN);
         uint8 gender = 0;
-        int8 locale = handler->GetSessionDbcLocale();
         uint32 totalPlayerTime = 0;
-        uint8 level = 0;
         std::string alive = handler->GetTrinityString(LANG_ERROR);
-        uint32 money = 0;
-        uint32 xp = 0;
-        uint32 xptotal = 0;
 
         // Position data print
         uint32 mapId;
@@ -1581,10 +1578,7 @@ public:
                 return false;
 
             accId = target->GetSession()->GetAccountId();
-            money = target->GetMoney();
             totalPlayerTime = target->GetTotalPlayedTime();
-            level = target->getLevel();
-            latency = target->GetSession()->GetLatency();
             raceid = target->getRace();
             classid = target->getClass();
             muteTime = target->GetSession()->m_muteTime;
@@ -1597,10 +1591,6 @@ public:
         // get additional information from DB
         else
         {
-            // check offline security
-            if (handler->HasLowerSecurity(NULL, targetGuid))
-                return false;
-
             // Query informations from the DB
             stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_CHAR_PINFO);
             stmt->setUInt64(0, lowguid);
@@ -1611,8 +1601,6 @@ public:
 
             Field* fields = result->Fetch();
             totalPlayerTime = fields[0].GetUInt32();
-            level = fields[1].GetUInt8();
-            money = fields[2].GetUInt32();
             accId = fields[3].GetUInt32();
             raceid = fields[4].GetUInt8();
             classid = fields[5].GetUInt8();
@@ -1640,42 +1628,35 @@ public:
             userName = fields[0].GetString();
             security = fields[1].GetUInt8();
 
-            // Only fetch these fields if commander has sufficient rights)
-            if (handler->HasPermission(rbac::RBAC_PERM_COMMANDS_PINFO_CHECK_PERSONAL_DATA) && // RBAC Perm. 48, Role 39
-                (!handler->GetSession() || handler->GetSession()->GetSecurity() >= AccountTypes(security)))
-            {
-                eMail = fields[2].GetString();
-                regMail = fields[3].GetString();
-                lastIp = fields[4].GetString();
-                lastLogin = fields[5].GetString();
+            eMail = fields[2].GetString();
+            regMail = fields[3].GetString();
+            lastIp = fields[4].GetString();
+            lastLogin = fields[5].GetString();
 
-                uint32 ip = inet_addr(lastIp.c_str());
-                EndianConvertReverse(ip);
+            uint32 ip = inet_addr(lastIp.c_str());
+            EndianConvertReverse(ip);
 
-                // If ip2nation table is populated, it displays the country
-                stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_IP2NATION_COUNTRY);
-                stmt->setUInt32(0, ip);
-                if (PreparedQueryResult result2 = LoginDatabase.Query(stmt))
-                {
-                    Field* fields2 = result2->Fetch();
-                    lastIp.append(" (");
-                    lastIp.append(fields2[0].GetString());
-                    lastIp.append(")");
-                }
-            }
-            else
+            // If ip2nation table is populated, it displays the country
+            stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_IP2NATION_COUNTRY);
+            stmt->setUInt32(0, ip);
+            if (PreparedQueryResult result2 = LoginDatabase.Query(stmt))
             {
-                eMail = handler->GetTrinityString(LANG_UNAUTHORIZED);
-                regMail = handler->GetTrinityString(LANG_UNAUTHORIZED);
-                lastIp = handler->GetTrinityString(LANG_UNAUTHORIZED);
-                lastLogin = handler->GetTrinityString(LANG_UNAUTHORIZED);
+                Field* fields2 = result2->Fetch();
+                lastIp.append(" (");
+                lastIp.append(fields2[0].GetString());
+                lastIp.append(")");
             }
+
             muteTime = fields[6].GetUInt64();
             muteReason = fields[7].GetString();
             muteBy = fields[8].GetString();
             failedLogins = fields[9].GetUInt32();
             locked = fields[10].GetUInt8();
             OS = fields[11].GetString();
+
+            // get Bnet info
+            bnetAccId = Battlenet::AccountMgr::GetIdByGameAccount(accId);
+            Battlenet::AccountMgr::GetName(bnetAccId, bnetUsername);
         }
 
         // Creates a chat link to the character. Returns nameLink
@@ -1709,9 +1690,7 @@ public:
         if (result4)
         {
             Field* fields = result4->Fetch();
-            xp = fields[0].GetUInt32(); // Used for "current xp" output and "%u XP Left" calculation
             ObjectGuid::LowType gguid = fields[1].GetUInt64(); // We check if have a guild for the person, so we might not require to query it at all
-            xptotal = sObjectMgr->GetXPForLevel(level);
 
             if (gguid)
             {
@@ -1733,61 +1712,70 @@ public:
         }
 
         // Initiate output
-        // Output I. LANG_PINFO_PLAYER
-        handler->PSendSysMessage(LANG_PINFO_PLAYER, target ? "" : handler->GetTrinityString(LANG_OFFLINE), nameLink.c_str(), targetGuid.ToString().c_str());
+        // PLAYER INFO
+        handler->PSendSysMessage(FREEDOM_CMDI_PINFO_START, nameLink, targetGuid.GetCounter());
+
+        // GAME-ACCOUNT INFO
+        handler->PSendSysMessage(FREEDOM_CMDI_PINFO_GAME_ACCOUNT, userName, accId, security);
+
+        // BNET-ACCOUNT INFO
+        handler->PSendSysMessage(FREEDOM_CMDI_PINFO_BNET_ACCOUNT, bnetUsername, bnetAccId);
+
+        // IP ADDRESS
+        handler->PSendSysMessage(FREEDOM_CMDI_PINFO_IP, lastIp, locked ? handler->GetTrinityString(LANG_YES) : handler->GetTrinityString(LANG_NO));
+
+        // EMAIL INFO
+        handler->PSendSysMessage(FREEDOM_CMDI_PINFO_EMAIL, eMail, regMail);
+
+        // LAST LOGIN
+        handler->PSendSysMessage(FREEDOM_CMDI_PINFO_LAST_LOGIN, lastLogin, failedLogins);
+
+        // ONLINE STATE
+        handler->PSendSysMessage(FREEDOM_CMDI_PINFO_ONLINE, target ? "YES" : "NO");
 
         // Output II. LANG_PINFO_GM_ACTIVE if character is gamemaster
         if (target && target->IsGameMaster())
-            handler->PSendSysMessage(LANG_PINFO_GM_ACTIVE);
-
-        // Output III. LANG_PINFO_BANNED if ban exists and is applied
-        if (banTime >= 0)
-            handler->PSendSysMessage(LANG_PINFO_BANNED, banType.c_str(), banReason.c_str(), banTime > 0 ? secsToTimeString(banTime - time(NULL), true).c_str() : handler->GetTrinityString(LANG_PERMANENTLY), bannedBy.c_str());
-
-        // Output IV. LANG_PINFO_MUTED if mute is applied
-        if (muteTime > 0)
-            handler->PSendSysMessage(LANG_PINFO_MUTED, muteReason.c_str(), secsToTimeString(muteTime - time(nullptr), true).c_str(), muteBy.c_str());
-
-        // Output V. LANG_PINFO_ACC_ACCOUNT
-        handler->PSendSysMessage(LANG_PINFO_ACC_ACCOUNT, userName.c_str(), accId, security);
-
-        // Output VI. LANG_PINFO_ACC_LASTLOGIN
-        handler->PSendSysMessage(LANG_PINFO_ACC_LASTLOGIN, lastLogin.c_str(), failedLogins);
-
-        // Output VII. LANG_PINFO_ACC_OS
-        handler->PSendSysMessage(LANG_PINFO_ACC_OS, OS.c_str(), latency);
-
-        // Output VIII. LANG_PINFO_ACC_REGMAILS
-        handler->PSendSysMessage(LANG_PINFO_ACC_REGMAILS, regMail.c_str(), eMail.c_str());
-
-        // Output IX. LANG_PINFO_ACC_IP
-        handler->PSendSysMessage(LANG_PINFO_ACC_IP, lastIp.c_str(), locked ? handler->GetTrinityString(LANG_YES) : handler->GetTrinityString(LANG_NO));
-
-        // Output X. LANG_PINFO_CHR_LEVEL
-        if (level != sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL))
-            handler->PSendSysMessage(LANG_PINFO_CHR_LEVEL_LOW, level, xp, xptotal, (xptotal - xp));
+            handler->PSendSysMessage(FREEDOM_CMDI_PINFO_GM_TOGGLE, "ON");
+        else if (target)
+            handler->PSendSysMessage(FREEDOM_CMDI_PINFO_GM_TOGGLE, "OFF");
         else
-            handler->PSendSysMessage(LANG_PINFO_CHR_LEVEL_HIGH, level);
+            handler->PSendSysMessage(FREEDOM_CMDI_PINFO_GM_TOGGLE, "OFFLINE");
 
-        // Output XI. LANG_PINFO_CHR_RACE
-        raceStr = GetRaceName(raceid, locale);
-        classStr = GetClassName(classid, locale);
-        handler->PSendSysMessage(LANG_PINFO_CHR_RACE, (gender == 0 ? handler->GetTrinityString(LANG_CHARACTER_GENDER_MALE) : handler->GetTrinityString(LANG_CHARACTER_GENDER_FEMALE)), raceStr.c_str(), classStr.c_str());
+        // BANNED INFO
+        if (banTime >= 0)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDI_PINFO_BAN_INFO);
+            handler->PSendSysMessage(FREEDOM_CMDI_PINFO_BAN_INFO_LI_TYPE, banType);
+            handler->PSendSysMessage(FREEDOM_CMDI_PINFO_BAN_INFO_LI_REASON, banReason);
+            handler->PSendSysMessage(FREEDOM_CMDI_PINFO_BAN_INFO_LI_LENGTH, banTime > 0 ? secsToTimeString(banTime - time(NULL), true) : handler->GetTrinityString(LANG_PERMANENTLY));
+            handler->PSendSysMessage(FREEDOM_CMDI_PINFO_BAN_INFO_LI_BANNED_BY, bannedBy);
+        }
 
-        // Output XII. LANG_PINFO_CHR_ALIVE
-        handler->PSendSysMessage(LANG_PINFO_CHR_ALIVE, alive.c_str());
+        // MUTED INFO
+        if (muteTime > 0)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDI_PINFO_MUTE_INFO);
+            handler->PSendSysMessage(FREEDOM_CMDI_PINFO_MUTE_INFO_LI_REASON, muteReason);
+            handler->PSendSysMessage(FREEDOM_CMDI_PINFO_MUTE_INFO_LI_LENGTH, secsToTimeString(muteTime - time(nullptr), true));
+            handler->PSendSysMessage(FREEDOM_CMDI_PINFO_MUTE_INFO_LI_BANNED_BY, muteBy);
+        }
 
-        // Output XIII. LANG_PINFO_CHR_PHASE if player is not in GM mode (GM is in every phase)
-        if (target && !target->IsGameMaster())                            // IsInWorld() returns false on loadingscreen, so it's more
-            handler->PSendSysMessage(LANG_PINFO_CHR_PHASE, phase);        // precise than just target (safer ?).
-                                                                          // However, as we usually just require a target here, we use target instead.
-                                                                          // Output XIV. LANG_PINFO_CHR_MONEY
-        uint32 gold = money / GOLD;
-        uint32 silv = (money % GOLD) / SILVER;
-        uint32 copp = (money % GOLD) % SILVER;
-        handler->PSendSysMessage(LANG_PINFO_CHR_MONEY, gold, silv, copp);
+        // RACE/CLASS INFO
+        raceStr = GetRaceName(raceid, DEFAULT_LOCALE);
+        classStr = GetClassName(classid, DEFAULT_LOCALE);
+        handler->PSendSysMessage(FREEDOM_CMDI_PINFO_RACE, (gender == 0 ? handler->GetTrinityString(LANG_CHARACTER_GENDER_MALE) : handler->GetTrinityString(LANG_CHARACTER_GENDER_FEMALE)), raceStr);
+        handler->PSendSysMessage(FREEDOM_CMDI_PINFO_CLASS, classStr);
 
-        // Position data
+        // ALIVE STATE INFO
+        handler->PSendSysMessage(FREEDOM_CMDI_PINFO_ALIVE, alive);
+
+        // PHASEMASK INFO
+        if (target && !target->IsGameMaster())  // IsInWorld() returns false on loadingscreen, so it's more
+            handler->PSendSysMessage(FREEDOM_CMDI_PINFO_PHASEMASK, phase);
+        else if (target)
+            handler->PSendSysMessage(FREEDOM_CMDI_PINFO_PHASEMASK_GM_ON);
+
+        // MAP/ZONE/AREA INFO
         MapEntry const* map = sMapStore.LookupEntry(mapId);
         AreaTableEntry const* area = sAreaTableStore.LookupEntry(areaId);
         if (area)
@@ -1800,40 +1788,23 @@ public:
         }
 
         if (target)
-            handler->PSendSysMessage(LANG_PINFO_CHR_MAP, map->MapName_lang,
+            handler->PSendSysMessage(FREEDOM_CMDI_PINFO_MAP, map->MapName_lang,
                 (!zoneName.empty() ? zoneName.c_str() : handler->GetTrinityString(LANG_UNKNOWN)),
                 (!areaName.empty() ? areaName.c_str() : handler->GetTrinityString(LANG_UNKNOWN)));
 
-        // Output XVII. - XVIX. if they are not empty
+        // GUILD INFO
         if (!guildName.empty())
         {
-            handler->PSendSysMessage(LANG_PINFO_CHR_GUILD, guildName.c_str(), guildId);
-            handler->PSendSysMessage(LANG_PINFO_CHR_GUILD_RANK, guildRank.c_str(), uint32(guildRankId));
+            handler->PSendSysMessage(FREEDOM_CMDI_PINFO_GUILD, guildName, guildId, guildRank, uint32(guildRankId));
+
             if (!note.empty())
-                handler->PSendSysMessage(LANG_PINFO_CHR_GUILD_NOTE, note.c_str());
+                handler->PSendSysMessage(FREEDOM_CMDI_PINFO_GUILD_NOTE, note);
             if (!officeNote.empty())
-                handler->PSendSysMessage(LANG_PINFO_CHR_GUILD_ONOTE, officeNote.c_str());
+                handler->PSendSysMessage(FREEDOM_CMDI_PINFO_GUILD_OFFICER_NOTE, officeNote);
         }
 
         // Output XX. LANG_PINFO_CHR_PLAYEDTIME
-        handler->PSendSysMessage(LANG_PINFO_CHR_PLAYEDTIME, (secsToTimeString(totalPlayerTime, true, true)).c_str());
-
-        // Mail Data - an own query, because it may or may not be useful.
-        // SQL: "SELECT SUM(CASE WHEN (checked & 1) THEN 1 ELSE 0 END) AS 'readmail', COUNT(*) AS 'totalmail' FROM mail WHERE `receiver` = ?"
-        PreparedStatement* stmt4 = CharacterDatabase.GetPreparedStatement(CHAR_SEL_PINFO_MAILS);
-        stmt4->setUInt64(0, lowguid);
-        PreparedQueryResult result6 = CharacterDatabase.Query(stmt4);
-        if (result6)
-        {
-            Field* fields = result6->Fetch();
-            uint32 readmail = uint32(fields[0].GetDouble());
-            uint32 totalmail = uint32(fields[1].GetUInt64());
-
-            // Output XXI. LANG_INFO_CHR_MAILS if at least one mail is given
-            if (totalmail >= 1)
-                handler->PSendSysMessage(LANG_PINFO_CHR_MAILS, readmail, totalmail);
-        }
-
+        handler->PSendSysMessage(FREEDOM_CMDI_PINFO_PLAYED_TIME, secsToTimeString(totalPlayerTime, true, true));
         return true;
     }
 

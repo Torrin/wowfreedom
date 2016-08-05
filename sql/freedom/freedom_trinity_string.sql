@@ -323,8 +323,36 @@ INSERT INTO wod_world.trinity_string (entry, content_default) VALUES
 /* FREEDOM_CMDI_FREEDOM_TITLE_SET_UNSET				*/ (100304, CONCAT(@T_CMD_INFO, 'Title toggled off')),
 /* FREEDOM_CMDH_NPC_SET_FLYSTATE							*/ (100305, CONCAT(@T_CMD_SYNTAX, '.npc set flystate on/off [$guid]')),
 /* FREEDOM_CMDI_NPC_SET_FLYSTATE							*/ (100306, CONCAT(@T_CMD_INFO, 'Creature animation state set/unset (flying or swimming in air) and saved')),
+/* FREEDOM_CMDI_PINFO_START								*/ (100307, CONCAT(@T_CMD_INFO, 'Listing information for player %s (DB GUID: %u):')),
+/* FREEDOM_CMDI_PINFO_GAME_ACCOUNT						*/ (100308, '> Game-Account: %s (ID: %u) (GMLevel: %u)'),
+/* FREEDOM_CMDI_PINFO_BNET_ACCOUNT						*/ (100309, '> Bnet-Account: %s (ID: %u)'),
+/* FREEDOM_CMDI_PINFO_IP									*/ (100310, '> IP: %s (Locked: %s)'),
+/* FREEDOM_CMDI_PINFO_EMAIL								*/ (100311, '> Email: %s, RegEmail: %s'),
+/* FREEDOM_CMDI_PINFO_LAST_LOGIN							*/ (100312, '> Last login: %s (Failed logins: %u)'),
+/* FREEDOM_CMDI_PINFO_ONLINE								*/ (100313, '> Online?: %s'),
+/* FREEDOM_CMDI_PINFO_ALIVE								*/ (100314, '> Alive?: %s'),
+/* FREEDOM_CMDI_PINFO_GM_TOGGLE							*/ (100315, '> GM toggle: %s'),
+/* FREEDOM_CMDI_PINFO_BANNED								*/ (100316, '> Banned?: %s'),
+/* FREEDOM_CMDI_PINFO_PLAYED_TIME						*/ (100317, '> Total Playtime: %s'),
+/* FREEDOM_CMDI_PINFO_RACE									*/ (100318, '> Race: %s %s'),
+/* FREEDOM_CMDI_PINFO_CLASS								*/ (100319, '> Class: %s'),
+/* FREEDOM_CMDI_PINFO_MAP									*/ (100320, '> Map: %s, Zone: %s, Area: %s'),
+/* FREEDOM_CMDI_PINFO_PHASEMASK							*/ (100321, '> Phasemask: %u'),
+/* FREEDOM_CMDI_PINFO_GUILD								*/ (100322, '> Guild: %s (ID: %u) (Rank: %s [Id: %u])'),
+/* FREEDOM_CMDI_PINFO_GUILD_NOTE							*/ (100323, '> Guild note: %s'),
+/* FREEDOM_CMDI_PINFO_GUILD_OFFICER_NOTE				*/ (100324, '> Guild officer note: %s'),
+/* FREEDOM_CMDI_PINFO_PHASEMASK_GM_ON					*/ (100325, '> Phasemask: (in all phases due to GM toggled to \'on\')'),
+/* FREEDOM_CMDI_PINFO_BAN_INFO							*/ (100326, '> Ban info:'),
+/* FREEDOM_CMDI_PINFO_BAN_INFO_LI_REASON				*/ (100327, '    Reason: %s'),
+/* FREEDOM_CMDI_PINFO_BAN_INFO_LI_LENGTH				*/ (100328, '    Length: %s'),
+/* FREEDOM_CMDI_PINFO_BAN_INFO_LI_BANNED_BY			*/ (100329, '    Banned by: %s'),
+/* FREEDOM_CMDI_PINFO_BAN_INFO_LI_TYPE					*/ (100330, '    Type: %s'),
+/* FREEDOM_CMDI_PINFO_MUTE_INFO							*/ (100331, '> Mute info:'),
+/* FREEDOM_CMDI_PINFO_MUTE_INFO_LI_REASON				*/ (100332, '    Reason: %s'),
+/* FREEDOM_CMDI_PINFO_MUTE_INFO_LI_LENGTH				*/ (100333, '    Length: %s'),
+/* FREEDOM_CMDI_PINFO_MUTE_INFO_LI_BANNED_BY			*/ (100334, '    Muted by: %s'),
 
 (200000, 'Dummy');
 -- Select new changes
 SELECT * FROM wod_world.trinity_string
-WHERE entry >= 100000;
+WHERE entry >= 100000 ORDER BY entry DESC;
