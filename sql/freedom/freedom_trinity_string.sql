@@ -351,6 +351,10 @@ INSERT INTO wod_world.trinity_string (entry, content_default) VALUES
 /* FREEDOM_CMDI_PINFO_MUTE_INFO_LI_REASON				*/ (100332, '    Reason: %s'),
 /* FREEDOM_CMDI_PINFO_MUTE_INFO_LI_LENGTH				*/ (100333, '    Length: %s'),
 /* FREEDOM_CMDI_PINFO_MUTE_INFO_LI_BANNED_BY			*/ (100334, '    Muted by: %s'),
+/* FREEDOM_CMDH_FREEDOM_GUILD_CREATE					*/ (100335, CONCAT(@T_CMD_SYNTAX, '.freedom guild create $guildName')),
+/* FREEDOM_CMDI_FREEDOM_GUILD_CREATE					*/ (100336, CONCAT(@T_CMD_INFO, 'Guild successfully created with you as leader: %s')),
+/* FREEDOM_CMDE_FREEDOM_GUILD_CREATE_ALREADY_IN		*/ (100337, CONCAT(@T_CMD_ERROR, 'You are already in a guild')),
+/* FREEDOM_CMDE_FREEDOM_GUILD_CREATE_FAILED			*/ (100338, CONCAT(@T_CMD_ERROR, 'Guild creation failed (does the guild already exist?)')),
 
 (200000, 'Dummy');
 -- Select new changes

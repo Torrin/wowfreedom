@@ -12,6 +12,8 @@
 #include "MoveSpline.h"
 #include "Pet.h"
 #include "CharacterPackets.h"
+#include "Guild.h"
+#include "GuildMgr.h"
 #include <boost/algorithm/string/predicate.hpp>
 
 enum FreedomCmdAuraSpells
@@ -94,7 +96,12 @@ public:
         static std::vector<ChatCommand> freedomTitleCommandTable =
         {
             { "list",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomTitleListCommand,      "" },
-            { "set",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomTitleSetCommand,              "" },
+            { "set",            rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomTitleSetCommand,       "" },
+        };
+
+        static std::vector<ChatCommand> freedomGuildCommandTable =
+        {
+            { "create",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomGuildCreateCommand,      "" },
         };
 
         static std::vector<ChatCommand> freedomCommandTable =
@@ -130,6 +137,7 @@ public:
             { "tame",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomTameCommand,               "" },
             { "title",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, NULL,                                    "", freedomTitleCommandTable },
             { "recall",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomRecallCommand,             "" },
+            { "guild",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, NULL,                                    "", freedomGuildCommandTable },
         };
 
         static std::vector<ChatCommand> commandTable =
@@ -930,6 +938,39 @@ public:
 #pragma endregion
 
 #pragma region COMMAND TABLE : .freedom -> *
+    static bool HandleFreedomGuildCreateCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_FREEDOM_GUILD_CREATE);
+            return true;
+        }
+
+        // if not guild name only (in "") then player name
+        Player* source = handler->GetSession()->GetPlayer();
+        AdvancedArgumentTokenizer tokenizer(args);
+
+        std::string guildName = tokenizer.GetUntokenizedString();
+
+        if (source->GetGuildId())
+        {
+            handler->SendSysMessage(FREEDOM_CMDE_FREEDOM_GUILD_CREATE_ALREADY_IN);
+            return true;
+        }
+
+        Guild* guild = new Guild;
+        if (!guild->Create(source, guildName))
+        {
+            delete guild;
+            handler->SendSysMessage(FREEDOM_CMDE_FREEDOM_GUILD_CREATE_FAILED);
+            return true;
+        }
+
+        sGuildMgr->AddGuild(guild);
+        handler->PSendSysMessage(FREEDOM_CMDI_FREEDOM_GUILD_CREATE, guildName);
+        return true;
+    }
+
     static bool HandleFreedomRecallCommand(ChatHandler* handler, char const* /*args*/)
     {
         Player* source = handler->GetSession()->GetPlayer();
