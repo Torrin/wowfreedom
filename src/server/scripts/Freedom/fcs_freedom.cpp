@@ -129,6 +129,7 @@ public:
             { "panda",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, NULL,                                    "",  freedomPandaCommandTable },            
             { "tame",           rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomTameCommand,               "" },
             { "title",          rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, NULL,                                    "", freedomTitleCommandTable },
+            { "recall",         rbac::RBAC_FPERM_COMMAND_FREEDOM_UTILITIES,         false, &HandleFreedomRecallCommand,             "" },
         };
 
         static std::vector<ChatCommand> commandTable =
@@ -929,6 +930,21 @@ public:
 #pragma endregion
 
 #pragma region COMMAND TABLE : .freedom -> *
+    static bool HandleFreedomRecallCommand(ChatHandler* handler, char const* /*args*/)
+    {
+        Player* source = handler->GetSession()->GetPlayer();
+
+        // stop flight if need
+        if (source->IsInFlight())
+        {
+            source->GetMotionMaster()->MovementExpired();
+            source->CleanupAfterTaxiFlight();
+        }
+
+        source->Recall();
+        return true;
+    }
+
     static bool HandleFreedomPandarenHordeCommand(ChatHandler* handler, char const* args)
     {
         Player* player = handler->GetSession()->GetPlayer();
