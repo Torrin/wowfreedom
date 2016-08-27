@@ -15,6 +15,7 @@
 #include "Guild.h"
 #include "GuildMgr.h"
 #include <boost/algorithm/string/predicate.hpp>
+#include "ArgumentTokenizer.h"
 
 enum FreedomCmdAuraSpells
 {
@@ -948,7 +949,7 @@ public:
 
         // if not guild name only (in "") then player name
         Player* source = handler->GetSession()->GetPlayer();
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
 
         std::string guildName = tokenizer.GetUntokenizedString();
 
@@ -1035,7 +1036,7 @@ public:
     {
         Player* source = handler->GetSession()->GetPlayer();
 
-        AdvancedArgumentTokenizer tokenizer(*args ? args : "");
+        ArgumentTokenizer tokenizer(*args ? args : "");
         std::string namePart = tokenizer.GetUntokenizedString();
         Gender gender = (Gender)source->getGender();
         uint32 count = 0;
@@ -1070,7 +1071,7 @@ public:
         }
 
         Player* source = handler->GetSession()->GetPlayer();
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         uint32 titleId = tokenizer.TryGetParam<uint32>(0, "Htitle");
         uint32 prevMaskId = source->GetUInt32Value(PLAYER_CHOSEN_TITLE);
 

@@ -40,6 +40,7 @@
 #include "MiscPackets.h"
 #include "Transport.h"
 #include "BattlenetAccountMgr.h"
+#include "ArgumentTokenizer.h"
 
 class fmisc_commandscript : public CommandScript
 {
@@ -2147,7 +2148,7 @@ public:
 
         if (*args)
         {
-            AdvancedArgumentTokenizer tokenizer(args);
+            ArgumentTokenizer tokenizer(args);
             speed = tokenizer.TryGetParam<float>(0);
 
             if (speed < 1.0f)
@@ -2180,7 +2181,7 @@ public:
 
         if (*args)
         {
-            AdvancedArgumentTokenizer tokenizer(args);
+            ArgumentTokenizer tokenizer(args);
             speedXY = tokenizer.TryGetParam<float>(0);
             speedZ = tokenizer.TryGetParam<float>(1);
 

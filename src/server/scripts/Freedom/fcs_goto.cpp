@@ -6,6 +6,7 @@
 #include "Language.h"
 #include "Player.h"
 #include "Transport.h"
+#include "ArgumentTokenizer.h"
 
 class fgoto_commandscript : public CommandScript
 {
@@ -109,7 +110,7 @@ public:
         
         if (*args)
         {
-            AdvancedArgumentTokenizer tokenizer(args);
+            ArgumentTokenizer tokenizer(args);
             guidLow = tokenizer.TryGetParam<uint64>(0, "Hcreature");
         }
 
@@ -244,7 +245,7 @@ public:
         
         if (*args)
         {
-            AdvancedArgumentTokenizer tokenizer(args);
+            ArgumentTokenizer tokenizer(args);
             guidLow = tokenizer.TryGetParam<uint64>(0, "Hgameobject");
         }
 

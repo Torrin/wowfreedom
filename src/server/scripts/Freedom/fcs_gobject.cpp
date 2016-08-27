@@ -9,6 +9,7 @@
 #include "Opcodes.h"
 #include "Config.h"
 #include "BattlenetAccountMgr.h"
+#include "ArgumentTokenizer.h"
 
 class fgobject_commandscript : public CommandScript
 {
@@ -56,7 +57,7 @@ public:
         bool positionInfo = false;
         bool advancedInfo = false;
 
-        AdvancedArgumentTokenizer tokenizer(*args ? args : "");
+        ArgumentTokenizer tokenizer(*args ? args : "");
         tokenizer.LoadModifier("-full", 0);
         tokenizer.LoadModifier("-pos", 0);
         tokenizer.LoadModifier("-history", 0);
@@ -254,7 +255,7 @@ public:
         Player* source = handler->GetSession()->GetPlayer();
         ObjectGuid::LowType guidLow = sFreedomMgr->GetSelectedGameobjectGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         std::string scaleToken = tokenizer.TryGetParam(0);
         std::string id = tokenizer.TryGetParam(1);
         float scale = atof(scaleToken.c_str());
@@ -312,7 +313,7 @@ public:
         ObjectGuid::LowType guidLow = sFreedomMgr->GetSelectedGameobjectGuidFromPlayer(source->GetGUID().GetCounter());
         bool parseAsPhaseMasks = true;
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         tokenizer.LoadModifier("-ids", 0);
         tokenizer.LoadModifier("-guid", 1);
 
@@ -696,7 +697,7 @@ public:
         float o = source->GetOrientation();
         
         // Prepare tokenizer with command modifiers
-        AdvancedArgumentTokenizer tokenizer(*args ? args : "");
+        ArgumentTokenizer tokenizer(*args ? args : "");
         tokenizer.LoadModifier("-guid", 1);
         tokenizer.LoadModifier("-adeg", 1);
         tokenizer.LoadModifier("-sdeg", 1);
@@ -757,7 +758,7 @@ public:
         ObjectGuid::LowType guidLow = sFreedomMgr->GetSelectedGameobjectGuidFromPlayer(source->GetGUID().GetCounter());
 
         // Prepare tokenizer with command modifiers
-        AdvancedArgumentTokenizer tokenizer(*args ? args : "");
+        ArgumentTokenizer tokenizer(*args ? args : "");
         tokenizer.LoadModifier("-guid", 1);
         tokenizer.LoadModifier("-adeg", 1);
         tokenizer.LoadModifier("-sdeg", 1);
@@ -904,7 +905,7 @@ public:
         Player* source = handler->GetSession()->GetPlayer();
         ObjectGuid::LowType guidLow = sFreedomMgr->GetSelectedGameobjectGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         std::string type = tokenizer.TryGetParam(0);
         std::string state = tokenizer.TryGetParam(1);
         std::string id = tokenizer.TryGetParam(2);

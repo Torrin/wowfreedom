@@ -32,6 +32,7 @@ EndScriptData */
 #include "ScriptMgr.h"
 #include "SpellInfo.h"
 #include <boost/algorithm/string/predicate.hpp>
+#include "ArgumentTokenizer.h"
 
 class flookup_commandscript : public CommandScript
 {
@@ -364,7 +365,7 @@ public:
         bool armorFilter = false;
         bool weaponFilter = false;
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         tokenizer.LoadModifier("-a", 0);
         tokenizer.LoadModifier("-w", 0);
         tokenizer.LoadModifier("-c", 0);

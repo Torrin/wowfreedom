@@ -10,6 +10,7 @@
 #include "Pet.h"
 #include "Config.h"
 #include "BattlenetAccountMgr.h"
+#include "ArgumentTokenizer.h"
 
 template<typename E, typename T = char const*>
 struct EnumName
@@ -245,7 +246,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         toggleToken = tokenizer.TryGetParam(0);
 
         if (tokenizer.size() > 1)
@@ -288,7 +289,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         toggleToken = tokenizer.TryGetParam(0);
 
         if (tokenizer.size() > 1)
@@ -331,7 +332,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         toggleToken = tokenizer.TryGetParam(0);
 
         if (tokenizer.size() > 1)
@@ -374,7 +375,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         sheathToken = tokenizer.TryGetParam(0);
 
         if (tokenizer.size() > 1)
@@ -426,7 +427,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         toggleToken = tokenizer.TryGetParam(0);
 
         if (tokenizer.size() > 1)
@@ -472,7 +473,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         toggleToken = tokenizer.TryGetParam(0);
 
         if (tokenizer.size() > 1)
@@ -518,7 +519,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         toggleToken = tokenizer.TryGetParam(0);
 
         if (tokenizer.size() > 1)
@@ -564,7 +565,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         toggleToken = tokenizer.TryGetParam(0);
 
         if (tokenizer.size() > 1)
@@ -610,7 +611,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         toggleToken = tokenizer.TryGetParam(0);
 
         if (tokenizer.size() > 1)
@@ -656,7 +657,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         bytes1 = tokenizer.TryGetParam<uint32>(0);
 
         if (tokenizer.size() > 1)
@@ -693,7 +694,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         bytes2 = tokenizer.TryGetParam<uint32>(0);
 
         if (tokenizer.size() > 1)
@@ -730,7 +731,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         toggleToken = tokenizer.TryGetParam(0);
 
         if (tokenizer.size() > 1)
@@ -776,7 +777,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         toggleToken = tokenizer.TryGetParam(0);
 
         if (tokenizer.size() > 1)
@@ -822,7 +823,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         toggleToken = tokenizer.TryGetParam(0);
 
         if (tokenizer.size() > 1)
@@ -869,7 +870,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         auraId = tokenizer.TryGetParam<uint32>(0);
         toggleToken = tokenizer.TryGetParam(1);
 
@@ -913,7 +914,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         mountId = tokenizer.TryGetParam<uint32>(0);
 
         if (tokenizer.size() > 1)
@@ -950,7 +951,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         emoteId = tokenizer.TryGetParam<uint32>(0);
 
         if (tokenizer.size() > 1)
@@ -986,7 +987,7 @@ public:
 
         if (*args)
         {
-            AdvancedArgumentTokenizer tokenizer(args);
+            ArgumentTokenizer tokenizer(args);
             entryId = tokenizer.TryGetParam<uint32>(0, "Hcreature_entry");
         }
 
@@ -1063,7 +1064,7 @@ public:
 
         Player* source = handler->GetSession()->GetPlayer();
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         uint32 entryId = tokenizer.TryGetParam<uint32>(0, "Hcreature_entry");
         auto creatureTemplate = sObjectMgr->GetCreatureTemplate(entryId);
 
@@ -1100,7 +1101,7 @@ public:
 
         Player* source = handler->GetSession()->GetPlayer();
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         uint32 itemId = tokenizer.TryGetParam<uint32>(0, "Hitem");
         uint32 maxCount = tokenizer.TryGetParam<uint32>(1);
         uint32 incrTime = tokenizer.TryGetParam<uint32>(2);
@@ -1156,7 +1157,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         scale = tokenizer.TryGetParam<float>(0);
         
         if (tokenizer.size() > 1)
@@ -1196,7 +1197,7 @@ public:
             return true;
         }
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         std::string toggleToken = tokenizer.TryGetParam(0);
 
         if (toggleToken != "on" && toggleToken != "off")
@@ -1230,7 +1231,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         uint32 newEntryNum = tokenizer.TryGetParam<uint32>(0, "Hcreature_entry");
 
         if (!newEntryNum)
@@ -1275,7 +1276,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         uint8 lvl = (uint8)tokenizer.TryGetParam<uint32>(0);
 
         if (tokenizer.size() > 1)
@@ -1329,7 +1330,7 @@ public:
        
         if (*args)
         {
-            AdvancedArgumentTokenizer tokenizer(args);
+            ArgumentTokenizer tokenizer(args);
             guidLow = tokenizer.TryGetParam<uint64>(0, "Hcreature");
             target = nullptr; // remove selected target
         }
@@ -1371,7 +1372,7 @@ public:
             return true;
         }
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         uint32 itemId = tokenizer.TryGetParam<uint32>(0, "Hitem");
 
         if (!itemId)
@@ -1410,7 +1411,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         factionId = tokenizer.TryGetParam<uint32>(0);
 
         if (tokenizer.size() > 1)
@@ -1469,7 +1470,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         npcFlags = tokenizer.TryGetParam<uint64>(0);
 
         if (tokenizer.size() > 1)
@@ -1514,7 +1515,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         field = tokenizer.TryGetParam<uint32>(0);
         data = tokenizer.TryGetParam<uint32>(1);
 
@@ -1576,7 +1577,7 @@ public:
         bool positionInfo = false;
         bool advancedInfo = false;
 
-        AdvancedArgumentTokenizer tokenizer(*args ? args : "");
+        ArgumentTokenizer tokenizer(*args ? args : "");
         tokenizer.LoadModifier("-full", 0);
         tokenizer.LoadModifier("-pos", 0);
         tokenizer.LoadModifier("-history", 0);
@@ -1826,7 +1827,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 spawnId = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(*args ? args : "");
+        ArgumentTokenizer tokenizer(*args ? args : "");
         tokenizer.LoadModifier("-guid", 1);
         tokenizer.LoadModifier("-adeg", 1);
         tokenizer.LoadModifier("-sdeg", 1);
@@ -1901,7 +1902,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(*args ? args : "");
+        ArgumentTokenizer tokenizer(*args ? args : "");
         tokenizer.LoadModifier("-guid", 1);
         tokenizer.LoadModifier("-adeg", 1);
         tokenizer.LoadModifier("-sdeg", 1);
@@ -1963,7 +1964,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         emoteId = tokenizer.TryGetParam<uint32>(0);
 
         if (tokenizer.size() > 1)
@@ -1999,7 +2000,7 @@ public:
         Creature* target = handler->getSelectedCreature();
         uint64 guidLow = target ? target->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         displayId = tokenizer.TryGetParam<uint32>(0);
 
         if (tokenizer.size() > 1)
@@ -2039,7 +2040,7 @@ public:
         ObjectGuid::LowType guidLow = creature ? creature->GetSpawnId() : sFreedomMgr->GetSelectedCreatureGuidFromPlayer(source->GetGUID().GetCounter());
         bool parseAsPhaseMasks = true;
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         tokenizer.LoadModifier("-ids", 0);
         tokenizer.LoadModifier("-guid", 1);
 
@@ -2264,7 +2265,7 @@ public:
 
         if (*args)
         {
-            AdvancedArgumentTokenizer tokenizer(args);
+            ArgumentTokenizer tokenizer(args);
             leaderGUID = tokenizer.TryGetParam<uint64>(0, "Hcreature");
         }
 

@@ -30,6 +30,7 @@ EndScriptData */
 #include "ReputationMgr.h"
 #include "ScriptMgr.h"
 #include "SpellPackets.h"
+#include "ArgumentTokenizer.h"
 
 class fmodify_commandscript : public CommandScript
 {
@@ -1053,7 +1054,7 @@ public:
         if (!target)
             target = source;
 
-        AdvancedArgumentTokenizer tokenizer(args);
+        ArgumentTokenizer tokenizer(args);
         tokenizer.LoadModifier("-ids", 0);
         tokenizer.LoadModifier("-guid", 1);
 
