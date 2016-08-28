@@ -229,22 +229,27 @@ bool GameObject::Create(uint32 name_id, Map* map, uint32 /*phaseMask*/, float x,
         return false;
     }
 
-    SetFloatValue(GAMEOBJECT_PARENTROTATION+0, rotation0);
-    SetFloatValue(GAMEOBJECT_PARENTROTATION+1, rotation1);
-
-    UpdateRotationFields(rotation2, rotation3);              // GAMEOBJECT_FACING, GAMEOBJECT_ROTATION, GAMEOBJECT_PARENTROTATION+2/3
-
     GameObjectExtraData const* extraData = sFreedomMgr->GetGameObjectExtraData(GetSpawnId());
 
     if (extraData)
-    {        
+    {
+        if (extraData->usesQuat)
+        {
+            UpdateRotationFieldsQuat(rotation0, rotation1, rotation2, rotation3);
+        }
+        else
+        {
+            UpdateRotationFields(rotation0, rotation1, rotation2, rotation3);
+        }
+
         float scale = extraData->scale;
         SetObjectScale(scale < 0 ? goinfo->size : scale);
     }
     else
     {
         SetObjectScale(goinfo->size);
-    }    
+        UpdateRotationFields(rotation0, rotation1, rotation2, rotation3);
+    }
 
     SetUInt32Value(GAMEOBJECT_FACTION, goinfo->faction);
     SetUInt32Value(GAMEOBJECT_FLAGS, goinfo->flags);
@@ -1981,7 +1986,35 @@ std::string const & GameObject::GetNameForLocaleIdx(LocaleConstant loc_idx) cons
     return GetName();
 }
 
-void GameObject::UpdateRotationFields(float rotation2 /*=0.0f*/, float rotation3 /*=0.0f*/)
+void GameObject::UpdateRotationFieldsQuat(float qx /* = 0.0f */, float qy /* = 0.0f */, float qz /* = 0.0f */, float qw /* = 0.0f */)
+{
+    Quat quat(qx, qy, qz, qw);
+    // Temporary solution for gameobjects that has no rotation data in DB:
+    if (qz == 0 && qw == 0)
+        quat = Quat::fromAxisAngleRotation(G3D::Vector3::unitZ(), GetOrientation());
+
+    quat.unitize();
+    m_rotation = QuaternionCompressed(quat).m_raw;
+    m_quatX = quat.x;
+    m_quatY = quat.y;
+    m_quatZ = quat.z;
+    m_quatW = quat.w;
+
+    SetFloatValue(GAMEOBJECT_PARENTROTATION + 0, m_quatX);
+    SetFloatValue(GAMEOBJECT_PARENTROTATION + 1, m_quatY);
+    SetFloatValue(GAMEOBJECT_PARENTROTATION + 2, m_quatZ);
+    SetFloatValue(GAMEOBJECT_PARENTROTATION + 3, m_quatW);
+}
+
+Quat GameObject::GetRotationQuat()
+{
+    if (m_quatZ == 0 && m_quatW == 0)
+        return Quat::fromAxisAngleRotation(G3D::Vector3::unitZ(), GetOrientation());
+    else
+        return Quat(m_quatX, m_quatY, m_quatZ, m_quatW);
+}
+
+void GameObject::UpdateRotationFields(float rotation0 /* = 0.0f */, float rotation1 /* = 0.0f */, float rotation2 /* = 0.0f */, float rotation3 /* = 0.0f */)
 {
     static double const atan_pow = atan(pow(2.0f, -20.0f));
 
@@ -1991,14 +2024,6 @@ void GameObject::UpdateRotationFields(float rotation2 /*=0.0f*/, float rotation3
     int64 i_rot1 = int64(f_rot1 / atan_pow *(f_rot2 >= 0 ? 1.0f : -1.0f));
     int64 rotation = (i_rot1 << 43 >> 43) & 0x00000000001FFFFF;
 
-    //float f_rot2 = std::sin(0.0f / 2.0f);
-    //int64 i_rot2 = f_rot2 / atan(pow(2.0f, -20.0f));
-    //rotation |= (((i_rot2 << 22) >> 32) >> 11) & 0x000003FFFFE00000;
-
-    //float f_rot3 = std::sin(0.0f / 2.0f);
-    //int64 i_rot3 = f_rot3 / atan(pow(2.0f, -21.0f));
-    //rotation |= (i_rot3 >> 42) & 0x7FFFFC0000000000;
-
     m_rotation = rotation;
 
     if (rotation2 == 0.0f && rotation3 == 0.0f)
@@ -2007,8 +2032,16 @@ void GameObject::UpdateRotationFields(float rotation2 /*=0.0f*/, float rotation3
         rotation3 = (float)f_rot2;
     }
 
-    SetFloatValue(GAMEOBJECT_PARENTROTATION+2, rotation2);
-    SetFloatValue(GAMEOBJECT_PARENTROTATION+3, rotation3);
+    SetFloatValue(GAMEOBJECT_PARENTROTATION + 0, rotation0);
+    SetFloatValue(GAMEOBJECT_PARENTROTATION + 1, rotation1);
+    SetFloatValue(GAMEOBJECT_PARENTROTATION + 2, rotation2);
+    SetFloatValue(GAMEOBJECT_PARENTROTATION + 3, rotation3);
+}
+
+void GameObject::SetWorldRotationAngles(float z_rot, float y_rot, float x_rot)
+{
+    Quat quat(G3D::Matrix3::fromEulerAnglesZYX(z_rot, y_rot, x_rot));
+    UpdateRotationFieldsQuat(quat.x, quat.y, quat.z, quat.w);
 }
 
 void GameObject::ModifyHealth(int32 change, Unit* attackerOrHealer /*= NULL*/, uint32 spellId /*= 0*/)

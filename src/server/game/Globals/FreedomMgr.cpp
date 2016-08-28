@@ -787,6 +787,10 @@ void FreedomMgr::LoadGameObjectExtras()
         data.created = fields[6].GetUInt64();
         data.modified = fields[7].GetUInt64();
         data.phaseMask = fields[8].GetUInt32();
+        data.usesQuat = fields[9].GetBool();
+        data.roll = fields[10].GetFloat();
+        data.pitch = fields[11].GetFloat();
+        data.yaw = fields[12].GetFloat();
 
         _gameObjectExtraStore[guid] = data;
     } while (result->NextRow());
@@ -866,6 +870,10 @@ void FreedomMgr::SaveGameObject(GameObject* go)
         stmt->setUInt64(index++, data.created);
         stmt->setUInt64(index++, data.modified);
         stmt->setUInt32(index++, data.phaseMask);
+        stmt->setUInt8(index++, data.usesQuat);
+        stmt->setFloat(index++, data.roll);
+        stmt->setFloat(index++, data.pitch);
+        stmt->setFloat(index++, data.yaw);
 
         FreedomDatabase.Execute(stmt);
     }
@@ -922,12 +930,147 @@ GameObject* FreedomMgr::GameObjectRefresh(GameObject* go)
 void FreedomMgr::GameObjectMove(GameObject* go, float x, float y, float z, float o)
 {
     go->Relocate(x, y, z, o);
-    go->UpdateRotationFields();
+
+    if (GameObjectUsesQuatRotation(go))
+    {
+        auto extraData = &_gameObjectExtraStore[go->GetSpawnId()];
+
+        // Preserve roll and pitch, use new orientation (z angle) for yaw
+        extraData->yaw = o;
+        go->SetWorldRotationAngles(extraData->yaw, extraData->pitch, extraData->roll);
+    }
+    else
+    {
+        go->UpdateRotationFields();
+    }
 }
 
 void FreedomMgr::GameObjectTurn(GameObject* go, float o)
 {
     GameObjectMove(go, go->GetPositionX(), go->GetPositionY(), go->GetPositionZ(), o);
+}
+
+void FreedomMgr::GameObjectRotate(GameObject* go, float deg_x, float deg_y, float deg_z, bool addDeg)
+{
+    auto extraData = &_gameObjectExtraStore[go->GetSpawnId()];
+    bool firstTimeQuat = !extraData->usesQuat;
+    extraData->usesQuat = true;
+
+    float rad_x = deg_x * M_PI / 180;
+    float rad_y = deg_y * M_PI / 180;
+    float rad_z = deg_z * M_PI / 180;
+
+    if (addDeg)
+    {
+        float roll, pitch, yaw;
+        auto quat = go->GetRotationQuat();
+        quat.toRotationMatrix().toEulerAnglesZYX(yaw, pitch, roll);
+
+        if (firstTimeQuat)
+        {
+            extraData->roll = rad_x;
+            extraData->pitch = rad_y;
+            extraData->yaw = rad_z + go->GetOrientation();
+        }
+        else
+        {
+            extraData->roll += rad_x;
+            extraData->pitch += rad_y;
+            extraData->yaw += rad_z;
+        }
+    }
+    else
+    {
+        extraData->roll = rad_x;
+        extraData->pitch = rad_y;
+        extraData->yaw = rad_z;
+    }
+
+    go->Relocate(go->GetPositionX(), go->GetPositionY(), go->GetPositionZ(), extraData->yaw);
+    go->SetWorldRotationAngles(extraData->yaw, extraData->pitch, extraData->roll);
+}
+
+void FreedomMgr::GameObjectRotateSingleAxis(GameObject* go, float deg, RotationAxis axis, bool addDeg)
+{
+    auto extraData = &_gameObjectExtraStore[go->GetSpawnId()];
+    bool firstTimeQuat = !extraData->usesQuat;
+    extraData->usesQuat = true;
+
+    float rad = deg * M_PI / 180;
+
+    if (firstTimeQuat)
+    {
+        extraData->roll = 0;
+        extraData->pitch = 0;
+        extraData->yaw = go->GetOrientation();
+    }
+
+    switch (axis)
+    {
+    case AXIS_ROLL:
+        extraData->roll = (addDeg ? (extraData->roll + rad) : rad);
+        break;
+    case AXIS_PITCH:
+        extraData->pitch = (addDeg ? (extraData->pitch + rad) : rad);
+        break;
+    case AXIS_YAW:
+        extraData->yaw = (addDeg ? (extraData->yaw + rad) : rad);
+        break;
+    }
+
+    go->Relocate(go->GetPositionX(), go->GetPositionY(), go->GetPositionZ(), extraData->yaw);
+    go->SetWorldRotationAngles(extraData->yaw, extraData->pitch, extraData->roll);
+}
+
+void FreedomMgr::GetGameObjectEulerAnglesDeg(GameObject* go, float &deg_x, float &deg_y, float &deg_z)
+{
+    if (GameObjectUsesQuatRotation(go))
+    {
+        auto extraData = _gameObjectExtraStore[go->GetSpawnId()];
+
+        // Convert to degrees and round inaccuracies to 2 decimal places
+        deg_x = round((extraData.roll * 180 / M_PI) * 100) / 100.0f;
+        deg_y = round((extraData.pitch * 180 / M_PI) * 100) / 100.0f;
+        deg_z = round((extraData.yaw * 180 / M_PI) * 100) / 100.0f;
+    }
+    else
+    {
+        deg_x = 0.0f;
+        deg_y = 0.0f;
+        deg_z = round((go->GetOrientation() * 180 / M_PI) * 100) / 100.0f;
+    }
+}
+
+void FreedomMgr::GetGameObjectEulerAnglesRad(GameObject* go, float &rad_x, float &rad_y, float &rad_z)
+{
+    if (GameObjectUsesQuatRotation(go))
+    {
+        auto extraData = _gameObjectExtraStore[go->GetSpawnId()];
+        rad_x = extraData.roll;
+        rad_y = extraData.pitch;
+        rad_z = extraData.yaw;
+    }
+    else
+    {
+        rad_x = 0.0f;
+        rad_y = 0.0f;
+        rad_z = go->GetOrientation();
+    }
+}
+
+bool FreedomMgr::GameObjectUsesQuatRotation(GameObject* go)
+{
+    // Save extra attached data if it exists
+    auto it = _gameObjectExtraStore.find(go->GetSpawnId());
+
+    if (it != _gameObjectExtraStore.end())
+    {
+        return (*it).second.usesQuat;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 void FreedomMgr::GameObjectScale(GameObject* go, float scale)
@@ -1038,6 +1181,10 @@ GameObject* FreedomMgr::GameObjectCreate(Player* creator, GameObjectTemplate con
     stmt->setUInt64(index++, data.created);
     stmt->setUInt64(index++, data.modified);
     stmt->setUInt64(index++, data.phaseMask);
+    stmt->setUInt8(index++, data.usesQuat);
+    stmt->setFloat(index++, data.roll);
+    stmt->setFloat(index++, data.pitch);
+    stmt->setFloat(index++, data.yaw);
 
     FreedomDatabase.Execute(stmt);
 

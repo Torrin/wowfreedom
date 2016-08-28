@@ -25,10 +25,47 @@
 #include "Object.h"
 #include "LootMgr.h"
 #include "DatabaseEnv.h"
+#include "G3D\Quat.h"
 
 class GameObjectAI;
 class Group;
 class Transport;
+
+using G3D::Quat;
+struct QuaternionCompressed
+{
+    QuaternionCompressed() : m_raw(0) {}
+    QuaternionCompressed(int64 val) : m_raw(val) {}
+    QuaternionCompressed(const Quat& quat) { Set(quat); }
+
+    enum {
+        PACK_COEFF_YZ = 1 << 20,
+        PACK_COEFF_X = 1 << 21,
+    };
+
+    void Set(const Quat& quat)
+    {
+        int8 w_sign = (quat.w >= 0 ? 1 : -1);
+        int64 X = int32(quat.x * PACK_COEFF_X) * w_sign & ((1 << 22) - 1);
+        int64 Y = int32(quat.y * PACK_COEFF_YZ) * w_sign & ((1 << 21) - 1);
+        int64 Z = int32(quat.z * PACK_COEFF_YZ) * w_sign & ((1 << 21) - 1);
+        m_raw = Z | (Y << 21) | (X << 42);
+    }
+
+    Quat Unpack() const
+    {
+        double x = (double)(m_raw >> 42) / (double)PACK_COEFF_X;
+        double y = (double)(m_raw << 22 >> 43) / (double)PACK_COEFF_YZ;
+        double z = (double)(m_raw << 43 >> 43) / (double)PACK_COEFF_YZ;
+        double w = 1 - (x * x + y * y + z * z);
+        ASSERT(w >= 0 && "Quaternion w @ QuaternionCompressed::Unpack() must be positive or zero");
+        w = sqrt(w);
+
+        return Quat(x, y, z, w);
+    }
+
+    int64 m_raw;
+};
 
 // from `gameobject_template`
 struct GameObjectTemplate
@@ -901,7 +938,10 @@ class TC_GAME_API GameObject : public WorldObject, public GridObject<GameObject>
 
         ObjectGuid::LowType GetSpawnId() const { return m_spawnId; }
 
-        void UpdateRotationFields(float rotation2 = 0.0f, float rotation3 = 0.0f);
+        void UpdateRotationFieldsQuat(float qx = 0.0f, float qy = 0.0f, float qz = 0.0f, float qw = 0.0f);
+        void UpdateRotationFields(float rotation0 = 0.0f, float rotation1 = 0.0f, float rotation2 = 0.0f, float rotation3 = 0.0f);
+        void SetWorldRotationAngles(float z_rot, float y_rot, float x_rot);
+        Quat GetRotationQuat();
 
         // overwrite WorldObject function for proper name localization
         std::string const& GetNameForLocaleIdx(LocaleConstant locale_idx) const override;
@@ -1115,6 +1155,11 @@ class TC_GAME_API GameObject : public WorldObject, public GridObject<GameObject>
         GameObjectValue m_goValue;
 
         uint64 m_rotation;
+        float m_quatX;
+        float m_quatY;
+        float m_quatZ;
+        float m_quatW;
+
         Position m_stationaryPosition;
 
         ObjectGuid m_lootRecipient;

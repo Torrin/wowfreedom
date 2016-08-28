@@ -131,7 +131,7 @@ INSERT INTO wod_world.trinity_string (entry, content_default) VALUES
 /* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_POS_X				*/ (100112, '> X: %.6f'),
 /* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_POS_Y				*/ (100113, '> Y: %.6f'),
 /* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_POS_Z				*/ (100114, '> Z: %.6f'),
-/* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_ORIENTATION		*/ (100115, '> Orientation: %.6f'),
+/* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_ORIENTATION		*/ (100115, '> Orientation: %.6f (Deg: %.2f°)'),
 /* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_DISTANCE			*/ (100116, '> Distance: %.3f yards'),
 /* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_SCALE				*/ (100117, '> Scale: %.5f'),
 /* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_STATE				*/ (100118, '> State: (%u) %s'),
@@ -355,6 +355,17 @@ INSERT INTO wod_world.trinity_string (entry, content_default) VALUES
 /* FREEDOM_CMDI_FREEDOM_GUILD_CREATE					*/ (100336, CONCAT(@T_CMD_INFO, 'Guild successfully created with you as leader: %s')),
 /* FREEDOM_CMDE_FREEDOM_GUILD_CREATE_ALREADY_IN		*/ (100337, CONCAT(@T_CMD_ERROR, 'You are already in a guild')),
 /* FREEDOM_CMDE_FREEDOM_GUILD_CREATE_FAILED			*/ (100338, CONCAT(@T_CMD_ERROR, 'Guild creation failed (does the guild already exist?)')),
+/* FREEDOM_CMDH_GOBJECT_AXIAL								*/ (100339, CONCAT(@T_CMD_SYNTAX, '.gobject axial $roll $pitch $yaw [$guid]')),
+/* FREEDOM_CMDI_GOBJECT_AXIAL								*/ (100340, CONCAT(@T_CMD_INFO, 'Gameobject axial rotation set to (ROLL: %.2f°, PITCH: %.2f°, YAW: %.2f°)')),
+/* FREEDOM_CMDH_GOBJECT_ROLL								*/ (100341, CONCAT(@T_CMD_SYNTAX, '.gobject roll [modifiers] $roll [$guid]')),
+/* FREEDOM_CMDI_GOBJECT_ROLL								*/ (100342, CONCAT(@T_CMD_INFO, 'Gameobject ROLL rotation set to %.2f°')),
+/* FREEDOM_CMDH_GOBJECT_PITCH								*/ (100343, CONCAT(@T_CMD_SYNTAX, '.gobject pitch [modifiers] $pitch [$guid]')),
+/* FREEDOM_CMDI_GOBJECT_PITCH								*/ (100344, CONCAT(@T_CMD_INFO, 'Gameobject PITCH rotation set to %.2f°')),
+/* FREEDOM_CMDH_GOBJECT_YAW								*/ (100345, CONCAT(@T_CMD_SYNTAX, '.gobject yaw [modifiers] $yaw [$guid]')),
+/* FREEDOM_CMDI_GOBJECT_YAW								*/ (100346, CONCAT(@T_CMD_INFO, 'Gameobject YAW rotation set to %.2f°')),
+/* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_ROLL				*/ (100347, '> Roll: %.6f (Deg: %.2f°)'),
+/* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_PITCH				*/ (100348, '> Pitch: %.6f (Deg: %.2f°)'),
+/* FREEDOM_CMDI_GAMEOBJECT_INFO_LI_YAW					*/ (100349, '> Yaw: %.6f (Deg: %.2f°)'),
 
 (200000, 'Dummy');
 -- Select new changes

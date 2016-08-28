@@ -41,12 +41,250 @@ public:
             { "add",        rbac::RBAC_PERM_COMMAND_GOBJECT_ADD,        false, NULL,            "", gobjectAddCommandTable },
             { "spawn",      rbac::RBAC_PERM_COMMAND_GOBJECT_ADD,        false, NULL,            "", gobjectAddCommandTable },
             { "set",        rbac::RBAC_PERM_COMMAND_GOBJECT_SET,        false, NULL,            "", gobjectSetCommandTable },
+            { "axial",      rbac::RBAC_PERM_COMMAND_GOBJECT,            false, HandleGameObjectAxialCommand,        "" },
+            { "roll",       rbac::RBAC_PERM_COMMAND_GOBJECT,            false, HandleGameObjectRollCommand,         "" },
+            { "pitch",      rbac::RBAC_PERM_COMMAND_GOBJECT,            false, HandleGameObjectPitchCommand,        "" },
+            { "yaw",        rbac::RBAC_PERM_COMMAND_GOBJECT,            false, HandleGameObjectYawCommand,          "" }
         };
         static std::vector<ChatCommand> commandTable =
         {
             { "gobject", rbac::RBAC_PERM_COMMAND_GOBJECT, false, NULL, "", gobjectCommandTable },
         };
         return commandTable;
+    }
+
+    static bool HandleGameObjectRollCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_GOBJECT_ROLL);
+            return true;
+        }
+
+        Player* source = handler->GetSession()->GetPlayer();
+        ObjectGuid::LowType guidLow = sFreedomMgr->GetSelectedGameobjectGuidFromPlayer(source->GetGUID().GetCounter());
+
+        ArgumentTokenizer tokenizer(*args ? args : "");
+        tokenizer.LoadModifier("-adeg", 0);
+
+        if (tokenizer.size() < 1)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_GOBJECT_ROLL);
+            return true;
+        }
+
+        bool addDeg = tokenizer.ModifierExists("-adeg");
+        float deg_x = tokenizer.TryGetParam<float>(0);
+
+        std::string id = tokenizer.TryGetParam(1);
+        if (!id.empty())
+            guidLow = atoul(id.c_str());
+
+        if (!guidLow)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_GAMEOBJECT_NOT_FOUND);
+            return true;
+        }
+
+        GameObject* object = NULL;
+        GameObjectData const* goData = NULL;
+
+        // by DB guid
+        if (goData = sObjectMgr->GetGOData(guidLow))
+            object = sFreedomMgr->GetAnyGameObject(source->GetMap(), guidLow, goData->id);
+
+        if (!object)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_GAMEOBJECT_GUID_NOT_EXISTS, guidLow);
+            return true;
+        }
+
+        // Set axial angle, save and refresh
+        sFreedomMgr->GameObjectRotateSingleAxis(object, deg_x, AXIS_ROLL, addDeg);
+        sFreedomMgr->GameObjectSetModifyHistory(object, source);
+        sFreedomMgr->SaveGameObject(object);
+        object = sFreedomMgr->GameObjectRefresh(object);
+
+        float deg_roll, deg_pitch, deg_yaw;
+        sFreedomMgr->GetGameObjectEulerAnglesDeg(object, deg_roll, deg_pitch, deg_yaw);
+        handler->PSendSysMessage(FREEDOM_CMDI_GOBJECT_ROLL, deg_roll);
+        return true;
+    }
+
+    static bool HandleGameObjectPitchCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_GOBJECT_PITCH);
+            return true;
+        }
+
+        Player* source = handler->GetSession()->GetPlayer();
+        ObjectGuid::LowType guidLow = sFreedomMgr->GetSelectedGameobjectGuidFromPlayer(source->GetGUID().GetCounter());
+
+        ArgumentTokenizer tokenizer(*args ? args : "");
+        tokenizer.LoadModifier("-adeg", 0);
+
+        if (tokenizer.size() < 1)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_GOBJECT_PITCH);
+            return true;
+        }
+
+        bool addDeg = tokenizer.ModifierExists("-adeg");
+        float deg_y = tokenizer.TryGetParam<float>(0);
+
+        std::string id = tokenizer.TryGetParam(1);
+        if (!id.empty())
+            guidLow = atoul(id.c_str());
+
+        if (!guidLow)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_GAMEOBJECT_NOT_FOUND);
+            return true;
+        }
+
+        GameObject* object = NULL;
+        GameObjectData const* goData = NULL;
+
+        // by DB guid
+        if (goData = sObjectMgr->GetGOData(guidLow))
+            object = sFreedomMgr->GetAnyGameObject(source->GetMap(), guidLow, goData->id);
+
+        if (!object)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_GAMEOBJECT_GUID_NOT_EXISTS, guidLow);
+            return true;
+        }
+
+        // Set axial angle, save and refresh
+        sFreedomMgr->GameObjectRotateSingleAxis(object, deg_y, AXIS_PITCH, addDeg);
+        sFreedomMgr->GameObjectSetModifyHistory(object, source);
+        sFreedomMgr->SaveGameObject(object);
+        object = sFreedomMgr->GameObjectRefresh(object);
+
+        float deg_roll, deg_pitch, deg_yaw;
+        sFreedomMgr->GetGameObjectEulerAnglesDeg(object, deg_roll, deg_pitch, deg_yaw);
+        handler->PSendSysMessage(FREEDOM_CMDI_GOBJECT_PITCH, deg_pitch);
+        return true;
+    }
+
+    static bool HandleGameObjectYawCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_GOBJECT_YAW);
+            return true;
+        }
+
+        Player* source = handler->GetSession()->GetPlayer();
+        ObjectGuid::LowType guidLow = sFreedomMgr->GetSelectedGameobjectGuidFromPlayer(source->GetGUID().GetCounter());
+
+        ArgumentTokenizer tokenizer(*args ? args : "");
+        tokenizer.LoadModifier("-adeg", 0);
+
+        if (tokenizer.size() < 1)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_GOBJECT_YAW);
+            return true;
+        }
+
+        bool addDeg = tokenizer.ModifierExists("-adeg");
+        float deg_z = tokenizer.TryGetParam<float>(0);
+
+        std::string id = tokenizer.TryGetParam(1);
+        if (!id.empty())
+            guidLow = atoul(id.c_str());
+
+        if (!guidLow)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_GAMEOBJECT_NOT_FOUND);
+            return true;
+        }
+
+        GameObject* object = NULL;
+        GameObjectData const* goData = NULL;
+
+        // by DB guid
+        if (goData = sObjectMgr->GetGOData(guidLow))
+            object = sFreedomMgr->GetAnyGameObject(source->GetMap(), guidLow, goData->id);
+
+        if (!object)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_GAMEOBJECT_GUID_NOT_EXISTS, guidLow);
+            return true;
+        }
+
+        // Set axial angle, save and refresh
+        sFreedomMgr->GameObjectRotateSingleAxis(object, deg_z, AXIS_YAW, addDeg);
+        sFreedomMgr->GameObjectSetModifyHistory(object, source);
+        sFreedomMgr->SaveGameObject(object);
+        object = sFreedomMgr->GameObjectRefresh(object);
+
+        float deg_roll, deg_pitch, deg_yaw;
+        sFreedomMgr->GetGameObjectEulerAnglesDeg(object, deg_roll, deg_pitch, deg_yaw);
+        handler->PSendSysMessage(FREEDOM_CMDI_GOBJECT_YAW, deg_yaw);
+        return true;
+    }
+
+    static bool HandleGameObjectAxialCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_GOBJECT_AXIAL);
+            return true;
+        }
+
+        Player* source = handler->GetSession()->GetPlayer();
+        ObjectGuid::LowType guidLow = sFreedomMgr->GetSelectedGameobjectGuidFromPlayer(source->GetGUID().GetCounter());
+
+        ArgumentTokenizer tokenizer(*args ? args : "");
+        tokenizer.LoadModifier("-adeg", 0);
+
+        if (tokenizer.size() < 3)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDH_GOBJECT_AXIAL);
+            return true;
+        }
+
+        bool addDeg = tokenizer.ModifierExists("-adeg");
+        float deg_x = tokenizer.TryGetParam<float>(0);
+        float deg_y = tokenizer.TryGetParam<float>(1);
+        float deg_z = tokenizer.TryGetParam<float>(2);
+
+        std::string id = tokenizer.TryGetParam(3);
+        if (!id.empty())
+            guidLow = atoul(id.c_str());
+
+        if (!guidLow)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_GAMEOBJECT_NOT_FOUND);
+            return true;
+        }
+
+        GameObject* object = NULL;
+        GameObjectData const* goData = NULL;
+
+        // by DB guid
+        if (goData = sObjectMgr->GetGOData(guidLow))
+            object = sFreedomMgr->GetAnyGameObject(source->GetMap(), guidLow, goData->id);
+
+        if (!object)
+        {
+            handler->PSendSysMessage(FREEDOM_CMDE_GAMEOBJECT_GUID_NOT_EXISTS, guidLow);
+            return true;
+        }
+
+        // Set axial angle, save and refresh
+        sFreedomMgr->GameObjectRotate(object, deg_x, deg_y, deg_z, addDeg);
+        sFreedomMgr->GameObjectSetModifyHistory(object, source);
+        sFreedomMgr->SaveGameObject(object);
+        object = sFreedomMgr->GameObjectRefresh(object);
+        
+        float deg_roll, deg_pitch, deg_yaw;
+        sFreedomMgr->GetGameObjectEulerAnglesDeg(object, deg_roll, deg_pitch, deg_yaw);
+        handler->PSendSysMessage(FREEDOM_CMDI_GOBJECT_AXIAL, deg_roll, deg_pitch, deg_yaw);
+        return true;
     }
 
     static bool HandleGameObjectInfoCommand(ChatHandler* handler, char const* args)
@@ -176,7 +414,16 @@ public:
             handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_POS_X, ox);
             handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_POS_Y, oy);
             handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_POS_Z, oz);
-            handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_ORIENTATION, oo);
+            handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_ORIENTATION, oo, round((oo * 180 / M_PI) * 100) / 100.0f);
+
+            float rad_roll, rad_pitch, rad_yaw;
+            float deg_roll, deg_pitch, deg_yaw;
+            sFreedomMgr->GetGameObjectEulerAnglesRad(object, rad_roll, rad_pitch, rad_yaw);                        
+            sFreedomMgr->GetGameObjectEulerAnglesDeg(object, deg_roll, deg_pitch, deg_yaw);
+
+            handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_ROLL, rad_roll, deg_roll);
+            handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_PITCH, rad_pitch, deg_pitch);
+            handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_YAW, rad_yaw, deg_yaw);
         }
 
         handler->PSendSysMessage(FREEDOM_CMDI_GAMEOBJECT_INFO_LI_DISTANCE, distance);

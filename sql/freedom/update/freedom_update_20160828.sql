@@ -1,0 +1,4 @@
+ALTER TABLE `gameobject_extra`
+	ADD COLUMN `roll` FLOAT NOT NULL DEFAULT '0' AFTER `uses_quat`,
+	ADD COLUMN `pitch` FLOAT NOT NULL DEFAULT '0' AFTER `roll`,
+	ADD COLUMN `yaw` FLOAT NOT NULL DEFAULT '0' AFTER `pitch`;

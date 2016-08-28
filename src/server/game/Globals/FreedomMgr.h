@@ -20,7 +20,8 @@ typedef std::unordered_map<uint32, GameObjectTemplateExtraData> GameObjectTempla
 struct GameObjectExtraData
 {
     GameObjectExtraData() : scale(-1.0f), creatorBnetAccId(0), creatorPlayerId(0),
-        modifierBnetAccId(0), modifierPlayerId(0), created(0), modified(0), phaseMask(1) { }
+        modifierBnetAccId(0), modifierPlayerId(0), created(0), modified(0), phaseMask(1),
+        usesQuat(false), roll(0.0f), pitch(0.0f), yaw(0.0f) { }
 
     float scale;
     uint32 creatorBnetAccId;
@@ -30,6 +31,10 @@ struct GameObjectExtraData
     time_t created;
     time_t modified;
     uint32 phaseMask;
+    bool usesQuat;
+    float roll;
+    float pitch;
+    float yaw;
 };
 
 typedef std::unordered_map<uint64, GameObjectExtraData> GameObjectExtraContainer;
@@ -133,6 +138,16 @@ typedef std::vector<std::pair<uint32, uint32>> PhaseListContainer;
 
 class Map;
 
+using G3D::Quat;
+using G3D::Vector3;
+
+enum RotationAxis
+{
+    AXIS_ROLL,
+    AXIS_PITCH,
+    AXIS_YAW
+};
+
 class FreedomMgr
 {
     private:
@@ -164,11 +179,16 @@ class FreedomMgr
         GameObject* GameObjectRefresh(GameObject* go);
         void GameObjectMove(GameObject* go, float x, float y, float z, float o);
         void GameObjectTurn(GameObject* go, float o);
+        void GameObjectRotate(GameObject* go, float deg_x, float deg_y, float deg_z, bool addDeg = false);
+        void GameObjectRotateSingleAxis(GameObject* go, float deg, RotationAxis axis, bool addDeg = false);
+        void GetGameObjectEulerAnglesDeg(GameObject* go, float &deg_x, float &deg_y, float &deg_z);
+        void GetGameObjectEulerAnglesRad(GameObject* go, float &rad_x, float &rad_y, float &rad_z);
         void GameObjectScale(GameObject* go, float scale);
         void GameObjectDelete(GameObject* go);
         void GameObjectSetModifyHistory(GameObject* go, Player* modifier);
         GameObjectExtraData const* GetGameObjectExtraData(uint64 guid);
         GameObject* GameObjectCreate(Player* creator, GameObjectTemplate const* gobTemplate, uint32 spawnTimeSecs = 0);
+        bool GameObjectUsesQuatRotation(GameObject* go);
 
         // Creature        
         void LoadCreatureExtras();
