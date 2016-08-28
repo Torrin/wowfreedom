@@ -1831,7 +1831,7 @@ public:
         tokenizer.LoadModifier("-guid", 1);
         tokenizer.LoadModifier("-adeg", 1);
         tokenizer.LoadModifier("-sdeg", 1);
-        tokenizer.LoadModifier("-co", 0);
+        tokenizer.LoadModifier("-po", 0);
 
         if (tokenizer.ModifierExists("-guid"))
         {
@@ -1848,24 +1848,23 @@ public:
             return true;
         }
 
-        float o = source->GetOrientation();
-        float oldO = o;
+        float o = target->GetOrientation();
+
+        if (tokenizer.ModifierExists("-po"))
+        {
+            o = source->GetOrientation();
+        }
 
         if (tokenizer.ModifierExists("-adeg"))
         {
             std::string addDeg = tokenizer.GetModifierValue("-adeg", 0);
-            o = ((float)atof(addDeg.c_str())) * M_PI / 180.0f + target->GetOrientation();
+            o = ((float)atof(addDeg.c_str())) * M_PI / 180.0f + o;
         }
 
         if (tokenizer.ModifierExists("-sdeg"))
         {
             std::string setDeg = tokenizer.GetModifierValue("-sdeg", 0);
             o = ((float)atof(setDeg.c_str())) * M_PI / 180.0f;
-        }
-
-        if (tokenizer.ModifierExists("-co"))
-        {
-            o = target->GetOrientation();
         }
 
         float x, y, z;
@@ -1880,8 +1879,8 @@ public:
             float add_y = tokenizer.TryGetParam<float>(1);
             float add_z = tokenizer.TryGetParam<float>(2);
             // rotation matrix
-            x = add_x*cos(oldO) - add_y*sin(oldO) + target->GetPositionX();
-            y = add_x*sin(oldO) + add_y*cos(oldO) + target->GetPositionY();
+            x = add_x*cos(o) - add_y*sin(o) + target->GetPositionX();
+            y = add_x*sin(o) + add_y*cos(o) + target->GetPositionY();
             z = add_z + target->GetPositionZ();
         }
 
