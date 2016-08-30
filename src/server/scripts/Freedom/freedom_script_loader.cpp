@@ -8,6 +8,7 @@ void AddSC_flist_commandscript();
 void AddSC_flookup_commandscript();
 void AddSC_fmisc_commandscript();
 void AddSC_fmodify_commandscript();
+void AddSC_fticket_commandscript();
 
 // The name of this function should match:
 // void Add${NameOfDirectory}Scripts()
@@ -22,4 +23,5 @@ void AddFreedomScripts()
     AddSC_flookup_commandscript();
     AddSC_fmisc_commandscript();
     AddSC_fmodify_commandscript();
+    AddSC_fticket_commandscript();
 }
